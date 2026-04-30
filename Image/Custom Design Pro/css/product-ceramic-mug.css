@@ -1,0 +1,33 @@
+body.ceramic-mug-theme {
+  background: linear-gradient(180deg, #fefefe 0%, #f4f6fb 35%, #e5ebf5 100%);
+  color: #1c1f25;
+}
+
+body.ceramic-mug-theme.dark-mode {
+  background: radial-gradient(circle at top, rgba(6, 10, 18, 0.92), #020205 90%);
+  color: #f5f7fb;
+}
+
+.ceramic-mug-theme .cdp-card--product {
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.ceramic-mug-theme .cdp-product-name {
+  color: #4c51bf;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ceramic-mug-theme .cdp-view-btn.cdp-view-btn--active {
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.2);
+  color: #312e81;
+}
+
+.ceramic-mug-theme .cdp-toggle-color .cdp-toggle-knob {
+  background: linear-gradient(135deg, #fef6e4, #818cf8);
+}
+

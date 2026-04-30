@@ -1,0 +1,21 @@
+@import url('./print.css');
+
+/* Print boxes tuned for the Stanley/Stella Eco Tote proportions */
+body.stanley-tote-theme #boxFront {
+  top: 46%;
+  left: 34%;
+  width: 32%;
+  height: 44%;
+}
+
+body.stanley-tote-theme #boxBack {
+  top: 46%;
+  left: 34%;
+  width: 32%;
+  height: 44%;
+}
+
+body.stanley-tote-theme #boxRight,
+body.stanley-tote-theme #boxLeft {
+  display: none;
+}

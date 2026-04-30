@@ -1,0 +1,671 @@
+(function () {
+  "use strict";
+
+  function detectAppBasePath() {
+    const scriptNode = Array.from(document.scripts).find(function (node) {
+      return /\/JS\/account-panel\.js(?:\?|$)/i.test(node.src || "");
+    });
+
+    if (scriptNode && scriptNode.src) {
+      const scriptUrl = new URL(scriptNode.src, window.location.href);
+      return scriptUrl.pathname.replace(/\/JS\/account-panel\.js$/i, "");
+    }
+
+    const currentPath = window.location.pathname || "/";
+    return currentPath.replace(/\/[^/]*$/, "") || "/";
+  }
+
+  function buildAppPath(relativePath) {
+    const normalizedPath = String(relativePath || "").replace(/^\/+/, "");
+    const basePath = detectAppBasePath().replace(/\/+$/, "");
+
+    if (!basePath) {
+      return `/${normalizedPath}`;
+    }
+
+    return `${basePath}/${normalizedPath}`.replace(/\/+/g, "/");
+  }
+
+  const trigger = document.getElementById("gfAccountTrigger");
+  const panel = document.getElementById("gfAccountPanel");
+  const overlay = document.getElementById("gfAccountOverlay");
+  const closeBtn = panel ? panel.querySelector(".gf-account-close") : null;
+
+  if (!trigger || !panel || !overlay) {
+    return;
+  }
+
+  const guestView = document.getElementById("gfAccountGuest");
+  const userView = document.getElementById("gfAccountUser");
+  const loginForm = document.getElementById("gfAccountLoginForm");
+  const loginIdentifierInput = document.getElementById("gfLoginIdentifier");
+  const loginPasswordInput = document.getElementById("gfLoginPassword");
+  const loginBtn = document.getElementById("gfLoginBtn");
+  const signupBtn = document.getElementById("gfSignupBtn");
+  const forgotBtn = document.getElementById("gfForgotAccountBtn");
+  const googleLoginBtn = document.getElementById("gfGoogleLoginBtn");
+  const appleLoginBtn = document.getElementById("gfAppleLoginBtn");
+  const logoutBtn = document.getElementById("gfLogoutBtn");
+  const manageAccountBtn = document.getElementById("gfManageAccountBtn");
+  const myDesignsBtn = document.getElementById("gfMyDesignsBtn");
+  const orderHistoryBtn = document.getElementById("gfOrderHistoryBtn");
+  const paymentMethodsBtn = document.getElementById("gfPaymentMethodsBtn");
+  const shippingAddressesBtn = document.getElementById("gfShippingAddressesBtn");
+  const userNameEl = document.getElementById("gfUserName");
+  const userEmailEl = document.getElementById("gfUserEmail");
+  const userAvatarWrap = panel.querySelector(".gf-account-profile-icon");
+  const authHeadTitle = panel.querySelector(".gf-account-auth-head h4");
+  const authHeadCopy = panel.querySelector(".gf-account-auth-head p");
+
+  const LOGIN_URL = buildAppPath("backend/auth/login.php");
+  const REGISTER_URL = buildAppPath("backend/auth/register.php");
+  const SESSION_URL = buildAppPath("backend/auth/session.php");
+  const LOGOUT_URL = buildAppPath("logout.php");
+  const PROFILE_URL = buildAppPath("ProfilePage.php");
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  let authStatus = document.getElementById("gfAccountAuthStatus");
+  let registerNameInput = document.getElementById("gfRegisterName");
+  let registerEmailInput = document.getElementById("gfRegisterEmail");
+  let registerPhoneInput = document.getElementById("gfRegisterPhone");
+  let isRegisterMode = false;
+  let isAuthenticated = false;
+  let currentUser = null;
+  let isSyncingSession = false;
+
+  function dispatchAuthUpdated() {
+    document.dispatchEvent(new CustomEvent("girffon:auth-updated"));
+  }
+
+  function findInputGroup(input) {
+    return input ? input.closest(".gf-account-input-group") : null;
+  }
+
+  function ensureAuthStatusNode() {
+    if (authStatus || !loginForm) {
+      return authStatus;
+    }
+
+    authStatus = document.createElement("div");
+    authStatus.id = "gfAccountAuthStatus";
+    authStatus.setAttribute("role", "status");
+    authStatus.setAttribute("aria-live", "polite");
+    authStatus.style.minHeight = "1.25rem";
+    authStatus.style.fontSize = "0.95rem";
+    authStatus.style.lineHeight = "1.4";
+    loginForm.appendChild(authStatus);
+    return authStatus;
+  }
+
+  function setAuthStatus(message, isError) {
+    ensureAuthStatusNode();
+    if (!authStatus) {
+      return;
+    }
+
+    authStatus.textContent = String(message || "");
+    authStatus.style.color = isError ? "#d46a6a" : "";
+  }
+
+  function createInputGroup(config) {
+    if (!loginForm) {
+      return null;
+    }
+
+    const group = document.createElement("div");
+    group.className = "gf-account-input-group";
+
+    const label = document.createElement("label");
+    label.className = "gf-account-input-label";
+    label.htmlFor = config.id;
+    label.textContent = config.label;
+
+    const wrap = document.createElement("div");
+    wrap.className = "gf-account-input-wrap";
+
+    const icon = document.createElement("i");
+    icon.className = config.iconClass;
+    icon.setAttribute("aria-hidden", "true");
+
+    const input = document.createElement("input");
+    input.type = config.type;
+    input.id = config.id;
+    input.name = config.name;
+    input.placeholder = config.placeholder;
+    input.autocomplete = config.autocomplete;
+
+    wrap.appendChild(icon);
+    wrap.appendChild(input);
+    group.appendChild(label);
+    group.appendChild(wrap);
+
+    const passwordGroup = findInputGroup(loginPasswordInput);
+    if (passwordGroup && passwordGroup.parentNode === loginForm) {
+      loginForm.insertBefore(group, passwordGroup);
+    } else {
+      loginForm.appendChild(group);
+    }
+
+    return input;
+  }
+
+  function ensureRegisterInputs() {
+    registerNameInput = registerNameInput || createInputGroup({
+      id: "gfRegisterName",
+      name: "registerName",
+      type: "text",
+      label: "Full name",
+      placeholder: "Your full name",
+      autocomplete: "name",
+      iconClass: "fa-regular fa-id-card"
+    });
+
+    registerEmailInput = registerEmailInput || createInputGroup({
+      id: "gfRegisterEmail",
+      name: "registerEmail",
+      type: "email",
+      label: "Email address",
+      placeholder: "name@example.com",
+      autocomplete: "email",
+      iconClass: "fa-regular fa-envelope"
+    });
+
+    registerPhoneInput = registerPhoneInput || createInputGroup({
+      id: "gfRegisterPhone",
+      name: "registerPhone",
+      type: "tel",
+      label: "Mobile number",
+      placeholder: "Optional mobile number",
+      autocomplete: "tel",
+      iconClass: "fa-solid fa-mobile-screen-button"
+    });
+  }
+
+  ensureAuthStatusNode();
+  ensureRegisterInputs();
+
+  const loginIdentifierGroup = findInputGroup(loginIdentifierInput);
+  const loginPasswordGroup = findInputGroup(loginPasswordInput);
+  const registerNameGroup = findInputGroup(registerNameInput);
+  const registerEmailGroup = findInputGroup(registerEmailInput);
+  const registerPhoneGroup = findInputGroup(registerPhoneInput);
+  const authRow = loginForm ? loginForm.querySelector(".gf-account-auth-row") : null;
+
+  function splitDisplayName(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    return {
+      firstName: parts.shift() || "",
+      lastName: parts.join(" ")
+    };
+  }
+
+  function renderUserAvatar() {
+    if (!userAvatarWrap) {
+      return;
+    }
+
+    userAvatarWrap.innerHTML = '<i class="fa-solid fa-user"></i>';
+  }
+
+  function setActiveView(viewName) {
+    if (guestView) {
+      guestView.style.display = viewName === "guest" ? "flex" : "none";
+    }
+
+    if (userView) {
+      userView.style.display = viewName === "user" ? "flex" : "none";
+    }
+  }
+
+  function setPanelVisibility(visible) {
+    panel.setAttribute("data-visible", visible ? "true" : "false");
+    panel.setAttribute("aria-hidden", visible ? "false" : "true");
+    overlay.hidden = !visible;
+    document.body.style.overflow = visible ? "hidden" : "";
+  }
+
+  function normalizeUser(user) {
+    if (!user || typeof user !== "object") {
+      return null;
+    }
+
+    const firstName = String(user.first_name || "").trim();
+    const lastName = String(user.last_name || "").trim();
+    const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+    return {
+      id: Number(user.id || 0),
+      username: String(user.username || "").trim(),
+      name: fullName || String(user.username || "GirffoN Member"),
+      email: String(user.email || "").trim(),
+      phone: String(user.phone || "").trim(),
+      country: String(user.country || "").trim(),
+      city: String(user.city || "").trim(),
+      address: String(user.address || "").trim()
+    };
+  }
+
+  function updateAccountView() {
+    if (isAuthenticated && currentUser) {
+      setActiveView("user");
+      if (userNameEl) {
+        userNameEl.textContent = currentUser.name || "GirffoN Member";
+      }
+      if (userEmailEl) {
+        userEmailEl.textContent = currentUser.email || currentUser.username || "member@girffon.local";
+      }
+    } else {
+      setActiveView("guest");
+      if (userNameEl) {
+        userNameEl.textContent = "User";
+      }
+      if (userEmailEl) {
+        userEmailEl.textContent = "user@example.com";
+      }
+    }
+
+    renderUserAvatar();
+  }
+
+  function setAuthUser(user, shouldDispatch) {
+    currentUser = user ? normalizeUser(user) : null;
+    isAuthenticated = Boolean(currentUser);
+    updateAccountView();
+
+    if (shouldDispatch !== false) {
+      dispatchAuthUpdated();
+    }
+  }
+
+  function setButtonLabel(button, text) {
+    if (!button) {
+      return;
+    }
+
+    const label = button.querySelector("span");
+    if (label) {
+      label.textContent = text;
+      return;
+    }
+
+    button.textContent = text;
+  }
+
+  function toggleGroup(group, visible) {
+    if (!group) {
+      return;
+    }
+
+    group.style.display = visible ? "" : "none";
+  }
+
+  function setRegisterMode(enabled) {
+    isRegisterMode = Boolean(enabled);
+
+    toggleGroup(loginIdentifierGroup, !isRegisterMode);
+    toggleGroup(loginPasswordGroup, true);
+    toggleGroup(registerNameGroup, isRegisterMode);
+    toggleGroup(registerEmailGroup, isRegisterMode);
+    toggleGroup(registerPhoneGroup, isRegisterMode);
+
+    if (authRow) {
+      authRow.style.display = isRegisterMode ? "none" : "";
+    }
+
+    if (loginBtn) {
+      loginBtn.style.display = isRegisterMode ? "none" : "";
+    }
+
+    if (loginIdentifierInput) {
+      loginIdentifierInput.required = !isRegisterMode;
+    }
+
+    if (loginPasswordInput) {
+      loginPasswordInput.autocomplete = isRegisterMode ? "new-password" : "current-password";
+    }
+
+    if (registerNameInput) {
+      registerNameInput.required = isRegisterMode;
+    }
+
+    if (registerEmailInput) {
+      registerEmailInput.required = isRegisterMode;
+    }
+
+    if (authHeadTitle) {
+      authHeadTitle.textContent = isRegisterMode ? "Create account" : "Sign in";
+    }
+
+    if (authHeadCopy) {
+      authHeadCopy.textContent = isRegisterMode
+        ? "Create your GirffoN account to access saved designs, orders, and your customer profile."
+        : "Use your GirffoN account to access saved designs, orders, and your premium profile.";
+    }
+
+    setButtonLabel(signupBtn, isRegisterMode ? "Create my account" : "Create an account");
+  }
+
+  function resetGuestState() {
+    setRegisterMode(false);
+    if (loginForm) {
+      loginForm.reset();
+    }
+    setAuthStatus("Sign in to continue with your GirffoN account, or create one to save profile and preference details.", false);
+  }
+
+  async function readTextResponse(response) {
+    const text = await response.text();
+    let json = null;
+
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch (_error) {
+      json = null;
+    }
+
+    return {
+      ok: response.ok,
+      text: text,
+      json: json
+    };
+  }
+
+  async function syncSession() {
+    if (isSyncingSession) {
+      return currentUser;
+    }
+
+    isSyncingSession = true;
+
+    try {
+      const response = await fetch(SESSION_URL, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+      const payload = await readTextResponse(response);
+
+      if (payload.json && payload.json.authenticated && payload.json.user) {
+        setAuthUser(payload.json.user, false);
+        return currentUser;
+      }
+
+      setAuthUser(null, false);
+      return null;
+    } catch (_error) {
+      return currentUser;
+    } finally {
+      isSyncingSession = false;
+      updateAccountView();
+    }
+  }
+
+  async function loginRemote(identifier, password) {
+    const formData = new URLSearchParams();
+    formData.set("identifier", identifier);
+    formData.set("username", identifier);
+    formData.set("password", password);
+
+    const response = await fetch(LOGIN_URL, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      body: formData.toString()
+    });
+
+    const payload = await readTextResponse(response);
+
+    if (!payload.ok) {
+      throw new Error((payload.json && payload.json.message) || payload.text.trim() || "Unable to sign in.");
+    }
+
+    if (payload.json && payload.json.ok && payload.json.user) {
+      setAuthUser(payload.json.user);
+      return currentUser;
+    }
+
+    const sessionUser = await syncSession();
+    if (sessionUser) {
+      return sessionUser;
+    }
+
+    throw new Error(payload.text.trim() || "Unable to sign in.");
+  }
+
+  async function registerRemote(name, email, phone, password) {
+    const nameParts = splitDisplayName(name);
+    const formData = new URLSearchParams();
+    formData.set("first_name", nameParts.firstName || name);
+    formData.set("last_name", nameParts.lastName || "-");
+    formData.set("email", email);
+    formData.set("phone", phone);
+    formData.set("password", password);
+
+    const response = await fetch(REGISTER_URL, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      body: formData.toString()
+    });
+
+    const payload = await readTextResponse(response);
+
+    if (!payload.ok) {
+      throw new Error((payload.json && payload.json.message) || payload.text.trim() || "Unable to create your account.");
+    }
+
+    if (payload.json && payload.json.ok && payload.json.user) {
+      setAuthUser(payload.json.user);
+      return currentUser;
+    }
+
+    const sessionUser = await syncSession();
+    if (sessionUser) {
+      return sessionUser;
+    }
+
+    return loginRemote(email, password);
+  }
+
+  async function logoutRemote() {
+    const response = await fetch(LOGOUT_URL, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({})
+    });
+
+    const payload = await readTextResponse(response);
+    if (!payload.ok) {
+      throw new Error((payload.json && payload.json.message) || payload.text.trim() || "Unable to sign out.");
+    }
+
+    setAuthUser(null);
+  }
+
+  async function handleLoginSubmit(event) {
+    event.preventDefault();
+    setAuthStatus("", false);
+
+    if (isRegisterMode) {
+      await handleRegisterSubmit();
+      return;
+    }
+
+    const identifier = String(loginIdentifierInput ? loginIdentifierInput.value : "").trim();
+    const password = String(loginPasswordInput ? loginPasswordInput.value : "").trim();
+
+    if (!identifier) {
+      setAuthStatus("Enter your username, email, or mobile to sign in.", true);
+      loginIdentifierInput && loginIdentifierInput.focus();
+      return;
+    }
+
+    if (!password) {
+      setAuthStatus("Enter your password to sign in.", true);
+      loginPasswordInput && loginPasswordInput.focus();
+      return;
+    }
+
+    try {
+      await loginRemote(identifier, password);
+      setAuthStatus("Signed in successfully.", false);
+      updateAccountView();
+    } catch (error) {
+      setAuthStatus(error && error.message ? error.message : "Unable to sign in.", true);
+    }
+  }
+
+  async function handleRegisterSubmit() {
+    const fullName = String(registerNameInput ? registerNameInput.value : "").trim();
+    const email = String(registerEmailInput ? registerEmailInput.value : "").trim().toLowerCase();
+    const phone = String(registerPhoneInput ? registerPhoneInput.value : "").trim();
+    const password = String(loginPasswordInput ? loginPasswordInput.value : "").trim();
+
+    if (!fullName) {
+      setAuthStatus("Full name is required.", true);
+      registerNameInput && registerNameInput.focus();
+      return;
+    }
+
+    if (!EMAIL_PATTERN.test(email)) {
+      setAuthStatus("Enter a valid email address.", true);
+      registerEmailInput && registerEmailInput.focus();
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthStatus("Password must be at least 6 characters.", true);
+      loginPasswordInput && loginPasswordInput.focus();
+      return;
+    }
+
+    try {
+      await registerRemote(fullName, email, phone, password);
+      setRegisterMode(false);
+      setAuthStatus("Account created successfully.", false);
+      updateAccountView();
+    } catch (error) {
+      setAuthStatus(error && error.message ? error.message : "Unable to create your account.", true);
+    }
+  }
+
+  function goToProfileSection(hash) {
+    const sectionHash = typeof hash === "string" && hash ? hash : "#gfProfileDetails";
+    setPanelVisibility(false);
+    window.location.href = PROFILE_URL + sectionHash;
+  }
+
+  trigger.addEventListener("click", async function (event) {
+    event.preventDefault();
+    await syncSession();
+    if (!isAuthenticated) {
+      resetGuestState();
+    }
+    updateAccountView();
+    setPanelVisibility(true);
+  });
+
+  closeBtn && closeBtn.addEventListener("click", function () {
+    setPanelVisibility(false);
+  });
+
+  overlay.addEventListener("click", function () {
+    setPanelVisibility(false);
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      setPanelVisibility(false);
+    }
+  });
+
+  loginForm && loginForm.addEventListener("submit", handleLoginSubmit);
+
+  signupBtn && signupBtn.addEventListener("click", async function () {
+    if (!isRegisterMode) {
+      setRegisterMode(true);
+      setAuthStatus("Complete the fields below to create your account.", false);
+      registerNameInput && registerNameInput.focus();
+      return;
+    }
+
+    await handleRegisterSubmit();
+  });
+
+  forgotBtn && forgotBtn.addEventListener("click", function () {
+    setAuthStatus("Use your username, email, or mobile number to sign in.", false);
+    loginIdentifierInput && loginIdentifierInput.focus();
+  });
+
+  googleLoginBtn && googleLoginBtn.addEventListener("click", function () {
+    setAuthStatus("Google login will be available soon.", false);
+  });
+
+  appleLoginBtn && appleLoginBtn.addEventListener("click", function () {
+    setAuthStatus("Apple login will be available soon.", false);
+  });
+
+  logoutBtn && logoutBtn.addEventListener("click", async function (event) {
+    event.preventDefault();
+
+    try {
+      await logoutRemote();
+      resetGuestState();
+      setAuthStatus("Signed out from your GirffoN account.", false);
+      setPanelVisibility(false);
+    } catch (error) {
+      setAuthStatus(error && error.message ? error.message : "Unable to sign out.", true);
+    }
+  });
+
+  manageAccountBtn && manageAccountBtn.addEventListener("click", function () {
+    goToProfileSection("#gfProfileDetails");
+  });
+
+  myDesignsBtn && myDesignsBtn.addEventListener("click", function () {
+    goToProfileSection("#gfMyDesigns");
+  });
+
+  orderHistoryBtn && orderHistoryBtn.addEventListener("click", function () {
+    goToProfileSection("#gfRecentOrders");
+  });
+
+  paymentMethodsBtn && paymentMethodsBtn.addEventListener("click", function () {
+    goToProfileSection("#gfPayments");
+  });
+
+  shippingAddressesBtn && shippingAddressesBtn.addEventListener("click", function () {
+    goToProfileSection("#gfAddressBook");
+  });
+
+  document.addEventListener("girffon:auth-updated", function () {
+    syncSession().catch(function () {
+      return null;
+    });
+  });
+
+  resetGuestState();
+  updateAccountView();
+  syncSession().catch(function () {
+    return null;
+  });
+
+  window.GIRFFON_AUTH = {
+    ensureSession: syncSession,
+    login: loginRemote,
+    register: registerRemote,
+    logout: logoutRemote
+  };
+})();

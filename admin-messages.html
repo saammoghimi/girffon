@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GirffoN Admin Messages</title>
+  <script>window.location.replace("admin-messages.php");</script>
+  <link rel="stylesheet" href="CSS/admin-girffon.css">
+</head>
+<body class="admin-page" data-admin-page="messages">
+  <div class="admin-layout">
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+      <div class="admin-sidebar-header">
+        <span class="admin-brand" aria-label="GirffoN logo">
+          <img class="admin-brand-logo" src="Image/Logo/logo for gif.png" alt="GirffoN Logo">
+        </span>
+        <p>Messages inbox for customer contact records.</p>
+      </div>
+
+      <nav class="admin-nav">
+        <a class="admin-nav-link" href="admin-dashboard.html" aria-label="Dashboard" title="Dashboard">1. Dashboard</a>
+        <a class="admin-nav-link" href="admin-products.html" aria-label="Products" title="Products">2. Products</a>
+        <a class="admin-nav-link" href="admin-orders.html" aria-label="Orders" title="Orders">3. Orders</a>
+        <a class="admin-nav-link" href="admin-invoices.html" aria-label="Invoices" title="Invoices">4. Invoices</a>
+        <a class="admin-nav-link is-active" href="admin-messages.html" aria-label="Messages" title="Messages">5. Messages</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <section class="admin-sidebar-card">
+          <strong>Message Fields</strong>
+          <p class="admin-panel-note">Customer name, email, message, and status.</p>
+        </section>
+        <button class="admin-logout-button" type="button" data-admin-logout>Logout</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <p class="admin-page-subtitle">Admin</p>
+          <h1 class="admin-page-title" id="adminCurrentPage">Messages</h1>
+        </div>
+        <div class="admin-topbar-actions">
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
+        </div>
+      </header>
+
+      <section class="admin-page-section">
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Add Message</h2>
+              <p class="admin-panel-note">Store a demo customer message entry in localStorage.</p>
+            </div>
+          </div>
+
+          <form id="adminMessagesForm" class="admin-grid-form" novalidate>
+            <div class="admin-field">
+              <label for="adminMessageCustomerName">Customer Name</label>
+              <input class="admin-input" id="adminMessageCustomerName" name="customerName" type="text" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminMessageEmail">Email</label>
+              <input class="admin-input" id="adminMessageEmail" name="email" type="email" required>
+            </div>
+
+            <div class="admin-field admin-field-wide">
+              <label for="adminMessageText">Message</label>
+              <textarea class="admin-textarea" id="adminMessageText" name="message" required></textarea>
+            </div>
+
+            <div class="admin-field admin-field-wide">
+              <label for="adminMessageStatus">Status</label>
+              <select class="admin-select" id="adminMessageStatus" name="status" required>
+                <option value="Unread">Unread</option>
+                <option value="Read">Read</option>
+                <option value="Replied">Replied</option>
+              </select>
+            </div>
+
+            <div class="admin-form-actions">
+              <button class="admin-button admin-button-accent" type="submit">Save Message</button>
+            </div>
+            <div id="adminMessagesStatus" class="admin-feedback" role="status" aria-live="polite"></div>
+          </form>
+        </article>
+
+        <article class="admin-table-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Message List</h2>
+              <p class="admin-panel-note">All customer message records in the local admin inbox.</p>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminMessagesTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="JS/admin-girffon.js"></script>
+</body>
+</html>

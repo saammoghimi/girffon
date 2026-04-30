@@ -1,0 +1,409 @@
+/* ====================================
+   TEXT PANEL - Left Side
+   ==================================== */
+
+.cdp-text-panel {
+    position: fixed;
+    top: 0;
+    left: -420px;
+    width: 420px;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15);
+    z-index: 11000;
+    transition: left 0.3s ease;
+}
+
+.cdp-text-panel[data-visible="true"] {
+    left: 72px;
+}
+
+.cdp-text-panel-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Header */
+.cdp-text-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.cdp-text-panel-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cdp-text-panel-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.cdp-text-panel-close:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+/* Body */
+.cdp-text-panel-body {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.cdp-text-group {
+    margin-bottom: 24px;
+}
+
+.cdp-text-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+/* Text Input */
+.cdp-text-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 16px;
+    color: #111827;
+    transition: all 0.2s;
+}
+
+.cdp-text-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Font Scroll */
+.cdp-text-font-scroll {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.cdp-text-font-item {
+    width: 100%;
+    padding: 12px 16px;
+    margin-bottom: 6px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+.cdp-text-font-item:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.cdp-text-font-item.active {
+    border-color: #3b82f6;
+    background: #dbeafe;
+}
+
+.cdp-text-font-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.cdp-text-font-preview {
+    font-size: 20px;
+    color: #111827;
+}
+
+/* Size Row */
+.cdp-text-size-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#cdpTextSizeSlider {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+#cdpTextSizeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+}
+
+#cdpTextSizeValue {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    min-width: 50px;
+    text-align: right;
+}
+
+/* Color Row */
+.cdp-text-color-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#cdpTextColorPicker {
+    width: 60px;
+    height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#cdpTextColorHex {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    font-family: 'Courier New', monospace;
+}
+
+/* Style Buttons */
+.cdp-text-style-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.cdp-text-style-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #6b7280;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cdp-text-style-btn:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.cdp-text-style-btn.active {
+    border-color: #3b82f6;
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+/* Transform Buttons */
+.cdp-text-transform-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.cdp-text-transform-btn {
+    flex: 1;
+    padding: 8px 16px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cdp-text-transform-btn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.cdp-text-transform-btn:active {
+    background: #d1d5db;
+}
+
+/* Footer */
+.cdp-text-panel-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+}
+
+.cdp-text-btn {
+    flex: 1;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cdp-text-btn--cancel {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.cdp-text-btn--cancel:hover {
+    background: #e5e7eb;
+}
+
+.cdp-text-btn--apply {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.cdp-text-btn--apply:hover {
+    background: #2563eb;
+}
+
+/* Text Element on Canvas */
+.cdp-text-element {
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: grab !important;
+}
+
+.cdp-text-element:active {
+    cursor: grabbing !important;
+}
+
+.cdp-text-element:hover {
+    outline: 2px dashed #3b82f6;
+    outline-offset: 4px;
+}
+
+/* Resize Handle */
+.cdp-text-resize-handle {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 24px;
+    height: 24px;
+    background: #3b82f6;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: nwse-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 11px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.cdp-text-element:hover .cdp-text-resize-handle {
+    opacity: 1;
+}
+
+/* ============================================
+   DARK MODE — NEW Add Text Panel
+   ============================================ */
+
+body.dark-mode .cdp-text-panel {
+    background: #000 !important;
+    border-color: #333 !important;
+}
+
+body.dark-mode .cdp-text-panel-header {
+    background: #111 !important;
+    border-bottom: 1px solid #222 !important;
+}
+
+body.dark-mode .cdp-text-panel-header h3 {
+    color: #fff !important;
+}
+
+body.dark-mode .cdp-text-panel-close {
+    color: #ccc !important;
+}
+
+body.dark-mode .cdp-text-panel-close:hover {
+    background: #222 !important;
+    color: #fff !important;
+}
+
+body.dark-mode .cdp-text-panel-body {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+body.dark-mode .cdp-text-group label {
+    color: #fff !important;
+}
+
+/* input box */
+body.dark-mode .cdp-text-input {
+    background: #111 !important;
+    color: #fff !important;
+    border-color: #444 !important;
+}
+
+/* font list */
+body.dark-mode .cdp-text-font-scroll {
+    background: #111 !important;
+    border-color: #444 !important;
+}
+
+body.dark-mode .cdp-text-font-item {
+    background: #111 !important;
+    border-color: #444 !important;
+    color: #fff !important;
+}
+
+body.dark-mode .cdp-text-font-item.active {
+    background: #1a2f44 !important;
+    border-color: #3b82f6 !important;
+}
+
+body.dark-mode .cdp-text-font-preview {
+    color: #fff !important;
+}
+
+/* footer buttons */
+body.dark-mode .cdp-text-btn--cancel {
+    background: #222 !important;
+    color: #fff !important;
+}
+
+body.dark-mode .cdp-text-btn--apply {
+    background: #3b82f6 !important;
+    color: #fff !important;
+}

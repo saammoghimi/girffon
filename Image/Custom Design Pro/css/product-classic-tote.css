@@ -1,0 +1,33 @@
+body.classic-tote-theme {
+  background: linear-gradient(180deg, #fefaf5 0%, #f5e9dc 40%, #fffdf8 100%);
+  color: #2b2114;
+}
+
+body.classic-tote-theme.dark-mode {
+  background: radial-gradient(circle at top, rgba(43, 33, 20, 0.8), #0d0905 90%);
+  color: #f8f5ef;
+}
+
+.classic-tote-theme .cdp-card--product {
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  box-shadow: 0 18px 44px rgba(87, 65, 44, 0.25);
+  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.classic-tote-theme .cdp-product-name {
+  color: #b45309;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.classic-tote-theme .cdp-view-btn.cdp-view-btn--active {
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.14);
+  color: #3d2610;
+}
+
+.classic-tote-theme .cdp-toggle-color .cdp-toggle-knob {
+  background: linear-gradient(135deg, #f1e3c3, #d97706);
+}
+

@@ -1,0 +1,33 @@
+@import url('./print.css');
+
+/*
+ * Baby T-Shirt print overrides lowered by 2cm for better chest placement.
+ */
+
+body.baby-theme #boxFront {
+  top: calc(22% + 2cm);
+  left: 35%;
+  width: 30%;
+  height: 48%;
+}
+
+body.baby-theme #boxBack {
+  top: calc(23% + 2cm);
+  left: 35.5%;
+  width: 29%;
+  height: 46%;
+}
+
+body.baby-theme #boxRight {
+  top: 50%;
+  left: 57%;
+  width: 12%;
+  height: 22%;
+}
+
+body.baby-theme #boxLeft {
+  top: 50%;
+  left: 31%;
+  width: 12%;
+  height: 22%;
+}

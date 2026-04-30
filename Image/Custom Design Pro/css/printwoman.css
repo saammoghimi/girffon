@@ -1,0 +1,34 @@
+@import url('./print.css');
+
+/*
+ * Women’s Premium T-Shirt print overrides.
+ * Extend or override selectors from print.css below as needed.
+ */
+
+body.women-theme #boxFront {
+	top: 20%;
+	left: 34.5%;
+	width: 31%;
+	height: 56%;
+}
+
+body.women-theme #boxBack {
+	top: 21%;
+	left: 35%;
+	width: 30%;
+	height: 50%;
+}
+
+body.women-theme #boxRight {
+	top: 62%;
+	left: 34%;
+	width: 18%;
+	height: 22%;
+}
+
+body.women-theme #boxLeft {
+	top: 62%;
+	left: 47.5%;
+	width: 18%;
+	height: 22%;
+}

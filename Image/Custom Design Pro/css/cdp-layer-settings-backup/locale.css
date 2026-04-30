@@ -1,0 +1,64 @@
+/* ===================================
+   LOCALE PANEL STYLES
+   =================================== */
+
+.cdp-locale-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.cdp-locale-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cdp-locale-item:hover {
+    background: #f3f4f6;
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cdp-locale-item.active {
+    background: #dbeafe;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.cdp-locale-flag {
+    width: 64px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cdp-locale-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.cdp-locale-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    text-align: center;
+}
+
+.cdp-locale-code {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+}

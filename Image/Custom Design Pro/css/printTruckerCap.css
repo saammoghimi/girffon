@@ -1,0 +1,15 @@
+@import url('./print.css');
+
+/* Print box sized for front crown of Trucker Cap */
+body.trucker-theme #boxFront {
+  top: 33%;
+  left: 36%;
+  width: 28%;
+  height: 22%;
+}
+
+body.trucker-theme #boxBack,
+body.trucker-theme #boxRight,
+body.trucker-theme #boxLeft {
+  display: none;
+}

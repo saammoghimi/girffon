@@ -1,0 +1,21 @@
+@import url('./print.css');
+
+/* Stanley Stella Eco Tote printable window */
+body.stanley-stella-theme #boxFront {
+  top: 48%;
+  left: 33%;
+  width: 34%;
+  height: 44%;
+}
+
+body.stanley-stella-theme #boxBack {
+  top: 45%;
+  left: 33%;
+  width: 34%;
+  height: 44%;
+}
+
+body.stanley-stella-theme #boxRight,
+body.stanley-stella-theme #boxLeft {
+  display: none;
+}

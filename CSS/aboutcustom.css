@@ -1,0 +1,226 @@
+.about-custom-design-section {
+  width: 100%;
+  background: #f3f3f3;
+  padding: 70px 50px;
+  box-sizing: border-box;
+}
+
+.about-custom-design-container {
+  max-width: 1800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 70px;
+}
+
+.about-custom-design-left {
+  flex: 1;
+  max-width: 820px;
+  transform: translateX(30%); /* 👈 فقط متن جلو */
+}
+
+.about-custom-design-title {
+  margin: 0 0 34px;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0.2px;
+  color: #2d2d2d;
+}
+
+.about-custom-design-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.about-custom-design-icon {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  border-radius: 50%;
+  background: #ececec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff784f;
+  font-size: 23px;
+}
+
+.about-custom-design-feature:nth-child(3) .about-custom-design-icon {
+  color: #7bc96f;
+}
+
+.about-custom-design-feature p {
+  margin: 0;
+  max-width: 760px;
+  font-size: 18px;
+  line-height: 1.72;
+  color: #2f2f2f;
+}
+
+.about-custom-design-buttons {
+  display: flex;
+  gap: 16px;
+  margin-top: 34px;
+}
+
+.about-custom-design-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 150px;
+  height: 48px;
+  padding: 0 26px;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+  border: 2px solid #3a3a3a;
+  transition: 0.25s ease;
+}
+
+.about-custom-design-btn-dark {
+  background: #2f2f2f;
+  color: #fff;
+}
+
+.about-custom-design-btn-dark:hover {
+  background: #111;
+  border-color: #111;
+}
+
+.about-custom-design-btn-light {
+  background: transparent;
+  color: #2f2f2f;
+}
+
+.about-custom-design-btn-light:hover {
+  background: #2f2f2f;
+  color: #fff;
+}
+
+.about-custom-design-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ❗ ویدیو دست نخورده */
+.about-custom-design-video {
+  width: 40%;
+  max-width: 880px;
+  height: auto;
+  border-radius: 18px;
+  display: block;
+  object-fit: cover;
+}
+
+/* Tablet */
+@media (max-width: 1200px) {
+  .about-custom-design-section {
+    padding: 55px 30px;
+  }
+
+  .about-custom-design-container {
+    gap: 40px;
+  }
+
+  .about-custom-design-title {
+    font-size: 38px;
+  }
+
+  .about-custom-design-feature p {
+    font-size: 17px;
+  }
+
+  .about-custom-design-video {
+    width: 360px;
+    height: 204px;
+  }
+
+  .about-custom-design-left {
+    transform: translateX(20%);
+  }
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .about-custom-design-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .about-custom-design-left,
+  .about-custom-design-right {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .about-custom-design-left {
+    transform: translateX(0); /* 👈 موبایل ریست */
+  }
+
+  .about-custom-design-title {
+    font-size: 34px;
+  }
+
+  .about-custom-design-right {
+    justify-content: flex-start;
+  }
+
+  .about-custom-design-video {
+    width: 100%;
+    max-width: 420px;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+@media (max-width: 600px) {
+  .about-custom-design-section {
+    padding: 40px 16px;
+  }
+
+  .about-custom-design-title {
+    margin-bottom: 24px;
+    font-size: 30px;
+  }
+
+  .about-custom-design-feature {
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .about-custom-design-icon {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    font-size: 19px;
+  }
+
+  .about-custom-design-feature p {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .about-custom-design-buttons {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .about-custom-design-btn {
+    min-width: 132px;
+    height: 44px;
+    padding: 0 18px;
+    font-size: 15px;
+  }
+
+  .about-custom-design-video {
+    max-width: 100%;
+    border-radius: 14px;
+  }
+}

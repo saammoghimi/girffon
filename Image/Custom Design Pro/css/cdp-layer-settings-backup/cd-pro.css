@@ -1,0 +1,1687 @@
+body.dark-mode .cdp-sidebar {
+  background: #181A20 !important;
+  border-right: 1px solid #23262F !important;
+}
+/* ===========================
+   Reset & Base
+   =========================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* ===========================
+   Layout اصلی
+   =========================== */
+
+.cdp-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ===========================
+   Sidebar چپ
+   =========================== */
+
+.cdp-sidebar {
+  width: 68px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  gap: 16px;
+}
+
+.cdp-logo img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.cdp-sidebar-tools,
+.cdp-sidebar-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cdp-sidebar-bottom {
+  margin-top: auto;
+}
+
+.cdp-icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+  outline: none;
+}
+
+.cdp-icon-btn i {
+  font-size: 18px;
+  color: #111827;
+}
+
+.cdp-icon-btn:hover {
+  transform: scale(1.1) rotate(-4deg);
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px #facc1533;
+  background: #fefce8;
+}
+
+/* ===========================
+   وسط (صحنه تیشرت)
+   =========================== */
+
+.cdp-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 24px 24px 16px;
+}
+
+/* (استایل تیشرت و print-box ها در فایل print.css است) */
+
+/* ===========================
+   پنل راست
+   =========================== */
+
+.cdp-right-panel {
+  width: 320px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background: none;
+}
+
+/* کارت عمومی */
+
+.cdp-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+body.dark-mode .cdp-card {
+  background: #23272f !important;
+  color: #fff !important;
+}
+
+.cdp-card-header {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cdp-card-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cdp-card-body {
+  padding: 10px 14px 12px;
+}
+
+/* ===========================
+   Product card
+   =========================== */
+
+.cdp-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.cdp-label {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.cdp-field-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cdp-product-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* دکمه Size در کارت Product */
+
+.cdp-size-btn {
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  padding: 4px 10px;
+  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.1s ease,
+    box-shadow 0.16s ease;
+}
+
+.cdp-size-btn i {
+  font-size: 9px;
+}
+
+.cdp-size-btn:hover {
+  background: #fefce8;
+  border-color: #fbbf24;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+.cdp-size-value {
+  font-weight: 600;
+}
+
+/* ===========================
+   انتخاب رنگ محصول (کارت Product)
+   =========================== */
+
+/* ===========================
+   Product color (متن)
+   =========================== */
+.cdp-color-name {
+  font-size: 13px;
+}
+
+/* ===========================
+   دکمه گرد Color (فقط یک دایره داخل)
+   =========================== */
+.cdp-toggle-color {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;   /* قاب بیرونی خیلی ظریف */
+  background: transparent;      /* بدون رنگ ثابت */
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+}
+
+/* این span فقط لیبل بود، کلاً مخفی می‌کنیم */
+.cdp-toggle-label {
+  display: none;
+}
+
+/* این دایره اصلی است که JS رنگش را عوض می‌کند */
+.cdp-toggle-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;          /* پایه: سفید */
+  border: 1px solid #d1d5db;
+  display: block;
+}
+
+/* هاور روی خود دکمه */
+.cdp-toggle-color:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 2px #facc1533;
+  transform: scale(1.05);
+}
+
+/* ===========================
+   Note bar پایین پنل راست
+   =========================== */
+
+.cdp-note-bar {
+  margin-top: auto;
+  padding: 10px 0 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cdp-note-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cdp-note-label {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* دکمه + برای Note */
+
+.cdp-note-add-btn {
+  flex: 1;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.cdp-note-add-btn:hover {
+  background: #fefce8;
+  border-color: #fbbf24;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+/* ===========================
+   MODALS – Size / Color / Note
+   (cdpSizeModal / cdpColorModal / cdpNoteModal)
+   =========================== */
+
+/* =========================
+   Note Modal Styles
+   ========================= */
+
+.cdp-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+}
+
+.cdp-modal[hidden] {
+    display: none !important;
+}
+
+.cdp-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10001;
+}
+
+.cdp-modal-panel {
+    position: relative;
+    z-index: 10002;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: auto;
+}
+body.dark-mode .cdp-modal-panel {
+  background: #23272f !important;
+  color: #fff !important;
+}
+body.dark-mode .cdp-modal-header,
+body.dark-mode .cdp-modal-footer {
+  background: #23272f !important;
+  color: #fff !important;
+  border-color: #343a46 !important;
+}
+body.dark-mode .cdp-modal-header h3,
+body.dark-mode .cdp-modal-footer button,
+body.dark-mode .cdp-modal-body,
+body.dark-mode .cdp-modal-body label,
+body.dark-mode .cdp-modal-body span {
+  color: #fff !important;
+}
+
+.cdp-modal-panel--note {
+    max-width: 600px;
+}
+
+.cdp-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.cdp-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.cdp-modal-close {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 20px;
+    color: #6b7280;
+}
+
+.cdp-modal-close:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.cdp-modal-body {
+    padding: 24px;
+}
+
+.cdp-modal-body--note {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cdp-note-text-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.cdp-note-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.cdp-note-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.cdp-note-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.cdp-modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.cdp-note-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.cdp-note-btn--secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.cdp-note-btn--secondary:hover {
+    background: #e5e7eb;
+}
+
+.cdp-note-btn--primary {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.cdp-note-btn--primary:hover {
+    background: #2563eb;
+}
+
+/* انیمیشن برای مودال */
+.cdp-modal {
+    animation: fadeIn 0.2s ease-out;
+}
+
+.cdp-modal-panel {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+
+
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+
+
+
+/* ===========================
+   SIZE MODAL – ستون عمودی
+   =========================== */
+
+/* ----- SIZE BUTTONS ----- */
+.cdp-modal-body--sizes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  padding: 28px 0;
+}
+
+.cdp-size-option {
+  width: 160px;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  border: 2px solid #d1d5db;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.cdp-size-option:hover {
+  background: #f1f5f9;
+  border-color: #111827;
+  color: #111827;
+  transform: translateY(-2px);
+}
+
+.cdp-size-option.active {
+  border-color: #facc15;
+  background: #fffbe6;
+  color: #111827;
+}
+
+/* ===============================
+   COLOR MODAL – circles only
+   =============================== */
+
+.cdp-color-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.cdp-color-modal[hidden] {
+  display: none;
+}
+
+.cdp-color-modal.is-open {
+  display: flex;
+}
+
+.cdp-color-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.cdp-color-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(900px, 96vw);
+  padding: 20px 24px 24px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+}
+
+.cdp-color-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cdp-color-modal-close {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+
+/* ردیف دایره‌های رنگ – چند ردیف */
+.cdp-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+/* هر گزینه رنگ */
+.cdp-color-option {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* خود دایره */
+.cdp-color-dot {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+}
+
+/* متن ایتالیایی – مخفی تا وقتی موس بیاد */
+.cdp-color-label {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translate(-50%, 6px);
+  background: #ffffff;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  color: #dc2626;          /* قرمز */
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+/* وقتی موس روی دکمه می‌آید، اسم رنگ ظاهر شود */
+.cdp-color-option:hover .cdp-color-label {
+  opacity: 1;
+}
+
+/* هاور خود دایره */
+.cdp-color-option:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+}
+
+/* انتخاب‌شده */
+.cdp-color-option--active {
+  border-color: #facc15;
+}
+
+.cdp-color-option--active .cdp-color-dot {
+  box-shadow: 0 0 0 2px #111827;
+}
+
+.cdp-modal-footer .cdp-note-btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+}
+
+
+.cdp-color-indicator {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  margin-left: 8px;
+}
+
+/* ===========================
+   NOTE MODAL
+   =========================== */
+
+.cdp-modal-panel--note {
+  max-width: 640px;
+}
+
+.cdp-modal-body--note {
+  padding: 16px 18px 6px;
+}
+
+.cdp-note-text-label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: #4b5563;
+}
+
+.cdp-note-textarea {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+
+.cdp-note-textarea:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 1px #fef3c7;
+}
+
+/* دکمه‌های Note */
+
+.cdp-note-btn {
+  min-width: 64px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.cdp-note-btn--primary {
+  background: #111827;
+  color: #f9fafb;
+}
+
+.cdp-note-btn--primary:hover {
+  background: #000000;
+}
+
+.cdp-note-btn--secondary {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+.cdp-note-btn--secondary:hover {
+  background: #f3f4f6;
+}
+
+/* ===================================
+   SIZE PANEL (same style as Settings)
+   =================================== */
+
+.cdp-size-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+}
+
+.cdp-size-panel[data-visible="true"] {
+  transform: translateX(0);
+}
+
+.cdp-size-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.cdp-size-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cdp-size-close {
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.cdp-size-close:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.cdp-size-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.cdp-size-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cdp-size-option {
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.cdp-size-option:hover {
+  background: #f9fafb;
+  border-color: #fbbf24;
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.cdp-size-option.active {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  color: #111827;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+/* Dark mode for Size Panel */
+body.dark-mode .cdp-size-panel {
+  background: #1a1a1a;
+}
+
+body.dark-mode .cdp-size-header {
+  background: #000000;
+  border-bottom-color: #333333;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-size-close {
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-size-close:hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-size-option {
+  background: #0a0a0a;
+  border-color: #333333;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-size-option:hover {
+  background: #1a1a1a;
+  border-color: #fbbf24;
+  transform: translateX(4px);
+}
+
+body.dark-mode .cdp-size-option.active {
+  background: #2a2000;
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+/* ===================================
+   COLOR PANEL (same style as Settings)
+   =================================== */
+
+.cdp-color-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 450px;
+  height: 100vh;
+  background: #ffffff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+}
+
+.cdp-color-panel[data-visible="true"] {
+  transform: translateX(0);
+}
+
+.cdp-color-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.cdp-color-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cdp-color-close {
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.cdp-color-close:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.cdp-color-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.cdp-color-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.cdp-color-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cdp-color-option:hover {
+  border-color: #fbbf24;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cdp-color-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+}
+
+.cdp-color-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+  font-weight: 500;
+}
+
+.cdp-color-option--active {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+/* Dark mode for Color Panel */
+body.dark-mode .cdp-color-panel {
+  background: #1a1a1a;
+}
+
+body.dark-mode .cdp-color-header {
+  background: #000000;
+  border-bottom-color: #333333;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-color-close {
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-color-close:hover {
+  background: #333333;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-color-option {
+  background: #0a0a0a;
+  border-color: #333333;
+}
+
+body.dark-mode .cdp-color-option:hover {
+  background: #1a1a1a;
+  border-color: #fbbf24;
+}
+
+body.dark-mode .cdp-color-label {
+  color: #cccccc;
+}
+
+body.dark-mode .cdp-color-option--active {
+  background: #2a2000;
+  border-color: #fbbf24;
+}
+
+/* ===============================
+   NOTE PANEL (Right Side)
+   =============================== */
+
+.cdp-note-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 500px;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
+
+.cdp-note-panel[data-visible="true"] {
+    transform: translateX(0);
+}
+
+.cdp-note-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.cdp-note-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cdp-note-close {
+    background: transparent;
+    border: none;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 20px;
+    color: #6b7280;
+}
+
+.cdp-note-close:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.cdp-note-body {
+    padding: 24px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.cdp-note-text-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.cdp-note-textarea {
+    flex: 1;
+    width: 100%;
+    min-height: 300px;
+    padding: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    line-height: 1.6;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.cdp-note-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.cdp-note-textarea::placeholder {
+    color: #9ca3af;
+}
+
+.cdp-note-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+
+.cdp-note-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cdp-note-btn--secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.cdp-note-btn--secondary:hover {
+    background: #e5e7eb;
+}
+
+.cdp-note-btn--primary {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.cdp-note-btn--primary:hover {
+    background: #2563eb;
+}
+
+/* Dark Mode - Note Panel */
+body.dark-mode .cdp-note-panel {
+    background: #000000;
+    box-shadow: -4px 0 20px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .cdp-note-header {
+    border-bottom-color: #333333;
+}
+
+body.dark-mode .cdp-note-header h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-note-close {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-note-close:hover {
+    background: #1a1a1a;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-note-text-label {
+    color: #d1d5db;
+}
+
+body.dark-mode .cdp-note-textarea {
+    background: #1a1a1a;
+    border-color: #333333;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-note-textarea:focus {
+    border-color: #3b82f6;
+}
+
+body.dark-mode .cdp-note-textarea::placeholder {
+    color: #6b7280;
+}
+
+body.dark-mode .cdp-note-footer {
+    border-top-color: #333333;
+}
+
+body.dark-mode .cdp-note-btn--secondary {
+    background: #1a1a1a;
+    color: #d1d5db;
+}
+
+body.dark-mode .cdp-note-btn--secondary:hover {
+    background: #262626;
+}
+
+/* ===============================
+   ACCOUNT PANEL
+   =============================== */
+
+.cdp-account-view {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.cdp-account-welcome {
+    text-align: center;
+    padding: 20px;
+}
+
+.cdp-account-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: #ffffff;
+}
+
+.cdp-account-welcome h4 {
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.cdp-account-welcome p {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+.cdp-account-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cdp-account-btn {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.cdp-account-btn--primary {
+    background: #3b82f6;
+    color: #ffffff;
+}
+
+.cdp-account-btn--primary:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.cdp-account-btn--secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.cdp-account-btn--secondary:hover {
+    background: #e5e7eb;
+}
+
+.cdp-account-btn--danger {
+    background: #ef4444;
+    color: #ffffff;
+}
+
+.cdp-account-btn--danger:hover {
+    background: #dc2626;
+}
+
+.cdp-account-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.cdp-account-feature {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.cdp-account-feature i {
+    font-size: 24px;
+    color: #3b82f6;
+}
+
+.cdp-account-feature span {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.cdp-account-profile {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 12px;
+    color: #ffffff;
+}
+
+.cdp-account-avatar {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.cdp-account-info h4 {
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.cdp-account-info p {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+.cdp-account-menu-btn {
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+}
+
+.cdp-account-menu-btn:hover {
+    background: #f9fafb;
+    border-color: #3b82f6;
+    transform: translateX(4px);
+}
+
+.cdp-account-menu-btn i:first-child {
+    width: 24px;
+    font-size: 18px;
+    color: #6b7280;
+}
+
+.cdp-account-menu-btn span {
+    flex: 1;
+    text-align: left;
+    font-weight: 500;
+}
+
+.cdp-account-menu-btn i:last-child {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+/* Dark Mode - Account Panel */
+body.dark-mode .cdp-account-welcome h4 {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-account-welcome p {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-account-btn--secondary {
+    background: #1a1a1a;
+    color: #d1d5db;
+}
+
+body.dark-mode .cdp-account-btn--secondary:hover {
+    background: #262626;
+}
+
+body.dark-mode .cdp-account-features {
+    border-top-color: #333333;
+}
+
+body.dark-mode .cdp-account-feature {
+    background: #1a1a1a;
+}
+
+body.dark-mode .cdp-account-feature span {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-account-menu-btn {
+    background: #0a0a0a;
+    border-color: #333333;
+    color: #d1d5db;
+}
+
+body.dark-mode .cdp-account-menu-btn:hover {
+    background: #1a1a1a;
+}
+
+.cdp-account-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 20px 0;
+}
+
+.cdp-account-divider::before,
+.cdp-account-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cdp-account-divider span {
+    padding: 0 16px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.cdp-account-social {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cdp-account-social-btn {
+    padding: 12px 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: #374151;
+}
+
+.cdp-account-social-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cdp-account-social-btn--google:hover {
+    border-color: #4285F4;
+    background: #f8fbff;
+}
+
+.cdp-account-social-btn--apple {
+    background: #000000;
+    color: #ffffff;
+    border-color: #000000;
+}
+
+.cdp-account-social-btn--apple:hover {
+    background: #1a1a1a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cdp-account-social-btn--apple i {
+    font-size: 20px;
+}
+
+/* Dark Mode - Social Login */
+body.dark-mode .cdp-account-divider::before,
+body.dark-mode .cdp-account-divider::after {
+    border-bottom-color: #333333;
+}
+
+body.dark-mode .cdp-account-divider span {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-account-social-btn {
+    background: #0a0a0a;
+    border-color: #333333;
+    color: #d1d5db;
+}
+
+body.dark-mode .cdp-account-social-btn:hover {
+    background: #1a1a1a;
+}
+
+body.dark-mode .cdp-account-social-btn--google:hover {
+    border-color: #4285F4;
+    background: #0a1929;
+}
+
+body.dark-mode .cdp-account-social-btn--apple {
+    background: #1a1a1a;
+    border-color: #333333;
+}
+
+body.dark-mode .cdp-account-social-btn--apple:hover {
+    background: #262626;
+}
+
+/* Dark Mode - Product Card & Layers */
+body.dark-mode .cdp-card {
+    background: #1a1a1a;
+    border-color: #333333;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .cdp-card-header {
+    border-bottom-color: #333333;
+}
+
+body.dark-mode .cdp-card-header h2 {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-label {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-product-name {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-size-btn {
+    background: #2a2a2a;
+    border-color: #444444;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-size-btn:hover {
+    background: #333333;
+    border-color: #555555;
+}
+
+body.dark-mode .cdp-color-name {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-toggle-color {
+    background: #333333;
+}
+
+body.dark-mode .cdp-toggle-knob {
+    background: #ffffff;
+}
+
+body.dark-mode .cdp-note-bar {
+    border-top-color: #333333;
+}
+
+body.dark-mode .cdp-note-label {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-note-add-btn {
+    background: #2a2a2a;
+    border-color: #444444;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-note-add-btn:hover {
+    background: #333333;
+    border-color: #555555;
+}
+

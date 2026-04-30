@@ -1,0 +1,27 @@
+@import url('./print.css');
+
+/* Ceramic Mug 11oz print windows */
+body.ceramic-mug-theme #boxFront {
+  top: 22%;
+  left: 11%;
+  width: 50%;
+  height: 58%;
+}
+
+body.ceramic-mug-theme #boxBack {
+  top: 22%;
+  left: 25%;
+  width: 50%;
+  height: 58%;
+}
+
+body.ceramic-mug-theme #boxRight {
+  top: 22%;
+  left: 39.5%;
+  width: 50%;
+  height: 58%;
+}
+
+body.ceramic-mug-theme #boxLeft {
+  display: none;
+}

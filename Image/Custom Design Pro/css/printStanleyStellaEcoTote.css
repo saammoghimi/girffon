@@ -1,0 +1,20 @@
+@import url('./print.css');
+
+body.stanley-stella-theme #boxFront {
+  top: 44%;
+  left: 33%;
+  width: 34%;
+  height: 45%;
+}
+
+body.stanley-stella-theme #boxBack {
+  top: 45%;
+  left: 33%;
+  width: 34%;
+  height: 45%;
+}
+
+body.stanley-stella-theme #boxRight,
+body.stanley-stella-theme #boxLeft {
+  display: none;
+}

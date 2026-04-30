@@ -1,0 +1,160 @@
+.cdp-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.cdp-welcome[data-visible="true"] {
+  display: flex;
+}
+
+.cdp-welcome-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.cdp-welcome-card {
+  position: relative;
+  width: min(580px, 92vw);
+  border-radius: 28px;
+  padding: 32px;
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  text-align: center;
+}
+
+body.dark-mode .cdp-welcome-card {
+  background: linear-gradient(145deg, #0f172a, #111827);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.45);
+}
+
+.cdp-welcome-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: inherit;
+  cursor: pointer;
+}
+
+
+.cdp-welcome-crest {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.cdp-welcome-crest img {
+  max-width: 120px;
+  height: auto;
+}
+
+.cdp-welcome-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+body.dark-mode .cdp-welcome-kicker {
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.cdp-welcome-body {
+  max-width: 420px;
+}
+
+.cdp-welcome-body h2 {
+  margin: 6px 0 8px;
+  font-size: 28px;
+}
+
+.cdp-welcome-desc {
+  margin: 0;
+  color: rgba(15, 23, 42, 0.75);
+  line-height: 1.6;
+}
+
+body.dark-mode .cdp-welcome-desc {
+  color: rgba(248, 250, 252, 0.8);
+}
+
+.cdp-welcome-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cdp-welcome-btn {
+  flex: 1 1 180px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  font-weight: 700;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.cdp-welcome-btn--ghost {
+  background: transparent;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+}
+
+body.dark-mode .cdp-welcome-btn--ghost {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cdp-welcome-btn--primary {
+  background: #d9a300;
+  color: #0f172a;
+  box-shadow: 0 10px 30px rgba(217, 163, 0, 0.35);
+}
+
+@media (max-width: 520px) {
+  .cdp-welcome-card {
+    width: 100%;
+    border-radius: 0;
+    min-height: 100vh;
+    padding: 56px 20px 32px;
+  }
+
+  .cdp-welcome-close {
+    top: 20px;
+    right: 20px;
+  }
+
+  .cdp-welcome-body {
+    max-width: 100%;
+  }
+
+  .cdp-welcome-actions {
+    flex-direction: column;
+  }
+}

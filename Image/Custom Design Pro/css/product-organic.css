@@ -1,0 +1,36 @@
+/* Organic Unisex T-Shirt page accents */
+body.organic-theme {
+    background: #ffffff;
+    color: #0f172a;
+}
+
+body.organic-theme.dark-mode {
+    background: radial-gradient(circle at top, rgba(250, 224, 120, 0.18), transparent 45%),
+                #0f172a;
+}
+
+.organic-theme .cdp-card--product {
+    border: 1px solid rgba(245, 222, 179, 0.4);
+    box-shadow: 0 15px 40px rgba(12, 18, 34, 0.45);
+}
+
+.organic-theme .cdp-product-name {
+    color: #fcd34d;
+    letter-spacing: 0.04em;
+}
+
+.organic-theme .cdp-view-btn.cdp-view-btn--active {
+    border-color: #eab308;
+    background: rgba(250, 204, 21, 0.15);
+    color: #fcd34d;
+}
+
+.organic-theme .cdp-toggle-color .cdp-toggle-knob {
+    background: linear-gradient(135deg, #fde68a, #f27329);
+}
+
+.organic-theme .cdp-color-option.active {
+    border-color: #facc15;
+    box-shadow: 0 6px 20px rgba(250, 204, 21, 0.3);
+}
+

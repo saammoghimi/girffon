@@ -1,0 +1,64 @@
+/* Flag Grid - same as icon grid */
+.cdp-flag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+}
+
+.cdp-flag-item {
+    width: 80px;
+    height: 60px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.cdp-flag-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+.cdp-flag-item:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.cdp-flag-item.cdp-flag-item--selected {
+    border-color: #3b82f6;
+    background: #dbeafe;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Flag Element on Canvas */
+.cdp-flag-element {
+    position: absolute;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 9999;
+    pointer-events: auto;
+}
+
+.cdp-flag-element:active {
+    cursor: grabbing;
+}
+
+.cdp-flag-element:hover {
+    outline: 2px dashed #3b82f6;
+    outline-offset: 4px;
+}
+
+.cdp-flag-element img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}

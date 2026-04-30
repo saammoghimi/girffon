@@ -1,0 +1,122 @@
+/*
+  Layer Settings Sidebar Panel
+  ===========================
+  This panel will be shown in the right sidebar instead of a modal.
+*/
+
+.cdp-layer-settings-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+  z-index: 12001;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+
+.cdp-layer-settings-panel[data-visible="true"] {
+  transform: translateX(0);
+}
+
+.cdp-layer-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.cdp-layer-settings-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cdp-layer-settings-close {
+  background: none;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.cdp-layer-settings-close:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.cdp-layer-settings-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.cdp-layer-settings-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.cdp-layer-settings-btn {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cdp-layer-settings-btn--primary {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.cdp-layer-settings-btn--primary:hover {
+  background: #2563eb;
+}
+
+.cdp-layer-settings-btn--danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.cdp-layer-settings-btn--danger:hover {
+  background: #b91c1c;
+}
+
+.cdp-layer-settings-opacity-group {
+  margin-top: 24px;
+}
+
+.cdp-layer-settings-opacity-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.cdp-layer-settings-opacity-group input[type="range"] {
+  width: 100%;
+}
+
+.cdp-layer-settings-opacity-group span {
+  margin-left: 12px;
+  font-size: 14px;
+  color: #374151;
+}

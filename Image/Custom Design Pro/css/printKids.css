@@ -1,0 +1,33 @@
+@import url('./print.css');
+
+/*
+ * Kids T-Shirt print overrides for tighter torso proportions.
+ */
+
+body.kids-theme #boxFront {
+  top: 19.5%;
+  left: 34%;
+  width: 32%;
+  height: 54%;
+}
+
+body.kids-theme #boxBack {
+  top: 20.5%;
+  left: 34.5%;
+  width: 31%;
+  height: 52%;
+}
+
+body.kids-theme #boxRight {
+  top: 52%;
+  left: 58%;
+  width: 14%;
+  height: 24%;
+}
+
+body.kids-theme #boxLeft {
+  top: 52%;
+  left: 28%;
+  width: 14%;
+  height: 24%;
+}

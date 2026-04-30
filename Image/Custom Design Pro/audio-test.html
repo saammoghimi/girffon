@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 0; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #2563eb; }
+        .status {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        ul { padding-left: 20px; }
+        li { margin: 8px 0; line-height: 1.6; }
+        code {
+            background: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🎵 Audio System Test Page</h1>
+        <p>Use this page to test if your audio files are correctly placed and working.</p>
+    </div>
+
+    <div class="test-box">
+        <h2>1️⃣ Background Music Test</h2>
+        <p>Test each music track:</p>
+        <button onclick="testTrack(1)">Track 1 - Ambient</button>
+        <button onclick="testTrack(2)">Track 2 - Upbeat</button>
+        <button onclick="testTrack(3)">Track 3 - Calm</button>
+        <button onclick="testTrack(4)">Track 4 - Electronic</button>
+        <button onclick="testTrack(5)">Track 5 - Jazz</button>
+        <button onclick="stopMusic()">⏹️ Stop</button>
+        
+        <div class="status" id="musicStatus">
+            Status: No track playing
+        </div>
+    </div>
+
+    <div class="test-box">
+        <h2>2️⃣ Sound Effects Test</h2>
+        <p>Test sound effects:</p>
+        <button onclick="testSound('click')">🖱️ Click Sound</button>
+        <button onclick="testSound('success')">✅ Success Sound</button>
+        <button onclick="testSound('error')">❌ Error Sound</button>
+        
+        <div class="status" id="soundStatus">
+            Status: No sound played
+        </div>
+    </div>
+
+    <div class="test-box">
+        <h2>3️⃣ File Checklist</h2>
+        <p>Make sure these files exist in your project:</p>
+        <ul>
+            <li><code>audio/music/track1.mp3</code> - Ambient Relaxing</li>
+            <li><code>audio/music/track2.mp3</code> - Upbeat Creative</li>
+            <li><code>audio/music/track3.mp3</code> - Calm Focus</li>
+            <li><code>audio/music/track4.mp3</code> - Electronic Groove</li>
+            <li><code>audio/music/track5.mp3</code> - Jazz Lounge</li>
+            <li><code>audio/sounds/click.mp3</code> - Button Click</li>
+            <li><code>audio/sounds/success.mp3</code> - Success Action</li>
+            <li><code>audio/sounds/error.mp3</code> - Error Alert</li>
+        </ul>
+    </div>
+
+    <div class="test-box">
+        <h2>4️⃣ Troubleshooting</h2>
+        <ul>
+            <li><strong>If no sound plays:</strong> Check if files exist in correct folders</li>
+            <li><strong>If you see errors:</strong> Open Console (F12) and check error messages</li>
+            <li><strong>File path issues:</strong> Make sure file names match exactly (track1.mp3, not Track1.mp3)</li>
+            <li><strong>Format issues:</strong> Files must be MP3 format</li>
+        </ul>
+    </div>
+
+    <script>
+        let currentAudio = null;
+
+        const tracks = {
+            1: 'audio/music/track1.mp3',
+            2: 'audio/music/track2.mp3',
+            3: 'audio/music/track3.mp3',
+            4: 'audio/music/track4.mp3',
+            5: 'audio/music/track5.mp3'
+        };
+
+        const sounds = {
+            click: 'audio/sounds/click.mp3',
+            success: 'audio/sounds/success.mp3',
+            error: 'audio/sounds/error.mp3'
+        };
+
+        function testTrack(trackNum) {
+            const statusDiv = document.getElementById('musicStatus');
+            
+            // Stop previous audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+            }
+
+            try {
+                currentAudio = new Audio(tracks[trackNum]);
+                currentAudio.volume = 0.5;
+                
+                currentAudio.addEventListener('canplaythrough', () => {
+                    statusDiv.innerHTML = `<span class="success">✅ Track ${trackNum} loaded successfully!</span><br>Playing...`;
+                });
+
+                currentAudio.addEventListener('error', (e) => {
+                    statusDiv.innerHTML = `<span class="error">❌ Error loading Track ${trackNum}</span><br>` +
+                        `File path: ${tracks[trackNum]}<br>` +
+                        `Make sure the file exists!`;
+                });
+
+                currentAudio.play();
+                statusDiv.innerHTML = `⏳ Loading Track ${trackNum}...<br>File: ${tracks[trackNum]}`;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        function stopMusic() {
+            const statusDiv = document.getElementById('musicStatus');
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio = null;
+                statusDiv.innerHTML = '<span class="success">⏹️ Music stopped</span>';
+            } else {
+                statusDiv.innerHTML = 'No music is playing';
+            }
+        }
+
+        function testSound(soundName) {
+            const statusDiv = document.getElementById('soundStatus');
+            
+            try {
+                const sound = new Audio(sounds[soundName]);
+                sound.volume = 0.7;
+                
+                sound.addEventListener('canplaythrough', () => {
+                    statusDiv.innerHTML = `<span class="success">✅ ${soundName}.mp3 loaded successfully!</span><br>Playing...`;
+                });
+
+                sound.addEventListener('error', (e) => {
+                    statusDiv.innerHTML = `<span class="error">❌ Error loading ${soundName}.mp3</span><br>` +
+                        `File path: ${sounds[soundName]}<br>` +
+                        `Make sure the file exists!`;
+                });
+
+                sound.play();
+                statusDiv.innerHTML = `⏳ Loading ${soundName}.mp3...<br>File: ${sounds[soundName]}`;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<span class="error">❌ Error: ${error.message}</span>`;
+            }
+        }
+
+        // Test on page load
+        window.addEventListener('load', () => {
+            console.log('🎵 Audio Test Page Loaded');
+            console.log('Music tracks:', tracks);
+            console.log('Sound effects:', sounds);
+        });
+    </script>
+</body>
+</html>

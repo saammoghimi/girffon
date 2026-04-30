@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GirffoN Catalog Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d1016;
+      --surface: #161b24;
+      --surface-2: #1f2734;
+      --line: rgba(255,255,255,0.1);
+      --text: #f5f7fb;
+      --muted: #aab2c0;
+      --gold: #c7a65b;
+      --shadow: 0 20px 50px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Inter", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(199,166,91,0.14), transparent 26%),
+        linear-gradient(180deg, #090c12 0%, #121723 100%);
+    }
+
+    .viewer-page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .viewer-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 20px;
+    }
+
+    .viewer-head h1 {
+      margin: 8px 0 10px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1;
+    }
+
+    .viewer-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(199,166,91,0.3);
+      background: rgba(199,166,91,0.12);
+      color: #e8cf95;
+      font-weight: 800;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .viewer-head p {
+      margin: 0;
+      max-width: 74ch;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .viewer-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .viewer-link,
+    .tool-btn,
+    .tool-btn-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(199,166,91,0.24);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      text-decoration: none;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .viewer-link:hover,
+    .tool-btn:hover,
+    .tool-btn-link:hover {
+      background: rgba(199,166,91,0.16);
+      border-color: rgba(199,166,91,0.4);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(18,23,35,0.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .page-jump-group input {
+      width: 78px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(199,166,91,0.28);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font: inherit;
+    }
+
+    .viewer-stage {
+      position: relative;
+      min-height: 72vh;
+      border-radius: 26px;
+      border: 1px solid rgba(199,166,91,0.2);
+      background: linear-gradient(180deg, rgba(11,14,20,0.94), rgba(23,28,38,0.96));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      padding: 24px;
+    }
+
+    .viewer-empty {
+      min-height: 56vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 32px;
+    }
+
+    .viewer-window {
+      display: grid;
+      place-items: center;
+      min-height: 100%;
+    }
+
+    #flipbook {
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .viewer-sheet {
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+      background: #fcf8ef;
+      color: #1d1e22;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .viewer-sheet__inner {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 14px;
+      height: 100%;
+    }
+
+    .viewer-sheet__eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(199,166,91,0.14);
+      color: #785e1d;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .viewer-sheet h2,
+    .viewer-sheet h3 {
+      margin: 0;
+      color: #191717;
+    }
+
+    .viewer-sheet p {
+      margin: 0;
+      color: #584f43;
+      line-height: 1.7;
+    }
+
+    .viewer-image-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+    }
+
+    .viewer-image-grid[data-count="1"] {
+      grid-template-columns: 1fr;
+    }
+
+    .viewer-image-grid[data-count="3"],
+    .viewer-image-grid[data-count="4"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .viewer-image-card {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .viewer-image-card img {
+      width: 100%;
+      height: 100%;
+      min-height: 260px;
+      max-height: 430px;
+      object-fit: contain;
+      border-radius: 14px;
+      background: #f3ecde;
+      border: 1px solid rgba(120,94,29,0.12);
+    }
+
+    .viewer-image-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #6b5c3b;
+      font-size: 0.84rem;
+      font-weight: 600;
+    }
+
+    .viewer-sheet__footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: #6b5c3b;
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .nav-arrows {
+      position: absolute;
+      inset: auto 18px 18px 18px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .arrow {
+      pointer-events: auto;
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      border: 1px solid rgba(199,166,91,0.24);
+      background: rgba(10,13,20,0.8);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 900px) {
+      .viewer-page { padding: 18px; }
+      .viewer-head { flex-direction: column; }
+      .viewer-stage { padding: 16px; }
+      .viewer-image-grid,
+      .viewer-image-grid[data-count="3"],
+      .viewer-image-grid[data-count="4"] { grid-template-columns: 1fr; }
+      .viewer-image-card img { min-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="viewer-page">
+    <header class="viewer-head">
+      <div>
+        <span id="viewerKicker" class="viewer-kicker">Catalog Viewer</span>
+        <h1 id="viewerTitle">GirffoN Catalog</h1>
+        <p id="viewerSubtitle">Interactive monthly catalog viewer powered by the shared GirffoN catalog state.</p>
+      </div>
+      <div class="viewer-actions">
+        <a class="viewer-link" href="catalog.html">Back to Catalog</a>
+      </div>
+    </header>
+
+    <section class="toolbar" aria-label="Catalog viewer toolbar">
+      <div class="toolbar-group" id="navGroup">
+        <button id="btnPrev" type="button" class="tool-btn" aria-label="Previous page">Prev</button>
+        <button id="btnNext" type="button" class="tool-btn" aria-label="Next page">Next</button>
+      </div>
+      <div class="toolbar-group page-jump-group" id="pageJumpGroup">
+        <label for="pageInput">Page</label>
+        <input id="pageInput" type="number" min="1" step="1" value="1" />
+        <span>/ <strong id="totalPages">1</strong></span>
+        <button id="btnGo" type="button" class="tool-btn">Go</button>
+      </div>
+      <div class="toolbar-group" id="zoomGroup">
+        <button id="btnZoomOut" type="button" class="tool-btn">- Zoom</button>
+        <button id="btnZoomIn" type="button" class="tool-btn">+ Zoom</button>
+        <button id="btnZoomReset" type="button" class="tool-btn">Reset</button>
+      </div>
+      <div class="toolbar-group" id="printGroup">
+        <button id="btnPrintPage" type="button" class="tool-btn">Print Page</button>
+        <button id="btnPrintFull" type="button" class="tool-btn">Print Full</button>
+      </div>
+      <div class="toolbar-group" id="downloadGroup">
+        <button id="btnDownloadPage" type="button" class="tool-btn">Download Page</button>
+        <a id="btnDownloadFull" href="#" class="tool-btn-link" download>Download Full PDF</a>
+      </div>
+    </section>
+
+    <section class="viewer-stage">
+      <div id="viewerEmpty" class="viewer-empty" hidden>
+        <div>
+          <h2>No pages available</h2>
+          <p>This catalog month has no visible pages yet. Open Catalog Edit and add content.</p>
+        </div>
+      </div>
+      <div class="viewer-window">
+        <div id="bookStage">
+          <div id="flipbook"></div>
+        </div>
+      </div>
+      <div class="nav-arrows" id="arrowGroup" aria-hidden="true">
+        <button id="arrowPrev" type="button" class="arrow">&#10094;</button>
+        <button id="arrowNext" type="button" class="arrow">&#10095;</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="Catalog/June2025/jquery.min.js"></script>
+  <script src="Catalog/June2025/turn.js"></script>
+  <script src="../Shared/girffon-catalog-store.js"></script>
+  <script>
+    (function () {
+      const store = window.GIRFFON_CATALOG_STORE;
+      const params = new URLSearchParams(window.location.search);
+      const requestedMonth = params.get('month');
+      const month = store.getMonth(requestedMonth) || store.getActiveMonths()[0] || null;
+      const pages = month ? month.pages.filter(function (page) { return page.visible !== false; }) : [];
+      const flipbookEl = document.getElementById('flipbook');
+      const pageInput = document.getElementById('pageInput');
+      const totalPagesNode = document.getElementById('totalPages');
+      const viewerEmpty = document.getElementById('viewerEmpty');
+      const btnPrev = document.getElementById('btnPrev');
+      const btnNext = document.getElementById('btnNext');
+      const btnGo = document.getElementById('btnGo');
+      const btnZoomOut = document.getElementById('btnZoomOut');
+      const btnZoomIn = document.getElementById('btnZoomIn');
+      const btnZoomReset = document.getElementById('btnZoomReset');
+      const btnPrintPage = document.getElementById('btnPrintPage');
+      const btnPrintFull = document.getElementById('btnPrintFull');
+      const btnDownloadPage = document.getElementById('btnDownloadPage');
+      const btnDownloadFull = document.getElementById('btnDownloadFull');
+      const arrowPrev = document.getElementById('arrowPrev');
+      const arrowNext = document.getElementById('arrowNext');
+      const zoomGroup = document.getElementById('zoomGroup');
+      const printGroup = document.getElementById('printGroup');
+      const downloadGroup = document.getElementById('downloadGroup');
+      const navGroup = document.getElementById('navGroup');
+      const pageJumpGroup = document.getElementById('pageJumpGroup');
+      const arrowGroup = document.getElementById('arrowGroup');
+      let turnReady = false;
+      let fallbackPage = Math.max(1, Number(month && month.flipbook && month.flipbook.defaultPage) || 1);
+      let zoom = 1;
+
+      function escapeHtml(value) {
+        return String(value == null ? '' : value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function buildPageMarkup(page, index) {
+        const images = (page.images || []).map(function (image) {
+          return '<div class="viewer-image-card">' +
+            '<img src="' + escapeHtml(image.src) + '" alt="' + escapeHtml(image.alt || page.title || ('Page ' + (index + 1))) + '" />' +
+            '<div class="viewer-image-meta"><span>' + escapeHtml(image.assignment || 'page') + '</span><span>' + escapeHtml(image.placement || 'full') + '</span></div>' +
+          '</div>';
+        }).join('');
+        const imageCount = Math.max(1, (page.images || []).length);
+        return '<div class="viewer-sheet"><div class="viewer-sheet__inner">' +
+          '<span class="viewer-sheet__eyebrow">' + escapeHtml(page.sectionTitle || ('Page ' + (index + 1))) + '</span>' +
+          '<div><h2>' + escapeHtml(page.title || ('Page ' + (index + 1))) + '</h2><h3>' + escapeHtml(page.subtitle || '') + '</h3></div>' +
+          '<div class="viewer-image-grid" data-count="' + imageCount + '">' + (images || '<div class="viewer-image-card"><img src="" alt="Empty page" /></div>') + '</div>' +
+          '<div class="viewer-sheet__footer"><span>' + escapeHtml(page.text || '') + '</span>' +
+          (page.buttonText && page.buttonLink ? '<a href="' + escapeHtml(page.buttonLink) + '" class="viewer-link">' + escapeHtml(page.buttonText) + '</a>' : '<span></span>') +
+          '</div></div></div>';
+      }
+
+      function setHeader() {
+        if (!month) return;
+        document.getElementById('viewerKicker').textContent = month.cover.kicker || 'Catalog Viewer';
+        document.getElementById('viewerTitle').textContent = month.cover.title || month.label;
+        document.getElementById('viewerSubtitle').textContent = month.cover.bodyText || month.cover.subtitle || '';
+      }
+
+      function triggerDownload(url, filename) {
+        if (!url) return;
+        const link = document.createElement('a');
+        link.href = url;
+        if (filename) link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      function pageAsset(pageNumber) {
+        const page = pages[pageNumber - 1];
+        return page && page.images && page.images[0] ? page.images[0].src : '';
+      }
+
+      function printAsset(url, title) {
+        if (!url) return;
+        const win = window.open('', '_blank', 'width=1100,height=780');
+        if (!win) return;
+        win.document.write('<!doctype html><html><head><title>' + title + '</title><style>html,body{margin:0;padding:0;background:#fff}img{display:block;width:100%;height:auto}</style></head><body><img src="' + url + '" alt="' + title + '"></body></html>');
+        win.document.close();
+        win.onload = function () {
+          win.focus();
+          win.print();
+        };
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function getCurrentPage() {
+        if (turnReady) {
+          return Number(window.jQuery('#flipbook').turn('page')) || 1;
+        }
+        return fallbackPage;
+      }
+
+      function updatePageUi(page) {
+        pageInput.value = String(page);
+      }
+
+      function resizeBook() {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const maxWidth = Math.max(300, Math.min(980, viewportWidth - 72));
+        const maxHeight = Math.max(360, viewportHeight - 250);
+        const width = Math.floor(maxWidth * zoom);
+        const height = Math.floor(Math.min(maxHeight, (width / 1.414)));
+        if (turnReady) {
+          window.jQuery('#flipbook').turn('size', width, height);
+        } else {
+          flipbookEl.style.width = width + 'px';
+          flipbookEl.style.height = height + 'px';
+        }
+      }
+
+      function renderFallback(page) {
+        Array.from(flipbookEl.children).forEach(function (node, index) {
+          node.style.display = index + 1 === page ? 'block' : 'none';
+        });
+        updatePageUi(page);
+        resizeBook();
+      }
+
+      function goToPage(page) {
+        const safePage = clamp(Number(page) || 1, 1, pages.length || 1);
+        if (turnReady) {
+          window.jQuery('#flipbook').turn('page', safePage);
+        } else {
+          fallbackPage = safePage;
+          renderFallback(safePage);
+        }
+      }
+
+      function goPrev() { goToPage(getCurrentPage() - 1); }
+      function goNext() { goToPage(getCurrentPage() + 1); }
+
+      function applyControls() {
+        const flipbook = month && month.flipbook ? month.flipbook : {};
+        zoomGroup.hidden = !flipbook.zoomEnabled;
+        printGroup.hidden = !(flipbook.printPageEnabled || flipbook.printFullEnabled);
+        btnPrintPage.hidden = !flipbook.printPageEnabled;
+        btnPrintFull.hidden = !flipbook.printFullEnabled;
+        navGroup.hidden = !flipbook.nextPrevEnabled;
+        arrowGroup.hidden = !flipbook.nextPrevEnabled;
+        pageJumpGroup.hidden = !flipbook.pageNumberDisplay;
+        downloadGroup.hidden = !(flipbook.pageDownloadEnabled || (month && month.pdf && month.pdf.fullPdfDownloadEnabled));
+        btnDownloadPage.hidden = !flipbook.pageDownloadEnabled;
+        btnDownloadFull.hidden = !(month && month.pdf && month.pdf.fullPdfDownloadEnabled && month.pdf.pdfUrl);
+        if (btnDownloadFull && month && month.pdf) {
+          btnDownloadFull.href = month.pdf.pdfUrl || '#';
+        }
+      }
+
+      function initializeBook() {
+        setHeader();
+        applyControls();
+        totalPagesNode.textContent = String(pages.length || 0);
+        pageInput.max = String(Math.max(1, pages.length || 1));
+        if (!month || !pages.length) {
+          viewerEmpty.hidden = false;
+          return;
+        }
+        viewerEmpty.hidden = true;
+        flipbookEl.innerHTML = pages.map(function (page, index) {
+          return '<div>' + buildPageMarkup(page, index) + '</div>';
+        }).join('');
+
+        if (window.jQuery && typeof window.jQuery('#flipbook').turn === 'function') {
+          try {
+            window.jQuery('#flipbook').turn({
+              width: 920,
+              height: 650,
+              autoCenter: true,
+              elevation: 40,
+              gradients: true,
+              display: 'single',
+              when: {
+                turning: function (_event, page) { updatePageUi(page); },
+                turned: function (_event, page) { updatePageUi(page); resizeBook(); }
+              }
+            });
+            turnReady = true;
+          } catch (_error) {
+            turnReady = false;
+          }
+        }
+
+        if (!turnReady) {
+          renderFallback(fallbackPage);
+        } else {
+          goToPage(fallbackPage);
+          resizeBook();
+        }
+      }
+
+      btnPrev.addEventListener('click', goPrev);
+      btnNext.addEventListener('click', goNext);
+      arrowPrev.addEventListener('click', goPrev);
+      arrowNext.addEventListener('click', goNext);
+      btnGo.addEventListener('click', function () { goToPage(pageInput.value); });
+      pageInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          goToPage(pageInput.value);
+        }
+      });
+      btnZoomIn.addEventListener('click', function () { zoom = Math.min(1.6, zoom + 0.1); resizeBook(); });
+      btnZoomOut.addEventListener('click', function () { zoom = Math.max(0.7, zoom - 0.1); resizeBook(); });
+      btnZoomReset.addEventListener('click', function () { zoom = 1; resizeBook(); });
+      btnPrintPage.addEventListener('click', function () { printAsset(pageAsset(getCurrentPage()), (month ? month.label : 'Catalog') + ' Page ' + getCurrentPage()); });
+      btnPrintFull.addEventListener('click', function () { if (month && month.pdf && month.pdf.pdfUrl) { window.open(month.pdf.pdfUrl, '_blank', 'noopener'); } });
+      btnDownloadPage.addEventListener('click', function () { triggerDownload(pageAsset(getCurrentPage()), (month ? month.slug : 'catalog') + '-page-' + getCurrentPage() + '.png'); });
+      window.addEventListener('resize', resizeBook);
+      initializeBook();
+    })();
+  </script>
+</body>
+</html>

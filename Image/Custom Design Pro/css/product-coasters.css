@@ -1,0 +1,33 @@
+body.coasters-theme {
+  background: radial-gradient(circle at 20% 15%, #fffdf8 0%, #f5ede1 42%, #e4d5c3 78%, #d5c4b1 100%);
+  color: #2e2416;
+}
+
+body.coasters-theme.dark-mode {
+  background: radial-gradient(circle at 30% 20%, rgba(9, 7, 5, 0.96) 0%, #050302 70%);
+  color: #f8f2e7;
+}
+
+.coasters-theme .cdp-card--product {
+  border: 1px solid rgba(93, 72, 45, 0.35);
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 22px 54px rgba(45, 28, 6, 0.18);
+}
+
+.coasters-theme .cdp-product-name {
+  color: #9a6220;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.coasters-theme .cdp-view-btn.cdp-view-btn--active {
+  border-color: rgba(154, 98, 32, 0.75);
+  background: rgba(154, 98, 32, 0.16);
+  color: #5f3b0d;
+}
+
+.coasters-theme .cdp-toggle-color .cdp-toggle-knob {
+  background: linear-gradient(135deg, #f8e7cc, #d2a666);
+  box-shadow: 0 4px 10px rgba(119, 78, 26, 0.25);
+}
+

@@ -1,0 +1,425 @@
+/* =========================
+   Products Modal Styles
+   ========================= */
+
+.cdp-products-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 11000;
+    display: none;
+}
+
+.cdp-products-modal[data-visible="true"] {
+    display: block;
+}
+
+.cdp-products-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.cdp-products-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 1200px;
+    height: 85vh;
+    display: flex;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+/* =========================
+   Dark Mode Styles
+   ========================= */
+body.dark-mode .cdp-products-backdrop {
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(6px);
+}
+
+body.dark-mode .cdp-products-container {
+    background: #1f2533;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.75);
+}
+
+body.dark-mode .cdp-products-sidebar {
+    background: #181d28;
+    border-right: 1px solid #2c3445;
+}
+
+body.dark-mode .cdp-products-sidebar-header {
+    background: #181d28;
+    border-bottom: 1px solid #2c3445;
+}
+
+body.dark-mode .cdp-products-sidebar-header h3,
+body.dark-mode .cdp-products-sidebar-header i {
+    color: #f1f5f9;
+}
+
+body.dark-mode .cdp-products-close-btn {
+    color: #cbd5f5;
+}
+
+body.dark-mode .cdp-products-close-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+body.dark-mode .cdp-products-categories {
+    background: transparent;
+}
+
+body.dark-mode .cdp-category-btn {
+    color: #e2e8f0;
+}
+
+body.dark-mode .cdp-category-btn i {
+    color: #94a3b8;
+}
+
+body.dark-mode .cdp-category-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+body.dark-mode .cdp-category-count {
+    background: rgba(148, 163, 184, 0.2);
+    color: #cbd5f5;
+}
+
+body.dark-mode .cdp-category-btn--active {
+    background: #d9a300 !important;
+    color: #111827 !important;
+}
+
+body.dark-mode .cdp-category-btn--active .cdp-category-count {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #111827 !important;
+}
+
+body.dark-mode .cdp-products-main-header {
+    background: #1d2431;
+    border-bottom: 1px solid #2c3445;
+}
+
+body.dark-mode .cdp-products-main-header h2 {
+    color: #f8fafc;
+}
+
+body.dark-mode .cdp-products-count {
+    background: #d9a300;
+    color: #1f1300;
+}
+
+body.dark-mode .cdp-products-grid {
+    background: #151a25;
+}
+
+body.dark-mode .cdp-products-grid::-webkit-scrollbar-thumb {
+    background: #30384c;
+}
+
+body.dark-mode .cdp-product-card {
+    background: #1f2533;
+    border-color: #2f374a;
+}
+
+body.dark-mode .cdp-product-card:hover {
+    border-color: #d9a300;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode .cdp-product-image {
+    background: #161b25;
+}
+
+body.dark-mode .cdp-product-name {
+    color: #f8fafc;
+}
+
+body.dark-mode .cdp-product-price {
+    color: #ffe08a;
+}
+
+/* =========================
+   Sidebar
+   ========================= */
+
+.cdp-products-sidebar {
+    width: 280px;
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.cdp-products-sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.cdp-products-sidebar-header h3 {
+    margin: 0;
+    font-size: calc(var(--cdp-font-scale, 1) * 18px);
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cdp-products-close-btn {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: calc(var(--cdp-font-scale, 1) * 18px);
+    color: #6b7280;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cdp-products-close-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+/* =========================
+   Categories - WITH SCROLL
+   ========================= */
+
+.cdp-products-categories {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px;
+}
+
+.cdp-products-categories::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cdp-products-categories::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cdp-products-categories::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.cdp-products-categories::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+.cdp-category-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: calc(var(--cdp-font-scale, 1) * 14px);
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+    text-align: left;
+}
+
+.cdp-category-btn:hover {
+    background: #f3f4f6;
+}
+
+.cdp-category-btn i {
+    width: 20px;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.cdp-category-name {
+    flex: 1;
+}
+
+.cdp-category-count {
+    padding: 2px 8px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    font-size: calc(var(--cdp-font-scale, 1) * 12px);
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.cdp-category-btn--active {
+    background: #d9a300 !important;
+    color: #fff !important;
+}
+
+.cdp-category-btn--active i {
+    color: #fff !important;
+}
+
+.cdp-category-btn--active .cdp-category-count {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+}
+
+/* =========================
+   Main Content
+   ========================= */
+
+.cdp-products-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.cdp-products-main-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.cdp-products-main-header h2 {
+    margin: 0;
+    font-size: calc(var(--cdp-font-scale, 1) * 20px);
+    font-weight: 600;
+    color: #111827;
+}
+
+.cdp-products-count {
+    padding: 4px 12px;
+    background: #d9a300;
+    border-radius: 12px;
+    font-size: calc(var(--cdp-font-scale, 1) * 13px);
+    font-weight: 500;
+    color: #fff;
+}
+
+/* =========================
+   Products Grid - WITH SCROLL
+   ========================= */
+
+.cdp-products-grid {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-auto-rows: min-content;
+    gap: 24px;
+    background: #fff;
+}
+
+.cdp-products-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.cdp-products-grid::-webkit-scrollbar-track {
+    background: #f9fafb;
+}
+
+.cdp-products-grid::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 4px;
+}
+
+.cdp-products-grid::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* =========================
+   Product Card
+   ========================= */
+
+.cdp-product-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: fit-content;
+}
+
+.cdp-product-card:hover {
+    border-color: #d9a300;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+
+.cdp-product-image {
+    width: 100%;
+    height: 200px;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.cdp-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.cdp-product-card:hover .cdp-product-image img {
+    transform: scale(1.05);
+}
+
+.cdp-product-info {
+    padding: 16px;
+}
+
+.cdp-product-name {
+    margin: 0 0 8px 0;
+    font-size: calc(var(--cdp-font-scale, 1) * 15px);
+    font-weight: 600;
+    color: #111827;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cdp-product-price {
+    margin: 0;
+    font-size: calc(var(--cdp-font-scale, 1) * 16px);
+    font-weight: 700;
+    color: #d9a300;
+}

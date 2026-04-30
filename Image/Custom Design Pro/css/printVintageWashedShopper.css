@@ -1,0 +1,21 @@
+@import url('./print.css');
+
+/* Vintage Washed Shopper print window */
+body.vintage-shopper-theme #boxFront {
+  top: 46%;
+  left: 28%;
+  width: 44%;
+  height: 40%;
+}
+
+body.vintage-shopper-theme #boxBack {
+  top: 46%;
+  left: 33%;
+  width: 34%;
+  height: 46%;
+}
+
+body.vintage-shopper-theme #boxRight,
+body.vintage-shopper-theme #boxLeft {
+  display: none;
+}

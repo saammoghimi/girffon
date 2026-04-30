@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GirffoN - Custom T-Shirt Design & Online Store</title>
+  <meta name="description" content="Design your own custom t-shirt with GirffoN. Create unique styles, upload designs, and order online with high-quality printing." />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="CSS/style.css" />
+  <link rel="stylesheet" href="CSS/Hero.css" />
+  <link rel="stylesheet" href="CSS/Catalog5botton.css" />
+  <link rel="stylesheet" href="CSS/Rel.css"/>
+  <link rel="stylesheet" href="CSS/SH.css"/>
+  <link rel="stylesheet" href="CSS/aboutcustom.css"/>
+  <link rel="stylesheet" href="CSS/Gifthh.css"/>
+  <link rel="stylesheet" href="CSS/anotherfile.css"/>
+  <link rel="stylesheet" href="CSS/settings-panel.css"/>
+  <link rel="stylesheet" href="CSS/locale-panel.css"/>
+  <link rel="stylesheet" href="CSS/account-panel.css"/>
+  <link rel="stylesheet" href="CSS/profile-page.css"/>
+  <link rel="stylesheet" href="CSS/CheckoutPage.css"/>
+  <style>
+    html, body {
+      height: 100%;
+      min-height: 100%;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .site-footer {
+      margin-top: auto;
+    }
+  </style>
+
+
+</head>
+<body class="profile-page">
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="top-bar-left"></div>
+
+    <div class="top-search">
+      <input type="text" placeholder="Search" />
+      <button><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+
+<div class="top-actions">
+
+  <!-- کره زمین + دلار -->
+  <a href="#" id="gfLocaleTrigger" class="icon-link" title="Language / Currency" aria-label="Open language and currency panel">
+    <i class="fa-solid fa-globe"></i>
+    <i class="fa-solid fa-dollar-sign"></i>
+  </a>
+
+  <!-- Account -->
+  <a href="#" id="gfAccountTrigger" aria-label="Open account panel"><i class="fa-solid fa-user" title="Account"></i> Account</a>
+
+  <!-- Cart -->
+  <a href="#" id="gfCartTrigger" class="icon-link" title="Cart" aria-label="Open cart">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span class="count-badge">0</span>
+  </a>
+
+  <!-- Heart -->
+  <a href="#" id="gfWishlistTrigger" class="icon-link" title="Wishlist" aria-label="Open wishlist">
+    <i class="fa-solid fa-heart"></i>
+    <span class="count-badge">0</span>
+  </a>
+
+  <!-- Settings -->
+<a href="#" id="gfSettingsTrigger" class="icon-link" title="Settings" aria-label="Open settings panel"><i class="fa-solid fa-sliders-h"></i></a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="main-header">    <div class="logo-area">
+      <img src="Image/Logo/Logo.png" alt="GirffoN Logo" />
+    </div>
+
+<nav class="main-nav">
+  <a href="index.html">HOME</a>
+  <a href="about.html">ABOUT</a>
+
+  <div class="menu-item">
+    <a href="#">SHOP</a>
+    <div class="menu-box">
+      <a href="men.html">MAN</a>
+      <a href="woman.html">WOMAN</a>
+      <a href="kids.html">KIDS & BABIES</a>
+      <a href="accessories.html">ACCESSORIES</a>
+      <a href="home-living.html">HOME & LIVING</a>
+    </div>
+  </div>
+
+  <div class="menu-item">
+    <a href="Image/Custom%20Design%20Pro/CustomDesignPro.html">CUSTOM DESIGN</a>
+    <div class="menu-box">
+      <a href="Image/Custom%20Design%20Pro/OrganicUnisexT-Shirt.html">MEN</a>
+      <a href="Image/Custom%20Design%20Pro/WomenPremiumT-Shirt.html">WOMEN</a>
+      <a href="Image/Custom%20Design%20Pro/KidsT-Shirt.html">KIDS</a>
+      <a href="Image/Custom%20Design%20Pro/BabyT-Shirt.html">NEONATI</a>
+      <a href="Image/Custom%20Design%20Pro/FlexfitCap.html">ACCESSORIES</a>
+      <a href="Image/Custom%20Design%20Pro/CushionCoverNatural.html">HOME & LIVING</a>
+    </div>
+  </div>
+
+  <a href="catalog.html">CATALOG</a>
+  <a href="#" data-gf-contact-trigger aria-label="Open contact form">CONTACT</a>
+</nav>
+<div class="header-spacer"></div>
+  </header>
+
+<main class="gf-account-shell">
+  <section class="gf-account-center" aria-label="Account center">
+    <section class="gf-account-hero">
+      <div class="gf-account-hero-panel">
+        <span class="gf-account-kicker"><i class="fa-solid fa-crown"></i> GirffoN Account Center</span>
+        <h1>Manage your profile, orders, style preferences, and saved details in one premium space.</h1>
+        <p>
+          This account page is designed like a luxury fashion service desk: clean, responsive, and built for personal details,
+          profile photo updates, order visibility, addresses, payment tools, and communication preferences.
+        </p>
+
+        <div class="gf-account-hero-actions">
+          <a class="gf-account-btn gf-account-btn-primary" href="#gfProfileDetails"><i class="fa-solid fa-user-pen"></i> Edit Profile</a>
+          <a class="gf-account-btn gf-account-btn-secondary" href="#gfRecentOrders"><i class="fa-solid fa-bag-shopping"></i> View Orders</a>
+        </div>
+
+        <div class="gf-account-stat-grid" aria-label="Account highlights">
+          <article class="gf-account-stat">
+            <strong>12</strong>
+            <span>Saved custom designs ready to reorder</span>
+          </article>
+          <article class="gf-account-stat">
+            <strong>4</strong>
+            <span>Orders shipped in the last 90 days</span>
+          </article>
+          <article class="gf-account-stat">
+            <strong>Gold</strong>
+            <span>Loyalty tier with priority support access</span>
+          </article>
+        </div>
+      </div>
+
+      <aside class="gf-account-hero-card" aria-label="Profile summary">
+        <div class="gf-account-profile-header-bar">
+          <span class="gf-account-eyebrow">Profile Header</span>
+          <a class="gf-account-btn gf-account-btn-secondary gf-account-profile-edit" href="#gfProfileDetails">
+            <i class="fa-solid fa-user-pen"></i> Edit Profile
+          </a>
+        </div>
+
+        <div class="gf-account-profile-head">
+          <div class="gf-account-avatar-wrap">
+            <img class="gf-account-avatar" data-gf-avatar-target src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3C/svg%3E" alt="Profile avatar preview">
+            <span class="gf-account-avatar-badge"><i class="fa-solid fa-star"></i></span>
+          </div>
+
+          <div class="gf-account-profile-meta">
+            <div class="gf-account-profile-badges">
+              <span class="gf-account-chip">Verified Account</span>
+              <span class="gf-account-chip gf-account-chip-loyalty"><i class="fa-solid fa-crown"></i> Gold Loyalty</span>
+            </div>
+            <h2>GirffoN Member</h2>
+            <a class="gf-account-profile-link" href="mailto:member@girffon.local">member@girffon.local</a>
+            <a class="gf-account-profile-link" href="tel:+390000000000">Add your phone number</a>
+            <p class="gf-account-member-since">Account details update here after sign-in.</p>
+          </div>
+        </div>
+
+        <div class="gf-account-mini-list gf-account-profile-details-grid">
+          <div class="gf-account-mini-item">
+            <span>Default market</span>
+            <strong>Italy / EUR</strong>
+          </div>
+          <div class="gf-account-mini-item">
+            <span>Preferred line</span>
+            <strong>Luxury Custom Apparel</strong>
+          </div>
+          <div class="gf-account-mini-item">
+            <span>Next delivery</span>
+            <strong>22 Apr 2026</strong>
+          </div>
+          <div class="gf-account-mini-item">
+            <span>Support tier</span>
+            <strong>Priority Concierge</strong>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="gf-account-grid">
+      <aside class="gf-account-sidebar" aria-label="Account navigation and completion">
+        <section class="gf-account-sidebar-card">
+          <h3 class="gf-account-subtitle">Account Navigation</h3>
+          <nav class="gf-account-nav" aria-label="Jump to account sections">
+            <a href="#gfProfileDetails" class="is-active"><i class="fa-solid fa-id-badge"></i> Profile Details</a>
+            <a href="#gfProfilePhoto"><i class="fa-solid fa-camera"></i> Profile Photo</a>
+            <a href="#gfRecentOrders"><i class="fa-solid fa-box-open"></i> Recent Orders</a>
+            <a href="#gfAddressBook"><i class="fa-solid fa-location-dot"></i> Address Book</a>
+            <a href="#gfPayments"><i class="fa-solid fa-credit-card"></i> Payments</a>
+            <a href="#gfPreferences"><i class="fa-solid fa-sliders"></i> Preferences</a>
+            <a href="#gfSecurity"><i class="fa-solid fa-shield-halved"></i> Security</a>
+            <a href="#gfMyDesigns"><i class="fa-solid fa-shirt"></i> My Designs</a>
+            <a href="#gfSavedItems"><i class="fa-solid fa-heart"></i> Saved Items</a>
+            <a href="#gfAccountTools"><i class="fa-solid fa-shield-heart"></i> Account Tools</a>
+          </nav>
+        </section>
+
+        <section class="gf-account-sidebar-card gf-account-completion">
+          <h3 class="gf-account-subtitle">Profile Completion</h3>
+          <div class="gf-account-progress" aria-hidden="true"><span></span></div>
+          <strong data-gf-profile-progress>84%</strong>
+          <p class="gf-account-note">Add a second phone number and backup shipping address to complete your account.</p>
+        </section>
+      </aside>
+
+      <div class="gf-account-content">
+        <section class="gf-account-banner">
+          <div>
+            <h3>Luxury service, but practical tools.</h3>
+            <p>Keep identity, billing, order history, and communication settings together in a single responsive dashboard.</p>
+          </div>
+
+          <div class="gf-account-banner-actions">
+            <button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-save><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+            <button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-reset><i class="fa-solid fa-rotate-left"></i> Reset Draft</button>
+          </div>
+        </section>
+
+        <section class="gf-account-benefits-box" aria-labelledby="gfExclusiveBenefitsTitle">
+          <div class="gf-account-benefits-head">
+            <span class="gf-account-eyebrow">Member Privileges</span>
+            <h3 id="gfExclusiveBenefitsTitle">Exclusive Member Benefits</h3>
+            <p>Premium access designed for GirffoN members who want earlier drops, more curated updates, and richer rewards.</p>
+          </div>
+
+          <div class="gf-account-benefits-grid">
+            <article class="gf-account-benefit-item">
+              <span class="gf-account-benefit-icon"><i class="fa-solid fa-star"></i></span>
+              <div>
+                <h4>Early Access to New Collections</h4>
+                <p>Preview and shop selected releases before the public launch window opens.</p>
+              </div>
+            </article>
+
+            <article class="gf-account-benefit-item">
+              <span class="gf-account-benefit-icon"><i class="fa-solid fa-envelope-open-text"></i></span>
+              <div>
+                <h4>Private Catalog Emails</h4>
+                <p>Receive curated catalog editions, premium edits, and insider collection highlights by email.</p>
+              </div>
+            </article>
+
+            <article class="gf-account-benefit-item">
+              <span class="gf-account-benefit-icon"><i class="fa-solid fa-gift"></i></span>
+              <div>
+                <h4>40% Birthday Discount</h4>
+                <p>Celebrate your special day with a generous member discount reserved for your birthday.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="gfProfileDetails" class="gf-account-section" aria-labelledby="gfProfileDetailsTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfProfileDetailsTitle">Personal Information</h3>
+              <p>Update your core account identity, contact information, address details, and localization preferences.</p>
+            </div>
+            <span class="gf-account-chip">Validation Ready</span>
+          </div>
+
+          <form id="gfAccountProfileForm" class="gf-account-form-grid" novalidate>
+            <div class="gf-account-field">
+              <label for="gfProfileFirstName">First Name</label>
+              <input id="gfProfileFirstName" name="firstName" type="text" autocomplete="given-name" placeholder="Enter your first name" required>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfileLastName">Last Name</label>
+              <input id="gfProfileLastName" name="lastName" type="text" autocomplete="family-name" placeholder="Enter your last name" required>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfileEmail">Email Address</label>
+              <input id="gfProfileEmail" name="email" type="email" autocomplete="email" placeholder="name@example.com" required>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfilePhone">Phone Number</label>
+              <input id="gfProfilePhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="Add your phone number" required>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfileBirthDate">Date of Birth</label>
+              <input id="gfProfileBirthDate" name="dateOfBirth" type="date" required>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfileGender">Gender</label>
+              <select id="gfProfileGender" name="gender" required>
+                <option value="" selected>Select gender</option>
+                <option>Male</option>
+                <option>Female</option>
+                <option>Non-binary</option>
+                <option>Prefer not to say</option>
+              </select>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfileCountry">Country</label>
+              <select id="gfProfileCountry" name="country" autocomplete="country-name" required>
+                <option value="" selected>Select country</option>
+                <option>Afghanistan</option>
+                <option>Albania</option>
+                <option>Algeria</option>
+                <option>Andorra</option>
+                <option>Angola</option>
+                <option>Antigua and Barbuda</option>
+                <option>Argentina</option>
+                <option>Armenia</option>
+                <option>Australia</option>
+                <option>Austria</option>
+                <option>Azerbaijan</option>
+                <option>Bahamas</option>
+                <option>Bahrain</option>
+                <option>Bangladesh</option>
+                <option>Barbados</option>
+                <option>Belarus</option>
+                <option>Belgium</option>
+                <option>Belize</option>
+                <option>Benin</option>
+                <option>Bhutan</option>
+                <option>Bolivia</option>
+                <option>Bosnia and Herzegovina</option>
+                <option>Botswana</option>
+                <option>Brazil</option>
+                <option>Brunei</option>
+                <option>Bulgaria</option>
+                <option>Burkina Faso</option>
+                <option>Burundi</option>
+                <option>Cabo Verde</option>
+                <option>Cambodia</option>
+                <option>Cameroon</option>
+                <option>Canada</option>
+                <option>Central African Republic</option>
+                <option>Chad</option>
+                <option>Chile</option>
+                <option>China</option>
+                <option>Colombia</option>
+                <option>Comoros</option>
+                <option>Congo</option>
+                <option>Costa Rica</option>
+                <option>Cote d'Ivoire</option>
+                <option>Croatia</option>
+                <option>Cuba</option>
+                <option>Cyprus</option>
+                <option>Czech Republic</option>
+                <option>Democratic Republic of the Congo</option>
+                <option>Denmark</option>
+                <option>Djibouti</option>
+                <option>Dominica</option>
+                <option>Dominican Republic</option>
+                <option>Ecuador</option>
+                <option>Egypt</option>
+                <option>El Salvador</option>
+                <option>Equatorial Guinea</option>
+                <option>Eritrea</option>
+                <option>Estonia</option>
+                <option>Eswatini</option>
+                <option>Ethiopia</option>
+                <option>Fiji</option>
+                <option>Finland</option>
+                <option>France</option>
+                <option>Gabon</option>
+                <option>Gambia</option>
+                <option>Georgia</option>
+                <option>Germany</option>
+                <option>Ghana</option>
+                <option>Greece</option>
+                <option>Grenada</option>
+                <option>Guatemala</option>
+                <option>Guinea</option>
+                <option>Guinea-Bissau</option>
+                <option>Guyana</option>
+                <option>Haiti</option>
+                <option>Honduras</option>
+                <option>Hungary</option>
+                <option>Iceland</option>
+                <option>India</option>
+                <option>Indonesia</option>
+                <option>Iran</option>
+                <option>Iraq</option>
+                <option>Ireland</option>
+                <option>Israel</option>
+                <option>Italy</option>
+                <option>Jamaica</option>
+                <option>Japan</option>
+                <option>Jordan</option>
+                <option>Kazakhstan</option>
+                <option>Kenya</option>
+                <option>Kiribati</option>
+                <option>Kuwait</option>
+                <option>Kyrgyzstan</option>
+                <option>Laos</option>
+                <option>Latvia</option>
+                <option>Lebanon</option>
+                <option>Lesotho</option>
+                <option>Liberia</option>
+                <option>Libya</option>
+                <option>Liechtenstein</option>
+                <option>Lithuania</option>
+                <option>Luxembourg</option>
+                <option>Madagascar</option>
+                <option>Malawi</option>
+                <option>Malaysia</option>
+                <option>Maldives</option>
+                <option>Mali</option>
+                <option>Malta</option>
+                <option>Marshall Islands</option>
+                <option>Mauritania</option>
+                <option>Mauritius</option>
+                <option>Mexico</option>
+                <option>Micronesia</option>
+                <option>Moldova</option>
+                <option>Monaco</option>
+                <option>Mongolia</option>
+                <option>Montenegro</option>
+                <option>Morocco</option>
+                <option>Mozambique</option>
+                <option>Myanmar</option>
+                <option>Namibia</option>
+                <option>Nauru</option>
+                <option>Nepal</option>
+                <option>Netherlands</option>
+                <option>New Zealand</option>
+                <option>Nicaragua</option>
+                <option>Niger</option>
+                <option>Nigeria</option>
+                <option>North Korea</option>
+                <option>North Macedonia</option>
+                <option>Norway</option>
+                <option>Oman</option>
+                <option>Pakistan</option>
+                <option>Palau</option>
+                <option>Palestine</option>
+                <option>Panama</option>
+                <option>Papua New Guinea</option>
+                <option>Paraguay</option>
+                <option>Peru</option>
+                <option>Philippines</option>
+                <option>Poland</option>
+                <option>Portugal</option>
+                <option>Qatar</option>
+                <option>Romania</option>
+                <option>Russia</option>
+                <option>Rwanda</option>
+                <option>Saint Kitts and Nevis</option>
+                <option>Saint Lucia</option>
+                <option>Saint Vincent and the Grenadines</option>
+                <option>Samoa</option>
+                <option>San Marino</option>
+                <option>Sao Tome and Principe</option>
+                <option>Saudi Arabia</option>
+                <option>Senegal</option>
+                <option>Serbia</option>
+                <option>Seychelles</option>
+                <option>Sierra Leone</option>
+                <option>Singapore</option>
+                <option>Slovakia</option>
+                <option>Slovenia</option>
+                <option>Solomon Islands</option>
+                <option>Somalia</option>
+                <option>South Africa</option>
+                <option>South Korea</option>
+                <option>South Sudan</option>
+                <option>Spain</option>
+                <option>Sri Lanka</option>
+                <option>Sudan</option>
+                <option>Suriname</option>
+                <option>Sweden</option>
+                <option>Switzerland</option>
+                <option>Syria</option>
+                <option>Tajikistan</option>
+                <option>Tanzania</option>
+                <option>Thailand</option>
+                <option>Timor-Leste</option>
+                <option>Togo</option>
+                <option>Tonga</option>
+                <option>Trinidad and Tobago</option>
+                <option>Tunisia</option>
+                <option>Turkey</option>
+                <option>Turkmenistan</option>
+                <option>Tuvalu</option>
+                <option>Uganda</option>
+                <option>Ukraine</option>
+                <option>United Arab Emirates</option>
+                <option>United Kingdom</option>
+                <option>United States</option>
+                <option>Uruguay</option>
+                <option>Uzbekistan</option>
+                <option>Vanuatu</option>
+                <option>Vatican City</option>
+                <option>Venezuela</option>
+                <option>Vietnam</option>
+                <option>Yemen</option>
+                <option>Zambia</option>
+                <option>Zimbabwe</option>
+              </select>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfileCity">City</label>
+              <input id="gfProfileCity" name="city" type="text" autocomplete="address-level2" placeholder="Add your city" required>
+            </div>
+
+            <div class="gf-account-field">
+              <label for="gfProfilePostalCode">Postal Code</label>
+              <input id="gfProfilePostalCode" name="postalCode" type="text" autocomplete="postal-code" inputmode="numeric" placeholder="Add your postal code" required>
+            </div>
+
+            <div class="gf-account-field gf-account-field-wide">
+              <label for="gfProfileAddress">Full Address</label>
+              <textarea id="gfProfileAddress" name="fullAddress" autocomplete="street-address" placeholder="Street, city, postal code, country" required></textarea>
+            </div>
+
+            <div class="gf-account-field gf-account-field-wide">
+              <label for="gfProfileLanguage">Preferred Language</label>
+              <select id="gfProfileLanguage" name="preferredLanguage" required>
+                <option value="" selected>Select language</option>
+                <option>English</option>
+                <option>Italiano</option>
+                <option>Français</option>
+                <option>Deutsch</option>
+                <option>Español</option>
+              </select>
+              <p class="gf-account-field-note">All fields are structured for validation and ready for future backend or local storage integration.</p>
+            </div>
+
+            <div class="gf-account-form-actions gf-account-field-wide">
+              <button type="submit" class="gf-account-btn gf-account-btn-primary" data-gf-save>
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+              </button>
+            </div>
+
+            <div class="gf-account-field-wide">
+              <div id="gfProfileSaveStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
+            </div>
+          </form>
+        </section>
+
+        <section id="gfProfilePhoto" class="gf-account-section" aria-labelledby="gfProfilePhotoTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfProfilePhotoTitle">Profile Photo</h3>
+              <p>Upload a clean square image for your account center, order records, and saved design dashboard.</p>
+            </div>
+          </div>
+
+          <div class="gf-account-upload-card">
+            <div class="gf-account-upload-preview" aria-hidden="true"><i class="fa-solid fa-camera"></i></div>
+
+            <div class="gf-account-upload-copy">
+              <label for="gfProfileAvatarInput">Choose a profile image</label>
+              <p class="gf-account-field-note">JPG, PNG, or WEBP.</p>
+              <input class="gf-account-upload-input" id="gfProfileAvatarInput" type="file" accept="image/*">
+              <div class="gf-account-upload-actions">
+                <label class="gf-account-btn gf-account-btn-primary" for="gfProfileAvatarInput"><i class="fa-solid fa-upload"></i> Upload Photo</label>
+                <button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-save><i class="fa-solid fa-check"></i> Apply Photo</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="gf-account-section" aria-labelledby="gfAccountSummaryTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfAccountSummaryTitle">Account Summary</h3>
+              <p>Track the essentials of your customer profile at a glance.</p>
+            </div>
+          </div>
+
+          <div class="gf-account-summary-grid">
+            <article class="gf-account-card">
+              <strong data-gf-payment-count>0</strong>
+              <span>Active payment methods</span>
+            </article>
+            <article class="gf-account-card">
+              <strong data-gf-address-count>1</strong>
+              <span>Saved delivery addresses</span>
+            </article>
+            <article class="gf-account-card">
+              <strong>7</strong>
+              <span>Wishlist pieces waiting for restock</span>
+            </article>
+          </div>
+        </section>
+
+        <section id="gfRecentOrders" class="gf-account-section" aria-labelledby="gfRecentOrdersTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfRecentOrdersTitle">Order History Preview</h3>
+              <p>A premium snapshot of your latest GirffoN orders, with quick status visibility and detail access.</p>
+            </div>
+            <div class="gf-account-section-actions">
+              <button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-action="download-invoices">Download Invoices</button>
+              <button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-action="track-latest-order">Track Package</button>
+            </div>
+          </div>
+
+          <div class="gf-account-orders">
+            <article class="gf-account-order-card">
+              <span class="gf-account-order-kicker">Recent Order</span>
+              <div class="gf-account-order-top">
+                <div>
+                  <h4>GF-20481</h4>
+                  <p class="gf-account-order-meta">16 Apr 2026</p>
+                </div>
+                <span class="gf-account-order-status is-progress">In Transit</span>
+              </div>
+              <div class="gf-account-order-summary">
+                <div class="gf-account-order-detail"><span>Order Number</span><strong>GF-20481</strong></div>
+                <div class="gf-account-order-detail"><span>Date</span><strong>16 Apr 2026</strong></div>
+                <div class="gf-account-order-detail"><span>Total Amount</span><strong>EUR184.00</strong></div>
+              </div>
+              <p>Premium custom hoodie, printed tote, and eco packaging bundle.</p>
+              <div class="gf-account-order-line"><span>Status</span><strong>Courier confirmed for delivery</strong></div>
+              <div class="gf-account-address-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary">View Details</button></div>
+            </article>
+
+            <article class="gf-account-order-card">
+              <span class="gf-account-order-kicker">Recent Order</span>
+              <div class="gf-account-order-top">
+                <div>
+                  <h4>GF-20312</h4>
+                  <p class="gf-account-order-meta">28 Mar 2026</p>
+                </div>
+                <span class="gf-account-order-status is-delivered">Delivered</span>
+              </div>
+              <div class="gf-account-order-summary">
+                <div class="gf-account-order-detail"><span>Order Number</span><strong>GF-20312</strong></div>
+                <div class="gf-account-order-detail"><span>Date</span><strong>28 Mar 2026</strong></div>
+                <div class="gf-account-order-detail"><span>Total Amount</span><strong>EUR96.00</strong></div>
+              </div>
+              <p>Women premium t-shirt set with custom sleeve detail.</p>
+              <div class="gf-account-order-line"><span>Status</span><strong>Delivered successfully</strong></div>
+              <div class="gf-account-address-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary">View Details</button></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="gfAddressBook" class="gf-account-section" aria-labelledby="gfAddressBookTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfAddressBookTitle">Shipping Addresses</h3>
+              <p>Manage your delivery destinations with a clean premium layout built for fast checkout and reliable shipping.</p>
+            </div>
+            <div class="gf-account-section-actions">
+              <button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-add-address><i class="fa-solid fa-plus"></i> Add New Address</button>
+            </div>
+          </div>
+
+          <div class="gf-account-addresses" data-gf-addresses>
+            <article class="gf-account-address">
+              <div class="gf-account-address-top"><div><h4 data-gf-primary-address-name>Primary Recipient</h4><p>Primary Shipping Address</p></div><span class="gf-account-chip">Default</span></div>
+              <div class="gf-account-address-meta">
+                <div class="gf-account-address-row"><span>Phone Number</span><strong data-gf-primary-address-phone>Add phone number</strong></div>
+                <div class="gf-account-address-row"><span>Country</span><strong data-gf-primary-address-country>Select country</strong></div>
+                <div class="gf-account-address-row"><span>City</span><strong data-gf-primary-address-city>Add your city</strong></div>
+                <div class="gf-account-address-row"><span>Postal Code</span><strong data-gf-primary-address-postal>Add postal code</strong></div>
+              </div>
+              <p class="gf-account-address-full" data-gf-primary-address-full>Save a delivery address to complete your local profile.</p>
+              <div class="gf-account-address-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-action="edit-primary-address">Edit</button><button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-action="duplicate-primary-address">Duplicate</button></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="gfPayments" class="gf-account-section" aria-labelledby="gfPaymentsTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfPaymentsTitle">Payment Methods</h3>
+              <p>Manage saved cards and billing methods with a secure, premium e-commerce payment experience.</p>
+            </div>
+            <div class="gf-account-section-actions">
+              <button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-add-payment><i class="fa-solid fa-plus"></i> Add New Payment</button>
+            </div>
+          </div>
+
+          <div class="gf-account-payment-grid" data-gf-payment-grid>
+            <article class="gf-account-payment-card gf-account-payment-card-featured">
+              <div class="gf-account-payment-visual"><span class="gf-account-payment-brand">VISA</span><span class="gf-account-payment-lock"><i class="fa-solid fa-lock"></i> Secure</span></div>
+              <div class="gf-account-payment-top"><strong>Visa ending 4281</strong><span class="gf-account-chip">Primary</span></div>
+              <div class="gf-account-payment-meta">
+                <div class="gf-account-payment-row"><span>Cardholder</span><strong data-gf-primary-cardholder>Primary account holder</strong></div>
+                <div class="gf-account-payment-row"><span>Expires</span><strong>11/28</strong></div>
+                <div class="gf-account-payment-row"><span>Billing Method</span><strong>Personal Card</strong></div>
+              </div>
+              <div class="gf-account-address-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary">Edit Card</button><button type="button" class="gf-account-btn gf-account-btn-secondary">Set Billing</button></div>
+            </article>
+
+            <article class="gf-account-payment-card">
+              <div class="gf-account-payment-visual gf-account-payment-visual-soft"><span class="gf-account-payment-brand">MC</span><span class="gf-account-payment-lock"><i class="fa-solid fa-shield-halved"></i> Verified</span></div>
+              <div class="gf-account-payment-top"><strong>Mastercard ending 1194</strong><span class="gf-account-chip">Business</span></div>
+              <div class="gf-account-payment-meta">
+                <div class="gf-account-payment-row"><span>Cardholder</span><strong>GirffoN Studio</strong></div>
+                <div class="gf-account-payment-row"><span>Expires</span><strong>06/27</strong></div>
+                <div class="gf-account-payment-row"><span>Billing Method</span><strong>Business Billing</strong></div>
+              </div>
+              <div class="gf-account-address-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary">Edit Card</button><button type="button" class="gf-account-btn gf-account-btn-secondary">Use for Orders</button></div>
+            </article>
+          </div>
+        </section>
+
+        <section id="gfPreferences" class="gf-account-section gf-account-communication-section" aria-labelledby="gfPreferencesTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfPreferencesTitle">Communication Preferences</h3>
+              <p>Choose which premium updates, catalog drops, and customer messages GirffoN should send to you.</p>
+            </div>
+            <span class="gf-account-chip">Luxury Notifications</span>
+          </div>
+
+          <div class="gf-account-communication-intro"><p>Fine-tune every message channel with a polished preference center built for a luxury fashion experience.</p></div>
+
+          <article class="gf-account-birthday-card" aria-labelledby="gfBirthdayGiftTitle">
+            <div class="gf-account-birthday-icon" aria-hidden="true"><i class="fa-solid fa-gift"></i></div>
+            <div class="gf-account-birthday-content">
+              <div class="gf-account-birthday-copy">
+                <h4 id="gfBirthdayGiftTitle">Birthday Gift</h4>
+                <p>Add your birthday and receive a 40% discount on your special day.</p>
+              </div>
+              <div class="gf-account-birthday-form">
+                <label class="gf-account-birthday-label" for="gfBirthdayGiftDate">Birthday Date</label>
+                <div class="gf-account-birthday-actions">
+                  <input id="gfBirthdayGiftDate" class="gf-account-birthday-input" type="date" name="birthdayGiftDate">
+                  <button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-save data-gf-save-birthday>
+                    <i class="fa-solid fa-cake-candles"></i> Save Birthday
+                  </button>
+                </div>
+                <div id="gfBirthdaySaveStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="gf-account-catalog-card" aria-labelledby="gfCatalogSubscribeTitle">
+            <div class="gf-account-catalog-copy">
+              <span class="gf-account-eyebrow gf-account-eyebrow-light">New Collection</span>
+              <h4 id="gfCatalogSubscribeTitle">Collection and Catalog Subscription</h4>
+              <p>Receive our latest catalog, new arrivals, and exclusive offers by email.</p>
+            </div>
+
+            <form id="gfCatalogSubscriptionForm" class="gf-account-catalog-form" novalidate>
+              <label class="gf-account-catalog-label" for="gfCatalogSubscribeEmail">Email Address</label>
+              <div class="gf-account-catalog-actions">
+                <input id="gfCatalogSubscribeEmail" class="gf-account-catalog-input" name="catalogSubscriptionEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
+                <button type="submit" class="gf-account-btn gf-account-btn-primary"><i class="fa-solid fa-envelope-open-text"></i> Subscribe</button>
+              </div>
+              <div id="gfCatalogSubscribeStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
+            </form>
+          </article>
+
+          <article class="gf-account-test-card" aria-labelledby="gfTestEmailTitle">
+            <div class="gf-account-catalog-copy">
+              <span class="gf-account-eyebrow">Preview Tool</span>
+              <h4 id="gfTestEmailTitle">Test Email</h4>
+              <p>Preview how GirffoN email messages can appear for the current account before delivery tools are added.</p>
+            </div>
+
+            <form id="gfTestEmailForm" class="gf-account-catalog-form" novalidate>
+              <label class="gf-account-catalog-label" for="gfTestEmailInput">Email Address</label>
+              <div class="gf-account-catalog-actions">
+                <input id="gfTestEmailInput" class="gf-account-catalog-input" name="testEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
+                <button type="submit" class="gf-account-btn gf-account-btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Test Email</button>
+              </div>
+              <div id="gfTestEmailStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
+            </form>
+          </article>
+
+          <div class="gf-account-cards">
+            <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Promotional Emails</strong><p class="gf-account-note">Exclusive campaigns, featured collections, and premium studio announcements.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle promotional emails" data-default-state="true" data-gf-pref-key="promotionalEmails"></button></div></article>
+            <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Catalog Emails</strong><p class="gf-account-note">Seasonal lookbooks, new catalog releases, and curated product highlights.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle catalog emails" data-default-state="true" data-gf-pref-key="catalogEmails"></button></div></article>
+            <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Birthday Discount Emails</strong><p class="gf-account-note">Receive annual birthday perks, private codes, and celebratory member offers.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle birthday discount emails" data-default-state="true" data-gf-pref-key="birthdayDiscountEmails"></button></div></article>
+            <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Order Updates</strong><p class="gf-account-note">Important order confirmations, payment checks, shipping milestones, and delivery events.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle order updates" data-default-state="true" data-gf-pref-key="orderUpdates"></button></div></article>
+            <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>SMS Notifications</strong><p class="gf-account-note">Short mobile alerts for urgent delivery windows, courier changes, and service messages.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="false" aria-label="Toggle SMS notifications" data-default-state="false" data-gf-pref-key="smsNotifications"></button></div></article>
+          </div>
+        </section>
+
+        <section id="gfSecurity" class="gf-account-section gf-account-security-section" aria-labelledby="gfSecurityTitle">
+          <div class="gf-account-section-head">
+            <div>
+              <h3 id="gfSecurityTitle">Security</h3>
+              <p>Protect your GirffoN account with trusted controls, clear session visibility, and careful account actions.</p>
+            </div>
+            <span class="gf-account-chip">Account Protection</span>
+          </div>
+
+          <div class="gf-account-security-grid">
+            <article class="gf-account-security-card gf-account-security-card-primary">
+              <div class="gf-account-security-top"><div><h4>Change Password</h4><p class="gf-account-note">Refresh your password regularly to keep account access secure.</p></div><button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-save data-gf-action="change-password"><i class="fa-solid fa-key"></i> Change Password</button></div>
+            </article>
+            <article class="gf-account-security-card"><div class="gf-account-toggle-row"><div><h4>Two-Factor Authentication</h4><p class="gf-account-note">Add a second verification step for sign-ins and sensitive account changes.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle two-factor authentication" data-default-state="true" data-gf-pref-key="twoFactorEnabled"></button></div></article>
+          </div>
+          <div id="gfSecuritySaveStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
+
+          <div class="gf-account-security-layout">
+            <article class="gf-account-security-panel">
+              <div class="gf-account-security-panel-head"><h4>Login Activity</h4><span class="gf-account-chip">Monitored</span></div>
+              <div class="gf-account-security-stats">
+                <div class="gf-account-security-stat"><strong data-gf-active-devices>1</strong><span>Active devices</span></div>
+                <div class="gf-account-security-stat"><strong data-gf-last-signin>Local</strong><span>Latest verified sign-in</span></div>
+                <div class="gf-account-security-stat"><strong data-gf-security-location>Profile location pending</strong><span>Current secure location</span></div>
+              </div>
+            </article>
+            <article class="gf-account-security-panel">
+              <div class="gf-account-security-panel-head"><h4>Recent Sessions</h4><span class="gf-account-chip">Live View</span></div>
+              <div class="gf-account-session-list" role="list" data-gf-session-list>
+                <div class="gf-account-session-item" role="listitem"><div><strong>Current account session</strong><p class="gf-account-note" data-gf-current-session>Sign in to load your latest secure session details.</p></div><span class="gf-account-session-badge is-current">Pending</span></div>
+              </div>
+            </article>
+          </div>
+
+          <article class="gf-account-security-danger"><div><h4>Delete Account</h4><p class="gf-account-note">This removes your saved profile data, design drafts, and account history from this experience.</p></div><button type="button" class="gf-account-btn gf-account-btn-danger"><i class="fa-solid fa-triangle-exclamation"></i> Delete Account</button></article>
+        </section>
+
+        <section id="gfMyDesigns" class="gf-account-section gf-account-designs-section" aria-labelledby="gfMyDesignsTitle">
+          <div class="gf-account-section-head"><div><h3 id="gfMyDesignsTitle">My Designs</h3><p>Review your saved custom t-shirt concepts, reopen drafts, or duplicate ideas for your next order.</p></div><span class="gf-account-chip">Saved Studio</span></div>
+          <div class="gf-account-designs-grid">
+            <article class="gf-account-design-card"><div class="gf-account-design-thumb gf-account-design-thumb-one" aria-hidden="true"><span class="gf-account-design-shirt"></span><span class="gf-account-design-mark"></span></div><div class="gf-account-design-body"><h4>Monogram Gold Signature</h4><p class="gf-account-note">Saved on 18 Apr 2026</p><div class="gf-account-design-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary">Edit</button><button type="button" class="gf-account-btn gf-account-btn-secondary">Duplicate</button><button type="button" class="gf-account-btn gf-account-btn-danger">Delete</button></div></div></article>
+            <article class="gf-account-design-card"><div class="gf-account-design-thumb gf-account-design-thumb-two" aria-hidden="true"><span class="gf-account-design-shirt"></span><span class="gf-account-design-mark"></span></div><div class="gf-account-design-body"><h4>Minimal Paris Atelier Tee</h4><p class="gf-account-note">Saved on 12 Apr 2026</p><div class="gf-account-design-actions"><button type="button" class="gf-account-btn gf-account-btn-secondary">Edit</button><button type="button" class="gf-account-btn gf-account-btn-secondary">Duplicate</button><button type="button" class="gf-account-btn gf-account-btn-danger">Delete</button></div></div></article>
+          </div>
+        </section>
+
+        <section id="gfSavedItems" class="gf-account-section gf-account-saved-section" aria-labelledby="gfSavedItemsTitle">
+          <div class="gf-account-section-head"><div><h3 id="gfSavedItemsTitle">Wishlist and Saved Items</h3><p>Keep your favorite products close with a luxury e-commerce view of saved pieces, prices, and stock availability.</p></div><span class="gf-account-chip">Curated Favorites</span></div>
+          <div class="gf-account-saved-grid">
+            <article class="gf-account-saved-card"><img class="gf-account-saved-image" src="Cart/products/tshirt-men/Men france/Bk/400.jpg" alt="Black signature t-shirt"><div class="gf-account-saved-body"><div class="gf-account-saved-top"><h4>Signature Black Tee</h4><span class="gf-account-stock-badge is-in-stock">In Stock</span></div><p class="gf-account-saved-price">EUR39.00</p><div class="gf-account-saved-actions"><button type="button" class="gf-account-btn gf-account-btn-primary">Add to Cart</button><button type="button" class="gf-account-btn gf-account-btn-secondary">Remove</button></div></div></article>
+            <article class="gf-account-saved-card"><img class="gf-account-saved-image" src="Cart/products/tshirt-women/Women italy/Wh/400.jpg" alt="White premium women t-shirt"><div class="gf-account-saved-body"><div class="gf-account-saved-top"><h4>Women Premium White</h4><span class="gf-account-stock-badge is-low-stock">Low Stock</span></div><p class="gf-account-saved-price">EUR42.00</p><div class="gf-account-saved-actions"><button type="button" class="gf-account-btn gf-account-btn-primary">Add to Cart</button><button type="button" class="gf-account-btn gf-account-btn-secondary">Remove</button></div></div></article>
+          </div>
+        </section>
+
+        <section id="gfAccountTools" class="gf-account-toolbox" aria-labelledby="gfAccountToolsTitle">
+          <div class="gf-account-section-head"><div><h3 id="gfAccountToolsTitle">Account Tools</h3><p>Quick access to the essential GirffoN account areas in a premium, easy-to-scan dashboard.</p></div><span class="gf-account-chip">Quick Actions</span></div>
+          <div class="gf-account-tools">
+            <article class="gf-account-tool"><span class="gf-account-tool-icon"><i class="fa-solid fa-user-gear"></i></span><h4>Manage Account</h4><p>Review login details, profile settings, and personal account controls.</p><a href="#gfProfileDetails" class="gf-account-tool-link">Open Tool <i class="fa-solid fa-arrow-right"></i></a></article>
+            <article class="gf-account-tool"><span class="gf-account-tool-icon"><i class="fa-solid fa-folder-open"></i></span><h4>My Designs</h4><p>Reopen saved artwork projects, drafts, and personalized product concepts.</p><a href="#gfMyDesigns" class="gf-account-tool-link">Open Tool <i class="fa-solid fa-arrow-right"></i></a></article>
+            <article class="gf-account-tool"><span class="gf-account-tool-icon"><i class="fa-solid fa-clock-rotate-left"></i></span><h4>Order History</h4><p>Check previous purchases, shipment records, and reorder-ready items.</p><a href="#gfRecentOrders" class="gf-account-tool-link">Open Tool <i class="fa-solid fa-arrow-right"></i></a></article>
+            <article class="gf-account-tool"><span class="gf-account-tool-icon"><i class="fa-solid fa-credit-card"></i></span><h4>Payment Methods</h4><p>Manage your saved cards, billing preferences, and checkout options.</p><a href="#gfPayments" class="gf-account-tool-link">Open Tool <i class="fa-solid fa-arrow-right"></i></a></article>
+            <article class="gf-account-tool"><span class="gf-account-tool-icon"><i class="fa-solid fa-location-dot"></i></span><h4>Shipping Addresses</h4><p>Update primary destinations, delivery notes, and alternate addresses.</p><a href="#gfAddressBook" class="gf-account-tool-link">Open Tool <i class="fa-solid fa-arrow-right"></i></a></article>
+            <article class="gf-account-tool"><span class="gf-account-tool-icon"><i class="fa-solid fa-heart"></i></span><h4>Wishlist</h4><p>Track your favorite designs and monitor pieces waiting for restock.</p><a href="#gfSavedItems" class="gf-account-tool-link">Open Tool <i class="fa-solid fa-arrow-right"></i></a></article>
+          </div>
+          <div class="gf-account-timeline" aria-label="Recent account activity">
+            <div class="gf-account-timeline-item"><span class="gf-account-timeline-dot"><i class="fa-solid fa-user-check"></i></span><div class="gf-account-timeline-card"><strong>Identity verified</strong><p class="gf-account-timeline-meta">19 Apr 2026 · Local profile baseline</p></div></div>
+            <div class="gf-account-timeline-item"><span class="gf-account-timeline-dot"><i class="fa-solid fa-credit-card"></i></span><div class="gf-account-timeline-card"><strong>Primary payment method updated</strong><p class="gf-account-timeline-meta">11 Apr 2026 · Secure checkout vault</p></div></div>
+          </div>
+        </section>
+
+        <div class="gf-account-savebar" aria-label="Sticky save bar">
+          <div>
+            <strong>Draft changes are ready.</strong>
+            <p>Review your profile, upload a photo, then save the current account setup.</p>
+          </div>
+          <div class="gf-account-banner-actions">
+            <button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-reset>Discard</button>
+            <button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-save>Save Account</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
+
+
+<!-- Settings Panel -->
+<aside id="gfSettingsPanel" class="gf-settings-panel" data-visible="false" aria-hidden="true">
+  <header class="gf-settings-header">
+    <h3>
+      <i class="fa-solid fa-gear"></i>
+      <span>Settings</span>
+    </h3>
+    <button type="button" class="gf-settings-close" aria-label="Close settings">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+
+  <div class="gf-settings-body">
+    <section class="gf-settings-section">
+      <h4 class="gf-settings-section-title">DISPLAY</h4>
+
+      <div class="gf-settings-item gf-settings-item-inline">
+        <div class="gf-settings-label">
+          <span class="gf-settings-label-text">Theme</span>
+          <span class="gf-settings-label-desc">Choose light or dark mode</span>
+        </div>
+        <div class="gf-toggle-group gf-theme-toggle" role="group" aria-label="Theme">
+          <button type="button" class="gf-toggle-btn active" data-setting="theme" data-value="light">
+            <i class="fa-solid fa-sun"></i>
+            <span>Light</span>
+          </button>
+          <button type="button" class="gf-toggle-btn" data-setting="theme" data-value="dark">
+            <i class="fa-solid fa-moon"></i>
+            <span>Dark</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="gf-settings-item gf-settings-item-inline">
+        <div class="gf-settings-label">
+          <span class="gf-settings-label-text">Font Size</span>
+          <span class="gf-settings-label-desc">Adjust the text size</span>
+        </div>
+        <div class="gf-toggle-group gf-font-toggle" role="group" aria-label="Font size">
+          <button type="button" class="gf-size-btn active" data-setting="font" data-value="small">Small</button>
+          <button type="button" class="gf-size-btn" data-setting="font" data-value="medium">Medium</button>
+          <button type="button" class="gf-size-btn" data-setting="font" data-value="large">Large</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="gf-settings-section">
+      <h4 class="gf-settings-section-title">AUDIO</h4>
+
+      <div class="gf-settings-item gf-settings-item-inline">
+        <div class="gf-settings-label">
+          <span class="gf-settings-label-text">Background Music</span>
+          <span class="gf-settings-label-desc">Play music while browsing</span>
+        </div>
+        <div class="gf-toggle-group" role="group" aria-label="Background music">
+          <button type="button" class="gf-toggle-btn active" data-setting="music" data-value="off">
+            <i class="fa-solid fa-volume-xmark"></i>
+            <span>Off</span>
+          </button>
+          <button type="button" class="gf-toggle-btn" data-setting="music" data-value="on">
+            <i class="fa-solid fa-volume-high"></i>
+            <span>On</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="gf-settings-item">
+        <div class="gf-settings-label">
+          <span class="gf-settings-label-text">Music Track</span>
+          <span class="gf-settings-label-desc">Choose the background track</span>
+        </div>
+        <select id="gfMusicTrack" class="gf-music-select" aria-label="Choose music track"></select>
+      </div>
+
+      <div class="gf-settings-item gf-settings-item-inline">
+        <div class="gf-settings-label">
+          <span class="gf-settings-label-text">Sound Effects</span>
+          <span class="gf-settings-label-desc">Play sounds for actions</span>
+        </div>
+        <div class="gf-toggle-group" role="group" aria-label="Sound effects">
+          <button type="button" class="gf-toggle-btn active" data-setting="sound" data-value="off">
+            <i class="fa-solid fa-bell-slash"></i>
+            <span>Off</span>
+          </button>
+          <button type="button" class="gf-toggle-btn" data-setting="sound" data-value="on">
+            <i class="fa-solid fa-bell"></i>
+            <span>On</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="gf-settings-item gf-settings-item-volume">
+        <div class="gf-settings-label">
+          <span class="gf-settings-label-text">Volume</span>
+          <span class="gf-settings-label-desc">Adjust the audio volume</span>
+        </div>
+        <div class="gf-volume-control">
+          <i class="fa-solid fa-volume-low"></i>
+          <input type="range" id="gfVolumeSlider" min="0" max="100" value="100" aria-label="Volume slider">
+          <span id="gfVolumeValue">100%</span>
+        </div>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<div id="gfSettingsOverlay" class="gf-settings-overlay" hidden></div>
+<audio id="gfBackgroundMusic" loop preload="none"></audio>
+
+<aside id="gfLocalePanel" class="gf-locale-panel" data-visible="false" aria-hidden="true">
+  <header class="gf-locale-header">
+    <h3>
+      <i class="fa-solid fa-globe"></i>
+      <span id="gfLocaleTitle">Language / Locale</span>
+    </h3>
+    <button type="button" class="gf-locale-close" aria-label="Close language and locale panel">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+
+  <div class="gf-locale-body">
+    <h4 class="gf-locale-subtitle" id="gfLocaleSubtitle">Select Country / Language</h4>
+
+    <div class="gf-locale-grid" role="listbox" aria-label="Country and language selector">
+      <button type="button" class="gf-locale-card" data-country="IT" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/it.svg" alt="Italy flag"></span>
+        <span class="gf-locale-name">Italy</span>
+        <span class="gf-locale-code">IT</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="DE" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/de.svg" alt="Germany flag"></span>
+        <span class="gf-locale-name">Germany</span>
+        <span class="gf-locale-code">DE</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="FR" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/fr.svg" alt="France flag"></span>
+        <span class="gf-locale-name">France</span>
+        <span class="gf-locale-code">FR</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="ES" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/es.svg" alt="Spain flag"></span>
+        <span class="gf-locale-name">Spain</span>
+        <span class="gf-locale-code">ES</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="NL" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/nl.svg" alt="Netherlands flag"></span>
+        <span class="gf-locale-name">Netherlands</span>
+        <span class="gf-locale-code">NL</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="PL" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/pl.svg" alt="Poland flag"></span>
+        <span class="gf-locale-name">Poland</span>
+        <span class="gf-locale-code">PL</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="SE" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/se.svg" alt="Sweden flag"></span>
+        <span class="gf-locale-name">Sweden</span>
+        <span class="gf-locale-code">SE</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="GB" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/gb.svg" alt="United Kingdom flag"></span>
+        <span class="gf-locale-name">United Kingdom</span>
+        <span class="gf-locale-code">GB</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="US" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/us.svg" alt="United States flag"></span>
+        <span class="gf-locale-name">United States</span>
+        <span class="gf-locale-code">US</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="CH" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/ch.svg" alt="Switzerland flag"></span>
+        <span class="gf-locale-name">Switzerland</span>
+        <span class="gf-locale-code">CH</span>
+      </button>
+
+      <button type="button" class="gf-locale-card" data-country="CA" role="option" aria-selected="false">
+        <span class="gf-locale-flag" aria-hidden="true"><img src="Image/flags/ca.svg" alt="Canada flag"></span>
+        <span class="gf-locale-name">Canada</span>
+        <span class="gf-locale-code">CA</span>
+      </button>
+    </div>
+  </div>
+
+  <footer class="gf-locale-footer">
+    <button type="button" class="gf-locale-close-btn" id="gfLocaleCloseBtn">Close</button>
+  </footer>
+</aside>
+
+<div id="gfLocaleOverlay" class="gf-locale-overlay" hidden></div>
+
+<aside id="gfAccountPanel" class="gf-account-panel" data-visible="false" aria-hidden="true">
+  <header class="gf-account-header">
+    <h3><i class="fa-regular fa-circle-user"></i> Account</h3>
+    <button type="button" class="gf-account-close" aria-label="Close account panel">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+
+  <div class="gf-account-body">
+    <div id="gfAccountGuest" class="gf-account-view">
+      <div class="gf-account-auth-shell">
+        <div class="gf-account-auth-brand"><span>GirffoN</span></div>
+        <div class="gf-account-auth-head">
+          <h4>Sign in</h4>
+          <p>Use your GirffoN account to access saved designs, orders, and your premium profile.</p>
+        </div>
+        <form id="gfAccountLoginForm" class="gf-account-auth-form" action="/GirffoN/backend/auth/login.php" method="POST" novalidate>
+          <div class="gf-account-input-group">
+            <label class="gf-account-input-label" for="gfLoginIdentifier">Username, email, or mobile</label>
+            <div class="gf-account-input-wrap">
+              <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+              <input type="text" id="gfLoginIdentifier" name="username" placeholder="name@example.com" autocomplete="username" required>
+            </div>
+          </div>
+          <div class="gf-account-input-group">
+            <label class="gf-account-input-label" for="gfLoginPassword">Password</label>
+            <div class="gf-account-input-wrap">
+              <i class="fa-solid fa-lock" aria-hidden="true"></i>
+              <input type="password" id="gfLoginPassword" name="password" placeholder="Enter your password" autocomplete="current-password" required>
+            </div>
+          </div>
+          <button type="submit" class="gf-account-btn gf-account-btn-primary" id="gfLoginBtn">
+            <span>Login</span>
+          </button>
+          <div class="gf-account-auth-row">
+            <label class="gf-account-check" for="gfStaySignedIn">
+              <input type="checkbox" id="gfStaySignedIn" name="staySignedIn" checked>
+              <span>Stay signed in</span>
+            </label>
+            <button type="button" class="gf-account-link-btn" id="gfForgotAccountBtn">Forgot username?</button>
+          </div>
+          <div class="gf-account-input-group">
+            <label class="gf-account-input-label" for="gfRegisterName">Register full name</label>
+            <div class="gf-account-input-wrap">
+              <i class="fa-regular fa-id-card" aria-hidden="true"></i>
+              <input type="text" id="gfRegisterName" name="registerName" placeholder="Full name" autocomplete="name">
+            </div>
+          </div>
+          <div class="gf-account-input-group">
+            <label class="gf-account-input-label" for="gfRegisterEmail">Register email</label>
+            <div class="gf-account-input-wrap">
+              <i class="fa-regular fa-paper-plane" aria-hidden="true"></i>
+              <input type="email" id="gfRegisterEmail" name="registerEmail" placeholder="name@example.com" autocomplete="email">
+            </div>
+          </div>
+          <div class="gf-account-input-group">
+            <label class="gf-account-input-label" for="gfRegisterPhone">Register phone</label>
+            <div class="gf-account-input-wrap">
+              <i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i>
+              <input type="tel" id="gfRegisterPhone" name="registerPhone" placeholder="Optional phone number" autocomplete="tel">
+            </div>
+          </div>
+          <p id="gfAccountAuthStatus" class="gf-account-note" role="status" aria-live="polite">Sign in to continue with your GirffoN account, or create one to save profile and preference details.</p>
+        </form>
+        <div class="gf-account-actions">
+          <button type="button" class="gf-account-btn gf-account-create-btn" id="gfSignupBtn">
+            <span>Create an account</span>
+          </button>
+        </div>
+        <div class="gf-account-divider"><span>or</span></div>
+        <div class="gf-account-actions">
+          <button type="button" class="gf-account-btn gf-account-btn-google" id="gfGoogleLoginBtn">
+            <i class="fa-brands fa-google" aria-hidden="true"></i>
+            <span>Sign in with Google</span>
+          </button>
+          <button type="button" class="gf-account-btn gf-account-btn-apple" id="gfAppleLoginBtn">
+            <i class="fa-brands fa-apple" aria-hidden="true"></i>
+            <span>Sign in with Apple</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="gfAccountUser" class="gf-account-view gf-account-user-view" style="display:none;">
+      <section class="gf-account-user-card" aria-label="User profile summary">
+        <div class="gf-account-profile-icon"><i class="fa-solid fa-user"></i></div>
+        <div class="gf-account-user-meta">
+          <h4 id="gfUserName">GirffoN Member</h4>
+          <p id="gfUserEmail">member@girffon.local</p>
+        </div>
+      </section>
+
+      <h5 class="gf-account-options-title">Account Options</h5>
+
+      <div class="gf-account-options" role="list">
+        <button type="button" class="gf-account-option" id="gfManageAccountBtn" role="listitem">
+          <span class="gf-account-option-left"><i class="fa-solid fa-user-gear"></i><span>Manage Account</span></span>
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+
+        <button type="button" class="gf-account-option" id="gfMyDesignsBtn" role="listitem">
+          <span class="gf-account-option-left"><i class="fa-solid fa-folder"></i><span>My Designs</span></span>
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+
+        <button type="button" class="gf-account-option" id="gfOrderHistoryBtn" role="listitem">
+          <span class="gf-account-option-left"><i class="fa-solid fa-clock-rotate-left"></i><span>Order History</span></span>
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+
+        <button type="button" class="gf-account-option" id="gfPaymentMethodsBtn" role="listitem">
+          <span class="gf-account-option-left"><i class="fa-solid fa-credit-card"></i><span>Payment Methods</span></span>
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+
+        <button type="button" class="gf-account-option" id="gfShippingAddressesBtn" role="listitem">
+          <span class="gf-account-option-left"><i class="fa-solid fa-location-dot"></i><span>Shipping Addresses</span></span>
+          <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <button type="button" class="gf-account-btn gf-account-btn-danger gf-account-logout" id="gfLogoutBtn" onclick="return window.gfForceLogout ? window.gfForceLogout(event) : false;">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<div id="gfAccountOverlay" class="gf-account-overlay" hidden></div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+
+    <div class="footer-logo">
+      <img src="Image/Logo/Logo.png" alt="GirffoN Logo">
+    </div>
+
+    <div class="footer-links">
+      <a href="#" id="gfTrackTrigger" aria-label="Open order tracking panel"><i class="fa-solid fa-box"></i> Track Order</a>
+      <a href="#" id="gfReturnTrigger" aria-label="Open return policy panel"><i class="fa-solid fa-rotate-left"></i> Return Policy</a>
+      <a href="#" id="gfFaqTrigger" aria-label="Open FAQ panel"><i class="fa-solid fa-circle-question"></i> FAQs</a>
+      <a href="#" id="gfContactTrigger" data-gf-contact-trigger aria-label="Open contact form"><i class="fa-solid fa-envelope"></i> Contact Us</a>
+    </div>
+
+  </div>
+
+  <!-- نوار زرد -->
+  <div class="footer-bottom">
+
+    <!-- آیکن‌ها -->
+    <div class="footer-social">
+      <a href="https://www.instagram.com/Girffonstudio" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram profile" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="https://www.tiktok.com/@Girffon" target="_blank" rel="noopener noreferrer" aria-label="Open TikTok profile" title="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+      <a href="https://www.facebook.com/GirffonStudio" target="_blank" rel="noopener noreferrer" aria-label="Open Facebook page" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+      <a href="https://x.com/GirffoN2025" target="_blank" rel="noopener noreferrer" aria-label="Open X profile" title="X"><i class="fa-brands fa-twitter"></i></a>
+      <a href="https://www.youtube.com/@GirffoNStudio" target="_blank" rel="noopener noreferrer" aria-label="Open YouTube" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
+      <a href="https://t.me/GirffoNStudio" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
+      <a href="https://wa.me/393444268927" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+    </div>
+
+    <!-- متن جدا -->
+    <p>
+      © 2025 Design By 
+      <a href="../admin-moghimi/AdminMoghimi_System/auth/login.php" target="_blank">Admin Moghimi</a>. 
+      Designed in Italy - All Right Reserved
+    </p>
+
+  </div>
+</footer>
+
+<div id="gfReturnOverlay" class="gf-return-overlay" hidden></div>
+
+<section
+  id="gfReturnModal"
+  class="gf-return-modal"
+  data-visible="false"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="gfReturnTitle"
+>
+  <header class="gf-return-header">
+    <h3 id="gfReturnTitle"><i class="fa-solid fa-rotate-left"></i> Return Policy</h3>
+    <button type="button" id="gfReturnClose" class="gf-return-close" aria-label="Close return policy panel">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+
+  <div class="gf-return-content">
+    <p>We want you to be happy with your order. Please review the key return conditions below before sending any item back.</p>
+
+    <ul class="gf-return-points">
+      <li>Returns are accepted within 14 days of delivery.</li>
+      <li>Items must be unused and in original condition.</li>
+      <li>Custom-made or personalized products may not be eligible unless damaged or incorrect.</li>
+      <li>Refunds are processed after inspection of the returned item.</li>
+      <li>Please contact support before sending any return request.</li>
+    </ul>
+
+    <h4>How to request a return</h4>
+    <p>Send your order number and reason for return through our Contact Us form. We will confirm next steps and the return address.</p>
+
+    <h4>Refund timing and shipping</h4>
+    <p>Approved refunds are usually completed within 5-10 business days. Return shipping responsibility depends on the return reason.</p>
+  </div>
+</section>
+
+<div id="gfFaqOverlay" class="gf-faq-overlay" hidden></div>
+
+<section
+  id="gfFaqModal"
+  class="gf-faq-modal"
+  data-visible="false"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="gfFaqTitle"
+>
+  <header class="gf-faq-header">
+    <h3 id="gfFaqTitle"><i class="fa-solid fa-circle-question"></i> Frequently Asked Questions</h3>
+    <button type="button" id="gfFaqClose" class="gf-faq-close" aria-label="Close FAQ panel">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+
+  <div class="gf-faq-list" id="gfFaqList">
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">How long does shipping take?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>Most orders are delivered in 2-4 business days in Italy, 3-6 days in Europe, and 5-10 days worldwide.</p>
+      </div>
+    </article>
+
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">Do you ship internationally?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>Yes, we ship internationally. Delivery times vary by destination and shipping method.</p>
+      </div>
+    </article>
+
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">Can I return custom products?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>Returns are accepted for damaged or incorrect items. For fully custom items, return conditions may be limited.</p>
+      </div>
+    </article>
+
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">How does custom design work?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>Choose your product, add text or graphics, upload artwork, and preview your design before placing the order.</p>
+      </div>
+    </article>
+
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">What payment methods do you accept?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>We support major cards and commonly used online payment options depending on your country.</p>
+      </div>
+    </article>
+
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">How can I track my order?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>After shipping, you will receive a tracking link by email so you can follow your order status in real time.</p>
+      </div>
+    </article>
+
+    <article class="gf-faq-item">
+      <button type="button" class="gf-faq-question" aria-expanded="false">How do I contact support?</button>
+      <div class="gf-faq-answer" hidden>
+        <p>You can open the Contact Us form in the footer and send us your request directly from this page.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<div id="gfContactOverlay" class="gf-contact-overlay" hidden></div>
+
+<section
+  id="gfContactModal"
+  class="gf-contact-modal"
+  data-visible="false"
+  role="dialog"
+  aria-modal="true"
+  aria-hidden="true"
+  aria-labelledby="gfContactTitle"
+>
+  <header class="gf-contact-header">
+    <h3 id="gfContactTitle"><i class="fa-solid fa-envelope"></i> Contact Us</h3>
+    <button type="button" id="gfContactClose" class="gf-contact-close" aria-label="Close contact form">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </header>
+
+  <form id="gfContactForm" class="gf-contact-form" novalidate>
+    <label class="gf-contact-field" for="gfContactName">
+      <span>Full Name</span>
+      <input type="text" id="gfContactName" name="fullName" autocomplete="name" required>
+    </label>
+
+    <label class="gf-contact-field" for="gfContactEmail">
+      <span>Email Address</span>
+      <input type="email" id="gfContactEmail" name="email" autocomplete="email" required>
+    </label>
+
+    <label class="gf-contact-field" for="gfContactSubject">
+      <span>Subject</span>
+      <input type="text" id="gfContactSubject" name="subject" required>
+    </label>
+
+    <label class="gf-contact-field" for="gfContactMessage">
+      <span>Message</span>
+      <textarea id="gfContactMessage" name="message" rows="5" required></textarea>
+    </label>
+
+    <button type="submit" class="gf-contact-submit">Send</button>
+    <p id="gfContactStatus" class="gf-contact-status" role="status" aria-live="polite"></p>
+  </form>
+</section>
+
+  <script src="../Shared/girffon-bridge.js"></script>
+  <script src="JS/cart.js?v=20260429b"></script>
+  <script src="JS/script.js?v=20260429b"></script>
+  <script src="JS/contact-panel.js"></script>
+  <script src="JS/Hero.js"></script>
+  <script src="JS/Catalog5botton.js"></script>
+  <script src="JS/Rel.js"></script>
+  <script src="JS/Sh.js"></script>
+  <script src="JS/AboutCustom.js"></script>
+  <script src="JS/sh-man.js"></script>
+  <script src="JS/ral-2.js"></script>
+  <script src="JS/Gifthh.js"></script>
+  <script src="JS/aufile.js"></script>
+  <script src="JS/settings-panel.js"></script>
+  <script src="JS/locale-panel.js"></script>
+  <script src="JS/account-panel.js"></script>
+  <script src="JS/site-search.js"></script>
+  <script src="JS/profile-page.js"></script>
+
+</body>
+</html>

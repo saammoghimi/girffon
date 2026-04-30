@@ -1,0 +1,650 @@
+﻿.gf-account-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 24, 38, 0.42);
+  z-index: 1095;
+}
+
+.gf-account-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(420px, 92vw);
+  height: 100vh;
+  background: #f3f4f6;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
+  transform: translateX(104%);
+  transition: transform 0.26s ease;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+  font-size: 16px;
+}
+
+.gf-account-panel[data-visible="true"] {
+  transform: translateX(0);
+}
+
+.gf-account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid #d6d9df;
+  background: #f3f4f6;
+}
+
+.gf-account-header h3 {
+  margin: 0;
+  font-size: 31px;
+  font-weight: 600;
+  color: #111827;
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.gf-account-header h3 i {
+  color: #d9a300;
+}
+
+.gf-account-close {
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.gf-account-body {
+  padding: 22px;
+  overflow: auto;
+}
+
+.gf-account-view {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.gf-account-auth-shell {
+  position: relative;
+  padding: 26px 22px 22px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcfcff 100%);
+  border: 1px solid #e6e8f0;
+  box-shadow: 0 18px 40px rgba(35, 27, 20, 0.08);
+}
+
+.gf-account-auth-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle at top center, rgba(217, 163, 0, 0.08), transparent 46%);
+  pointer-events: none;
+}
+
+.gf-account-auth-brand,
+.gf-account-profile-icon {
+  position: relative;
+  z-index: 1;
+}
+
+.gf-account-auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.gf-account-auth-brand span {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  color: #b38600;
+}
+
+.gf-account-auth-head {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.gf-account-view h4 {
+  margin: 0 0 12px;
+  text-align: center;
+  color: #111827;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.gf-account-view p {
+  margin: 0;
+  text-align: center;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.gf-account-auth-form {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 14px;
+}
+
+.gf-account-input-group {
+  display: grid;
+  gap: 8px;
+}
+
+.gf-account-input-label {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gf-account-input-wrap {
+  position: relative;
+}
+
+.gf-account-input-wrap i {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #d9a300;
+  font-size: 15px;
+}
+
+.gf-account-input-wrap input {
+  width: 100%;
+  min-height: 54px;
+  padding: 0 16px 0 42px;
+  border: 1px solid #d7d9e6;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.gf-account-input-wrap input::placeholder {
+  color: #9ca3af;
+}
+
+.gf-account-input-wrap input:focus {
+  outline: none;
+  border-color: #d9a300;
+  box-shadow: 0 0 0 4px rgba(217, 163, 0, 0.12);
+  transform: translateY(-1px);
+}
+
+.gf-account-auth-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: -2px;
+}
+
+.gf-account-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.gf-account-check input {
+  width: 16px;
+  height: 16px;
+  accent-color: #d9a300;
+}
+
+.gf-account-link-btn {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #b38600;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gf-account-link-btn:hover {
+  color: #8f6a00;
+}
+
+.gf-account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gf-account-create-btn {
+  border: 1.5px solid #d9a300;
+  background: #ffffff;
+  color: #b38600;
+}
+
+.gf-account-create-btn:hover {
+  background: #fff8e8;
+}
+
+.gf-account-btn {
+  min-height: 52px;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.gf-account-btn-primary {
+  background: linear-gradient(90deg, #d9a300 0%, #c79600 100%);
+  color: #ffffff;
+}
+
+.gf-account-btn-primary:hover {
+  background: linear-gradient(90deg, #c79600 0%, #b38600 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(217, 163, 0, 0.34);
+}
+
+.gf-account-btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.gf-account-btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.gf-account-btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.gf-account-btn-danger:hover {
+  background: #dc2626;
+}
+
+.gf-account-user-view {
+  gap: 14px;
+}
+
+.gf-account-user-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #c79600;
+  color: #ffffff;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.gf-account-user-card .gf-account-profile-icon {
+  margin: 0;
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.gf-account-user-meta h4 {
+  margin: 0 0 4px;
+  color: #ffffff;
+  text-align: left;
+  font-size: 22px;
+}
+
+.gf-account-user-meta p {
+  margin: 0;
+  color: #fff7da;
+  text-align: left;
+  font-size: 14px;
+}
+
+.gf-account-options-title {
+  margin: 10px 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.gf-account-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gf-account-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #f8f9fb;
+  color: #374151;
+  padding: 13px 14px;
+  cursor: pointer;
+}
+
+.gf-account-option-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.gf-account-option > i {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.gf-account-option:hover {
+  background: #ffffff;
+  border-color: #c79600;
+}
+
+.gf-account-logout {
+  margin-top: 12px;
+}
+
+.gf-account-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 6px 0;
+}
+
+.gf-account-divider::before,
+.gf-account-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.gf-account-divider span {
+  padding: 0 16px;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.gf-account-btn-google {
+  padding: 8px 14px;
+  border: 1.5px solid #d7dce4;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.gf-account-btn-apple {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.gf-account-btn-google i,
+.gf-account-btn-apple i {
+  font-size: 0.95em;
+}
+
+.gf-account-btn-google:hover {
+  border-color: #d9a300;
+  background: #f8fbff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.gf-account-btn-apple {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+}
+
+.gf-account-btn-apple:hover {
+  background: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+body.gf-dark-mode .gf-account-overlay {
+  background: rgba(3, 7, 18, 0.68);
+}
+
+body.gf-dark-mode .gf-account-panel {
+  background: #0f1722;
+  box-shadow: -14px 0 34px rgba(0, 0, 0, 0.48);
+}
+
+body.gf-dark-mode .gf-account-header {
+  background: #111a26;
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+body.gf-dark-mode .gf-account-header h3,
+body.gf-dark-mode .gf-account-view h4,
+body.gf-dark-mode .gf-account-input-label,
+body.gf-dark-mode .gf-account-options-title,
+body.gf-dark-mode .gf-account-option,
+body.gf-dark-mode .gf-account-option > i,
+body.gf-dark-mode .gf-account-check,
+body.gf-dark-mode .gf-account-view p,
+body.gf-dark-mode .gf-account-close {
+  color: #f8fafc;
+}
+
+body.gf-dark-mode .gf-account-auth-shell {
+  background: linear-gradient(180deg, #151f2c 0%, #101924 100%);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.32);
+}
+
+body.gf-dark-mode .gf-account-auth-shell::before {
+  background: radial-gradient(circle at top center, rgba(217, 163, 0, 0.12), transparent 46%);
+}
+
+body.gf-dark-mode .gf-account-input-wrap input {
+  background: #0d141d;
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+body.gf-dark-mode .gf-account-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+
+body.gf-dark-mode .gf-account-input-wrap input:focus {
+  border-color: #d9a300;
+  box-shadow: 0 0 0 4px rgba(217, 163, 0, 0.18);
+}
+
+body.gf-dark-mode .gf-account-link-btn {
+  color: #f2c94c;
+}
+
+body.gf-dark-mode .gf-account-link-btn:hover {
+  color: #ffd86b;
+}
+
+body.gf-dark-mode .gf-account-create-btn {
+  background: #121b26;
+  color: #f2c94c;
+  border-color: #d9a300;
+}
+
+body.gf-dark-mode .gf-account-create-btn:hover {
+  background: #1a2531;
+}
+
+body.gf-dark-mode .gf-account-btn-google {
+  background: #121b26;
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+body.gf-dark-mode .gf-account-btn-google:hover {
+  background: #1a2531;
+  border-color: #d9a300;
+}
+
+body.gf-dark-mode .gf-account-btn-apple {
+  background: #05070b;
+  border-color: #202936;
+}
+
+body.gf-dark-mode .gf-account-btn-apple:hover {
+  background: #111827;
+}
+
+body.gf-dark-mode .gf-account-option {
+  background: #121b26;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.gf-dark-mode .gf-account-option:hover {
+  background: #182330;
+  border-color: #c79600;
+}
+
+body.gf-dark-mode .gf-account-divider::before,
+body.gf-dark-mode .gf-account-divider::after {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+body.gf-dark-mode .gf-account-divider span,
+body.gf-dark-mode .gf-account-user-meta p {
+  color: #cbd5e1;
+}
+
+body.gf-dark-mode .gf-account-user-card {
+  background: linear-gradient(135deg, #b88700 0%, #8f6900 100%);
+}
+
+@media (max-width: 680px) {
+  .gf-account-panel {
+    width: min(420px, 100vw);
+  }
+
+  .gf-account-header {
+    padding: 16px;
+  }
+
+  .gf-account-header h3 {
+    font-size: 16px;
+  }
+
+  .gf-account-close {
+    font-size: 20px;
+  }
+
+  .gf-account-body {
+    padding: 16px;
+  }
+
+  .gf-account-view {
+    gap: 14px;
+  }
+
+  .gf-account-auth-shell {
+    padding: 22px 16px 18px;
+    border-radius: 22px;
+  }
+
+  .gf-account-auth-brand span {
+    font-size: 1.7rem;
+  }
+
+  .gf-account-view h4 {
+    font-size: 22px;
+    margin: 0 0 8px;
+  }
+
+  .gf-account-view p {
+    font-size: 14px;
+  }
+
+  .gf-account-btn {
+    font-size: 14px;
+    padding: 12px 14px;
+  }
+
+  .gf-account-auth-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .gf-account-user-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .gf-account-user-card .gf-account-profile-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .gf-account-user-meta h4 {
+    font-size: 18px;
+  }
+
+  .gf-account-user-meta p {
+    font-size: 12px;
+  }
+
+  .gf-account-option {
+    padding: 11px 12px;
+  }
+
+  .gf-account-option-left {
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .gf-account-choice-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .gf-account-choice-icon {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+
+  .gf-account-choice-copy strong {
+    font-size: 14px;
+  }
+
+  .gf-account-choice-copy span {
+    font-size: 12px;
+  }
+
+  .gf-account-btn-google,
+  .gf-account-btn-apple {
+    font-size: 10px;
+    padding: 8px 10px;
+  }
+
+  .gf-account-divider span {
+    font-size: 13px;
+  }
+}

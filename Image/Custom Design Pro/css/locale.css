@@ -1,0 +1,133 @@
+/* ===================================
+   LOCALE PANEL STYLES
+   =================================== */
+
+#cdpLocalePanel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: auto !important;
+    width: 420px;
+    max-width: 90vw;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 11050;
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#cdpLocalePanel.is-open,
+#cdpLocalePanel[data-visible="true"] {
+    transform: translateX(0);
+}
+
+#cdpLocalePanel .cdp-icon-panel-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+#cdpLocalePanel .cdp-icon-panel-body {
+    flex: 1;
+    overflow-y: auto;
+}
+
+#cdpLocalePanel .cdp-icon-panel-footer {
+    border-top: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+
+#cdpLocalePanel .cdp-icon-panel-footer .cdp-icon-btn--cancel {
+    width: 100%;
+    background: #f3f4f6;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+#cdpLocalePanel .cdp-icon-panel-footer .cdp-icon-btn--cancel:hover {
+    background: #e5e7eb;
+}
+
+body.dark-mode #cdpLocalePanel .cdp-icon-panel-footer {
+    border-top-color: #2f3542;
+    background: #111827;
+}
+
+body.dark-mode #cdpLocalePanel .cdp-icon-panel-footer .cdp-icon-btn--cancel {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #2f3542;
+}
+
+body.dark-mode #cdpLocalePanel .cdp-icon-panel-footer .cdp-icon-btn--cancel:hover {
+    background: #253044;
+}
+
+.cdp-locale-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 16px;
+}
+
+.cdp-locale-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cdp-locale-item:hover {
+    background: #f3f4f6;
+    border-color: #d9a300;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cdp-locale-item.active {
+    background: #dbeafe;
+    border-color: #d9a300;
+    box-shadow: 0 0 0 3px rgba(217, 163, 0, 0.1);
+}
+
+.cdp-locale-flag {
+    width: 64px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cdp-locale-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.cdp-locale-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    text-align: center;
+}
+
+.cdp-locale-code {
+    font-size: 11px;
+    color: #6b7280;
+    text-transform: uppercase;
+}

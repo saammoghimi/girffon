@@ -1,0 +1,31 @@
+body.kids-theme {
+  background: linear-gradient(180deg, #fef9c3 0%, #e0f2fe 35%, #f8fafc 100%);
+  color: #0f172a;
+}
+
+body.kids-theme.dark-mode {
+  background: radial-gradient(circle at top, rgba(14, 165, 233, 0.25), transparent 55%),
+              #0f172a;
+  color: #f8fafc;
+}
+
+.kids-theme .cdp-card--product {
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  box-shadow: 0 18px 45px rgba(14, 165, 233, 0.25);
+}
+
+.kids-theme .cdp-product-name {
+  color: #0284c7;
+  letter-spacing: 0.03em;
+}
+
+.kids-theme .cdp-view-btn.cdp-view-btn--active {
+  border-color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.14);
+  color: #0369a1;
+}
+
+.kids-theme .cdp-toggle-color .cdp-toggle-knob {
+  background: linear-gradient(135deg, #f97316, #0ea5e9);
+}
+

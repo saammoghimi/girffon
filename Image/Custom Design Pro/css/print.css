@@ -1,0 +1,227 @@
+/* ===========================
+   تنظیم اندازه کلی تیشرت
+   =========================== */
+
+:root {
+  /* این عدد قد تیشرت را کنترل می‌کند */
+  --tshirt-max-height: 860px;
+}
+
+/* ===========================
+   صحنه تیشرت
+   =========================== */
+
+.cdp-shirt-stage {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.cdp-shirt-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.cdp-shirt-image {
+  display: block;
+  max-height: var(--tshirt-max-height);
+  height: auto;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ===========================
+   ناحیه چاپ و ۴ کادر
+   =========================== */
+
+.cdp-print-area {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* بعداً برای درَگ می‌توانی عوض کنی */
+}
+
+/* استایل کادر – استایل مشترک */
+.cdp-print-box {
+  position: absolute;
+  border: 2px dashed #111827;
+  box-sizing: border-box;
+}
+
+/* ۱) FRONT – وسط سینه، بزرگترین ناحیه چاپ */
+#boxFront {
+  top: 18%;
+  left: 30%;
+  width: 40%;
+  height: 60%;
+}
+
+/* ۲) BACK – پشت کمی کوچکتر و بالاتر */
+#boxBack {
+  top: 18%;
+  left: 32%;
+  width: 35%;
+  height: 50%;
+}
+
+/* ۳) RIGHT – سمت راست پایین (مثلاً آستین / پهلو) */
+#boxRight {
+  top: 56%;
+  left: 35%;
+  width: 25%;
+  height: 30%;
+}
+
+/* ۴) LEFT – سمت چپ پایین */
+#boxLeft {
+  top: 56%;
+  left: 39%;
+  width: 25%;
+  height: 30%;
+}
+
+/* مخفی‌کردن کادرهای غیرفعال (با JS کلاسش را عوض می‌کنی) */
+.cdp-print-box--hidden {
+  display: none;
+}
+
+/* ===========================
+   دکمه‌های Front / Back / Right / Left
+   =========================== */
+
+.cdp-views-switcher {
+  display: flex;
+  gap: 8px;
+}
+
+/* دکمه کارت‌مانند کوچک، شبیه عکس مرجع */
+
+.cdp-view-btn {
+  width: 62px;
+  height: 76px;
+  border-radius: 18px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  font-size: 10px;
+  color: #111827;
+  font-weight: 600;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.cdp-view-btn img {
+  width: 32px;
+  height: 32px;
+  opacity: 1;
+}
+
+.cdp-view-btn span {
+  line-height: 1;
+  font-weight: 500;
+}
+
+/* active */
+
+.cdp-view-btn--active {
+  border-color: #1118277e;
+  box-shadow: 0 0 0 2px #fdd700d2;
+  color: #111827;
+  background: #ffffff;
+}
+
+.cdp-view-btn--active img {
+  opacity: 1;
+}
+
+/* hover */
+
+.cdp-view-btn:hover {
+  transform: translateY(-2px);
+  background: #f9fafb;
+}
+
+/* Dark Mode */
+body.dark-mode .cdp-view-btn {
+  background: #5c5c63;
+  border-color: #666769;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-view-btn--active {
+  background: #595a5c;
+  border-color: #666769;
+  box-shadow: 0 0 0 2px #fdd700d2;
+  color: #ffffff;
+}
+
+body.dark-mode .cdp-view-btn:hover {
+  background: #666769;
+}
+
+/* ===========================
+   Responsive Scales
+   =========================== */
+
+@media (max-width: 768px) {
+  :root {
+    --tshirt-max-height: 640px;
+  }
+
+  .cdp-shirt-stage {
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .cdp-shirt-wrapper {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  .cdp-shirt-image {
+    width: 100%;
+  }
+
+  .cdp-views-switcher {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .cdp-view-btn {
+    width: 56px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --tshirt-max-height: 520px;
+  }
+
+  .cdp-shirt-stage {
+    gap: 10px;
+  }
+
+  .cdp-view-btn {
+    width: 48px;
+    height: 62px;
+    font-size: 9px;
+  }
+
+  .cdp-view-btn img {
+    width: 28px;
+    height: 28px;
+  }
+}

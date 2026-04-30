@@ -1,0 +1,21 @@
+@import url('./print.css');
+
+/* Classic Tote Bag print window sized for broad panel */
+body.classic-tote-theme #boxFront {
+  top: 49.5%;
+  left: 32%;
+  width: 36%;
+  height: 44%;
+}
+
+body.classic-tote-theme #boxBack {
+  top: 46%;
+  left: 34%;
+  width: 32%;
+  height: 46%;
+}
+
+body.classic-tote-theme #boxRight,
+body.classic-tote-theme #boxLeft {
+  display: none;
+}

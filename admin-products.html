@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GirffoN Admin Products</title>
+  <script>window.location.replace("admin-products.php");</script>
+  <link rel="stylesheet" href="CSS/admin-girffon.css">
+</head>
+<body class="admin-page" data-admin-page="products">
+  <div class="admin-layout">
+    <aside class="admin-sidebar" aria-label="Admin navigation">
+      <div class="admin-sidebar-header">
+        <span class="admin-brand" aria-label="GirffoN logo">
+          <img class="admin-brand-logo" src="Image/Logo/logo for gif.png" alt="GirffoN Logo">
+        </span>
+        <p>Products management for the current demo catalog.</p>
+      </div>
+
+      <nav class="admin-nav">
+        <a class="admin-nav-link" href="admin-dashboard.html" aria-label="Dashboard" title="Dashboard">1. Dashboard</a>
+        <a class="admin-nav-link is-active" href="admin-products.html" aria-label="Products" title="Products">2. Products</a>
+        <a class="admin-nav-link" href="admin-orders.html" aria-label="Orders" title="Orders">3. Orders</a>
+        <a class="admin-nav-link" href="admin-invoices.html" aria-label="Invoices" title="Invoices">4. Invoices</a>
+        <a class="admin-nav-link" href="admin-messages.html" aria-label="Messages" title="Messages">5. Messages</a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <section class="admin-sidebar-card">
+          <strong>Product Fields</strong>
+          <p class="admin-panel-note">Product name, SKU, price, image URL, and stock.</p>
+        </section>
+        <button class="admin-logout-button" type="button" data-admin-logout>Logout</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <p class="admin-page-subtitle">Admin</p>
+          <h1 class="admin-page-title" id="adminCurrentPage">Products</h1>
+        </div>
+        <div class="admin-topbar-actions">
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
+        </div>
+      </header>
+
+      <section class="admin-page-section">
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Add Product</h2>
+              <p class="admin-panel-note">Save a new product entry to localStorage.</p>
+            </div>
+          </div>
+
+          <form id="adminProductsForm" class="admin-grid-form" novalidate>
+            <div class="admin-field">
+              <label for="adminProductName">Product Name</label>
+              <input class="admin-input" id="adminProductName" name="name" type="text" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductSku">SKU</label>
+              <input class="admin-input" id="adminProductSku" name="sku" type="text" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductPrice">Price</label>
+              <input class="admin-input" id="adminProductPrice" name="price" type="number" step="0.01" min="0" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductStock">Stock</label>
+              <input class="admin-input" id="adminProductStock" name="stock" type="number" min="0" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductCategory">Category</label>
+              <input class="admin-input" id="adminProductCategory" name="category" type="text" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductSize">Size</label>
+              <input class="admin-input" id="adminProductSize" name="size" type="text" placeholder="S, M, L" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductColor">Color</label>
+              <input class="admin-input" id="adminProductColor" name="color" type="text" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductStatus">Status</label>
+              <select class="admin-select" id="adminProductStatus" name="status" required>
+                <option value="Active">Active</option>
+                <option value="Draft">Draft</option>
+                <option value="Archived">Archived</option>
+              </select>
+            </div>
+
+            <div class="admin-field admin-field-wide">
+              <label for="adminProductImage">Image URL</label>
+              <input class="admin-input" id="adminProductImage" name="imageUrl" type="url" placeholder="https://example.com/image.jpg" required>
+            </div>
+
+            <div class="admin-form-actions">
+              <button class="admin-button admin-button-accent" type="submit">Save Product</button>
+            </div>
+            <div id="adminProductsStatus" class="admin-feedback" role="status" aria-live="polite"></div>
+          </form>
+        </article>
+
+        <article class="admin-table-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Product List</h2>
+              <p class="admin-panel-note">Current products stored in the admin panel.</p>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>SKU</th>
+                  <th>Price</th>
+                  <th>Category</th>
+                  <th>Size</th>
+                  <th>Color</th>
+                  <th>Status</th>
+                  <th>Image URL</th>
+                  <th>Stock</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminProductsTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="JS/admin-girffon.js"></script>
+</body>
+</html>

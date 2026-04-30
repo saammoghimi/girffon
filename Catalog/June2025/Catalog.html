@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GirffoN Flipbook Catalog</title>
+  <link rel="stylesheet" href="flipbook.css" />
+  <script src="jquery.min.js"></script>
+  <script src="turn.js"></script>
+</head>
+<body>
+
+<header class="toolbar" aria-label="Flipbook toolbar">
+  <div class="toolbar-group">
+    <button id="btnPrev" type="button" class="tool-btn" aria-label="Previous page">❮ Prev</button>
+    <button id="btnNext" type="button" class="tool-btn" aria-label="Next page">Next ❯</button>
+  </div>
+
+  <div class="toolbar-group page-jump-group">
+    <label for="pageInput">Page</label>
+    <input id="pageInput" type="number" min="1" step="1" value="1" aria-label="Page number" />
+    <span>/ <strong id="totalPages">16</strong></span>
+    <button id="btnGo" type="button" class="tool-btn">Go</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button id="btnZoomOut" type="button" class="tool-btn" aria-label="Zoom out">− Zoom</button>
+    <button id="btnZoomIn" type="button" class="tool-btn" aria-label="Zoom in">＋ Zoom</button>
+    <button id="btnZoomReset" type="button" class="tool-btn" aria-label="Reset zoom">Reset</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button id="btnPrintPage" type="button" class="tool-btn" aria-label="Print current page">🖨 Print Page</button>
+    <button id="btnPrintFull" type="button" class="tool-btn" aria-label="Print full catalog">🖨 Print Full</button>
+  </div>
+
+  <div class="toolbar-group">
+    <button id="btnDownloadPage" type="button" class="tool-btn" aria-label="Download current page">📥 Download Page</button>
+    <a href="catalog.pdf" download class="tool-btn tool-btn-link" aria-label="Download full catalog PDF">📥 Download Full PDF</a>
+  </div>
+</header>
+
+<main class="viewer-shell">
+  <div id="bookStage" class="book-stage">
+    <div id="flipbook">
+
+      <div><img src="pages/page_1.png" alt="Page 1"></div>
+      <div><img src="pages/page_2.png" alt="Page 2"></div>
+      <div><img src="pages/page_3.png" alt="Page 3"></div>
+      <div><img src="pages/page_4.png" alt="Page 4"></div>
+      <div><img src="pages/page_5.png" alt="Page 5"></div>
+      <div><img src="pages/page_6.png" alt="Page 6"></div>
+      <div><img src="pages/page_7.png" alt="Page 7"></div>
+      <div><img src="pages/page_8.png" alt="Page 8"></div>
+      <div><img src="pages/page_9.png" alt="Page 9"></div>
+      <div><img src="pages/page_10.png" alt="Page 10"></div>
+      <div><img src="pages/page_11.png" alt="Page 11"></div>
+      <div><img src="pages/page_12.png" alt="Page 12"></div>
+      <div><img src="pages/page_13.png" alt="Page 13"></div>
+      <div><img src="pages/page_14.png" alt="Page 14"></div>
+      <div><img src="pages/page_15.png" alt="Page 15"></div>
+      <div><img src="pages/page_16.png" alt="Page 16"></div>
+    </div>
+  </div>
+
+  <div class="nav-arrows" aria-hidden="true">
+    <button id="arrowPrev" type="button" class="arrow left">❮</button>
+    <button id="arrowNext" type="button" class="arrow right">❯</button>
+  </div>
+</main>
+
+<script>
+  (function () {
+    const $flipbook = $("#flipbook");
+    const flipbookEl = document.getElementById("flipbook");
+    const toolbar = document.querySelector(".toolbar");
+    const pageInput = document.getElementById("pageInput");
+    const totalPagesNode = document.getElementById("totalPages");
+    const stage = document.getElementById("bookStage");
+    const pageNodes = Array.from(document.querySelectorAll("#flipbook > div"));
+    const pageCount = pageNodes.length;
+    const singlePageAspectRatio = 453 / 639;
+    const spreadAspectRatio = (453 * 2) / 639;
+    let turnReady = false;
+    let fallbackPage = 1;
+    let zoom = 1;
+
+    totalPagesNode.textContent = String(pageCount);
+    pageInput.max = String(pageCount);
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function applyZoom() {
+      resizeFlipbook();
+    }
+
+    function clampSize(value, min) {
+      return Math.max(min, Math.floor(value));
+    }
+
+    function renderFallbackPage() {
+      pageNodes.forEach(function (node, idx) {
+        const pageNumber = idx + 1;
+        const shouldShow = fallbackPage === 1
+          ? pageNumber === 1
+          : pageNumber === fallbackPage || pageNumber === fallbackPage + 1;
+        node.style.display = shouldShow ? "block" : "none";
+      });
+      updatePageUI(fallbackPage);
+    }
+
+    function syncDisplayMode(page) {
+      if (!turnReady) {
+        return;
+      }
+
+      const desiredDisplay = page <= 1 ? "single" : "double";
+      const currentDisplay = $flipbook.turn("display");
+
+      if (currentDisplay !== desiredDisplay) {
+        $flipbook.turn("display", desiredDisplay);
+      }
+    }
+
+    function applyBookSize(page) {
+      const viewportW = window.innerWidth;
+      const viewportH = window.innerHeight;
+      const isMobile = viewportW < 900;
+      const toolbarHeight = toolbar ? Math.ceil(toolbar.getBoundingClientRect().height) : 86;
+      const horizontalPadding = isMobile ? 28 : 120;
+      const verticalPadding = isMobile ? 44 : 70;
+
+      document.documentElement.style.setProperty("--toolbar-h", toolbarHeight + "px");
+
+      const maxViewportWidth = Math.max(280, viewportW - horizontalPadding);
+      const maxViewportHeight = Math.max(186, viewportH - toolbarHeight - verticalPadding);
+      const currentAspectRatio = page > 1 ? spreadAspectRatio : singlePageAspectRatio;
+
+      let targetWidth = Math.min(isMobile ? 430 : 760, maxViewportWidth);
+      let targetHeight = targetWidth / currentAspectRatio;
+      const maxHeight = maxViewportHeight;
+
+      if (targetHeight > maxHeight) {
+        targetHeight = maxHeight;
+        targetWidth = targetHeight * currentAspectRatio;
+      }
+
+      targetWidth *= zoom;
+      targetHeight *= zoom;
+
+      return {
+        width: clampSize(targetWidth, 280),
+        height: clampSize(targetHeight, 186)
+      };
+    }
+
+    function applyTurnLayout(page) {
+      const size = applyBookSize(page);
+
+      if (turnReady) {
+        syncDisplayMode(page);
+        $flipbook.turn("size", size.width, size.height);
+      } else {
+        flipbookEl.style.width = size.width + "px";
+        flipbookEl.style.height = size.height + "px";
+      }
+    }
+
+    function resizeFlipbook() {
+  const currentPage = getCurrentPage();
+      applyTurnLayout(currentPage);
+    }
+
+    function updatePageUI(page) {
+      pageInput.value = String(page);
+    }
+
+    function getCurrentPage() {
+      if (turnReady) {
+        return Number($flipbook.turn("page")) || 1;
+      }
+      return fallbackPage;
+    }
+
+    function goToPage(page) {
+      const safePage = clamp(Number(page) || 1, 1, pageCount);
+      const normalizedPage = safePage <= 1 ? 1 : (safePage % 2 === 0 ? safePage : safePage - 1);
+      if (turnReady) {
+        $flipbook.turn("page", normalizedPage);
+      } else {
+        fallbackPage = normalizedPage;
+        renderFallbackPage();
+        resizeFlipbook();
+      }
+    }
+
+    function goPrev() {
+      if (turnReady) {
+        $flipbook.turn("previous");
+      } else {
+        fallbackPage = fallbackPage <= 1 ? 1 : clamp(fallbackPage - 2, 1, pageCount);
+        renderFallbackPage();
+        resizeFlipbook();
+      }
+    }
+
+    function goNext() {
+      if (turnReady) {
+        $flipbook.turn("next");
+      } else {
+        fallbackPage = fallbackPage <= 1 ? 2 : clamp(fallbackPage + 2, 1, pageCount);
+        renderFallbackPage();
+        resizeFlipbook();
+      }
+    }
+
+    function currentPageImagePath() {
+      const page = getCurrentPage();
+      return "pages/page_" + page + ".png";
+    }
+
+    function triggerDownload(url, filename) {
+      const link = document.createElement("a");
+      link.href = url;
+      if (filename) {
+        link.download = filename;
+      }
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function printImage(url, title) {
+      const win = window.open("", "_blank", "width=1100,height=780");
+      if (!win) {
+        return;
+      }
+      win.document.write(
+        "<!doctype html><html><head><title>" + title + "</title>" +
+        "<style>html,body{margin:0;padding:0;background:#fff}img{display:block;width:100%;height:auto}</style>" +
+        "</head><body><img src='" + url + "' alt='" + title + "'></body></html>"
+      );
+      win.document.close();
+      win.onload = function () {
+        win.focus();
+        win.print();
+      };
+    }
+
+    if (typeof $flipbook.turn === "function") {
+      try {
+        $flipbook.turn({
+          width: 906,
+          height: 639,
+          autoCenter: true,
+          elevation: 50,
+          gradients: true,
+          display: "single",
+          when: {
+            turning: function (event, page) {
+              applyTurnLayout(page);
+              updatePageUI(page);
+            },
+            turned: function (event, page) {
+              applyTurnLayout(page);
+              updatePageUI(page);
+            }
+          }
+        });
+        turnReady = true;
+      } catch (err) {
+        turnReady = false;
+      }
+    }
+
+    if (!turnReady) {
+      fallbackPage = 1;
+      renderFallbackPage();
+    }
+
+    updatePageUI(1);
+    applyZoom();
+    resizeFlipbook();
+
+    document.getElementById("btnPrev").addEventListener("click", function () {
+      goPrev();
+    });
+    document.getElementById("btnNext").addEventListener("click", function () {
+      goNext();
+    });
+    document.getElementById("arrowPrev").addEventListener("click", function () {
+      goPrev();
+    });
+    document.getElementById("arrowNext").addEventListener("click", function () {
+      goNext();
+    });
+
+    document.getElementById("btnGo").addEventListener("click", function () {
+      goToPage(pageInput.value);
+    });
+
+    pageInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        goToPage(pageInput.value);
+      }
+    });
+
+    document.getElementById("btnZoomOut").addEventListener("click", function () {
+      zoom = clamp(zoom - 0.1, 0.8, 1.4);
+      applyZoom();
+    });
+    document.getElementById("btnZoomIn").addEventListener("click", function () {
+      zoom = clamp(zoom + 0.1, 0.8, 1.4);
+      applyZoom();
+    });
+    document.getElementById("btnZoomReset").addEventListener("click", function () {
+      zoom = 1;
+      applyZoom();
+    });
+
+    document.getElementById("btnDownloadPage").addEventListener("click", function () {
+      const page = getCurrentPage();
+      triggerDownload(currentPageImagePath(), "GirffoN-page-" + page + ".png");
+    });
+
+    document.getElementById("btnPrintPage").addEventListener("click", function () {
+      const page = getCurrentPage();
+      printImage(currentPageImagePath(), "GirffoN Catalog Page " + page);
+    });
+
+    document.getElementById("btnPrintFull").addEventListener("click", function () {
+      const pdfWindow = window.open("catalog.pdf", "_blank");
+      if (pdfWindow) {
+        pdfWindow.focus();
+      }
+    });
+
+    window.addEventListener("resize", resizeFlipbook);
+    window.addEventListener("orientationchange", resizeFlipbook);
+  })();
+</script>
+</body>
+</html>

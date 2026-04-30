@@ -1,0 +1,16 @@
+@import url('./print.css');
+
+/* Coaster printable area */
+body.coasters-theme #boxFront {
+  top: 22%;
+  left: 26.5%;
+  width: 65%;
+  height: 65%;
+  border-radius: 8%;
+}
+
+body.coasters-theme #boxBack,
+body.coasters-theme #boxRight,
+body.coasters-theme #boxLeft {
+  display: none;
+}

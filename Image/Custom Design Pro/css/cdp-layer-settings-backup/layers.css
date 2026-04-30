@@ -1,0 +1,626 @@
+body.dark-mode .cdp-text-editor-modal,
+body.dark-mode .cdp-text-editor-modal * {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #23262F !important;
+  box-shadow: none !important;
+}
+body.dark-mode .cdp-text-editor-modal button,
+body.dark-mode .cdp-text-editor-modal .cdp-btn {
+  background: #23262F !important;
+  color: #fff !important;
+  border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-text-editor-modal button:disabled,
+body.dark-mode .cdp-text-editor-modal .cdp-btn:disabled {
+  background: #23262F !important;
+  color: #888 !important;
+  border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-text-editor-modal,
+body.dark-mode .cdp-text-editor-modal * {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #23262F !important;
+}
+body.dark-mode .cdp-text-editor-modal button,
+body.dark-mode .cdp-text-editor-modal .cdp-btn {
+    background: #23262F !important;
+    color: #fff !important;
+    border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-text-editor-modal button:disabled,
+body.dark-mode .cdp-text-editor-modal .cdp-btn:disabled {
+    background: #23262F !important;
+    color: #888 !important;
+    border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-edit-modal,
+body.dark-mode .cdp-edit-modal * {
+  background: #181A20 !important;
+  color: #fff !important;
+  border-color: #23262F !important;
+}
+body.dark-mode .cdp-edit-modal button,
+body.dark-mode .cdp-edit-modal .cdp-btn {
+  background: #23262F !important;
+  color: #fff !important;
+  border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-edit-modal button:disabled,
+body.dark-mode .cdp-edit-modal .cdp-btn:disabled {
+  background: #23262F !important;
+  color: #888 !important;
+  border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-upload-modal,
+body.dark-mode .cdp-modal-panel {
+  background: #181A20 !important;
+  color: #fff !important;
+  border: 1px solid #23262F !important;
+}
+
+body.dark-mode .cdp-upload-modal,
+body.dark-mode .cdp-modal-panel {
+  background: #181A20 !important;
+  border: 1px solid #23262F !important;
+}
+
+body.dark-mode .cdp-modal-header {
+  background: #181A20 !important;
+  border-bottom: 1px solid #23262F !important;
+}
+
+body.dark-mode .cdp-modal-header h3,
+body.dark-mode .cdp-modal-panel,
+body.dark-mode .cdp-modal-panel * {
+  color: #fff !important;
+}
+
+body.dark-mode .cdp-modal-close {
+  color: #bfc8db !important;
+}
+
+body.dark-mode .cdp-modal-close:hover {
+  background: #23262F !important;
+  color: #fff !important;
+}
+
+body.dark-mode .cdp-upload-modal .cdp-btn,
+body.dark-mode .cdp-upload-modal button {
+  background: #23262F !important;
+  color: #fff !important;
+  border: 1px solid #23262F !important;
+}
+body.dark-mode .cdp-upload-modal .cdp-btn:disabled,
+body.dark-mode .cdp-upload-modal button:disabled {
+  background: #23262F !important;
+  color: #888 !important;
+  border: 1px solid #23262F !important;
+}
+/* ===========================
+   کارت لایه‌ها در پنل راست
+   =========================== */
+
+.cdp-card--layers {
+  /* این کارت وسطی است، بگذاریم فضای خالی را پر کند */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.cdp-card--layers .cdp-card-body {
+  padding-top: 8px;
+  flex: 1;
+  max-height: none;
+  overflow-y: auto; /* اسکرول اگر لایه زیاد شد */
+}
+
+/* ===========================
+   لیست لایه‌ها
+   =========================== */
+
+.cdp-layers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+}
+
+.cdp-layer-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #d1d5db;
+  cursor: move;
+  transition: background 0.15s ease;
+}
+
+.cdp-layer-item:last-child {
+  border-bottom: none;
+}
+
+.cdp-layer-item:hover {
+  background: #f9fafb;
+}
+
+.cdp-layer-item--active {
+  background: #eff6ff;
+}
+
+.cdp-layer-item--locked {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.cdp-layer-item--dragging {
+  opacity: 0.5;
+  background: #dbeafe;
+  border: 2px dashed #3b82f6;
+}
+
+/* محتوای لایه (آیکون‌ها و نام) */
+
+.cdp-layer-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.cdp-layer-type {
+  font-size: 10px;
+  font-weight: 600;
+  color: #1f2937;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  background: #c4c4c4;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.cdp-layer-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.cdp-layer-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  color: #6b7280;
+  transition: all 0.15s ease;
+}
+
+.cdp-layer-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.cdp-layer-btn--eye {
+  color: #10b981;
+}
+
+.cdp-layer-btn--eye:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.cdp-layer-btn--lock {
+  color: #9ca3af;
+}
+
+.cdp-layer-btn--lock:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.cdp-layer-btn--settings:hover {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.cdp-layer-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cdp-layer-name {
+  flex: 1;
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  color: #374151;
+}
+
+/* دکمه‌های لایه (چشم، تنظیمات، قفل) */
+
+.cdp-layer-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  color: #6b7280;
+  transition: all 0.15s ease;
+}
+
+.cdp-layer-icon:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+/* آیکون visibility */
+.cdp-layer-icon--visibility {
+  color: #10b981;
+}
+
+.cdp-layer-icon--visibility.cdp-layer-icon--hidden {
+  color: #9ca3af;
+}
+
+.cdp-layer-icon--visibility:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.cdp-layer-icon--visibility.cdp-layer-icon--hidden:hover {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* آیکون settings */
+.cdp-layer-icon--settings {
+  color: #6b7280;
+}
+
+.cdp-layer-icon--settings:hover {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+/* آیکون lock */
+.cdp-layer-icon--lock {
+  color: #9ca3af;
+}
+
+.cdp-layer-icon--lock.cdp-layer-icon--locked {
+  color: #ef4444;
+}
+
+.cdp-layer-icon--lock:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.cdp-layer-icon--lock.cdp-layer-icon--locked:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* حالت‌های Drag and Drop */
+
+.cdp-layer-item--dragging {
+  opacity: 0.5;
+  background: #dddddd;
+}
+
+.cdp-layer-item--drop-before {
+  border-top: 2px solid #3b82f6;
+  margin-top: -2px;
+}
+
+.cdp-layer-item--drop-after {
+  border-bottom: 2px solid #3b82f6;
+  margin-bottom: -2px;
+}
+
+/* ===========================
+   مودال تنظیمات لایه
+   =========================== */
+
+.cdp-modal-panel--layer {
+  max-width: 420px;
+  width: 90%;
+  margin: auto;
+}
+
+.cdp-modal-body--layer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+}
+
+/* دکمه‌های اکشن لایه */
+
+.cdp-layer-action-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #374151;
+}
+
+.cdp-layer-action-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.cdp-layer-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #d1d5db;
+}
+
+/* دکمه Duplicate */
+.cdp-layer-action-btn--primary {
+  background: #3b82f6;
+  color: #ffffff;
+  border-color: #3b82f6;
+}
+
+.cdp-layer-action-btn--primary:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* دکمه Delete */
+.cdp-layer-action-btn--danger {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.cdp-layer-action-btn--danger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* گروه Opacity */
+
+.cdp-layer-opacity-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  margin-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cdp-layer-opacity-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* اسلایدر Opacity */
+
+#cdpLayerOpacity {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #e5e7eb;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+#cdpLayerOpacity::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: grab;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+#cdpLayerOpacity::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+#cdpLayerOpacity::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+#cdpLayerOpacity::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: grab;
+  border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+#cdpLayerOpacity::-moz-range-thumb:hover {
+  transform: scale(1.15);
+}
+
+#cdpLayerOpacity::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+/* مقدار Opacity */
+
+#cdpLayerOpacityValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3b82f6;
+  text-align: center;
+  padding: 4px 8px;
+  background: #eff6ff;
+  border-radius: 6px;
+  min-width: 50px;
+}
+
+
+
+
+
+/* در layers.css یا print.css - اضافه کن: */
+
+/* Print box - مطمئن شو همه چیز داخلش محدود میشه */
+.cdp-print-box {
+  position: relative;
+  overflow: hidden; /* هر چیزی که از بیرون بره، مخفی میشه */
+}
+
+/* Elements داخل print box */
+.cdp-print-box > * {
+  box-sizing: border-box !important; /* Border داخل element حساب میشه */
+  outline: none !important; /* Outline نداشته باشه که بیرون نره */
+}
+
+/* اگر border dashed داری، حتما border-box باشه */
+.cdp-print-box [style*="dashed"] {
+  box-sizing: border-box !important;
+}
+
+/* Dark Mode - Layers */
+body.dark-mode .cdp-layer-item {
+    border-bottom-color: #3d3d3d;
+    color: #ffffff;
+    background: #2d2d2d;
+}
+
+body.dark-mode .cdp-layer-item:hover {
+    background: #3a3a3a;
+}
+
+body.dark-mode .cdp-layer-item--active {
+    background: #2a4a6f;
+    border-left-color: #3b82f6;
+}
+
+body.dark-mode .cdp-layer-label {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-layer-name {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-layer-type {
+    background: #2a2a2a;
+    color: #a8a8a8;
+    border-color: #3d3d3d;
+}
+
+body.dark-mode .cdp-layer-actions button {
+    color: #b8b8b8;
+}
+
+body.dark-mode .cdp-layer-actions button:hover {
+    background: #4a4a4a;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-layer-btn {
+    color: #b8b8b8;
+}
+
+body.dark-mode .cdp-layer-btn:hover {
+    background: #4a4a4a;
+    color: #ffffff;
+}
+
+/* Dark Mode - Layer Modal */
+body.dark-mode .cdp-modal-panel {
+    background: #1a1a1a;
+    border: 1px solid #333333;
+}
+
+body.dark-mode .cdp-modal-header {
+    border-bottom-color: #333333;
+}
+
+body.dark-mode .cdp-modal-header h3 {
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-modal-close {
+    color: #9ca3af;
+}
+
+body.dark-mode .cdp-modal-close:hover {
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-layer-action-btn {
+    background: #2a2a2a;
+    border-color: #444444;
+    color: #ffffff;
+}
+
+body.dark-mode .cdp-layer-action-btn:hover:not(:disabled) {
+    background: #333333;
+    border-color: #555555;
+}
+
+body.dark-mode .cdp-layer-action-btn:disabled {
+    background: #1f1f1f;
+    color: #666666;
+    border-color: #333333;
+}
+
+body.dark-mode .cdp-layer-opacity-group {
+    border-top-color: #333333;
+}
+
+body.dark-mode .cdp-layer-opacity-group label {
+    color: #ffffff;
+}
+
+body.dark-mode #cdpLayerOpacity {
+    background: #333333;
+}
+
+body.dark-mode #cdpLayerOpacityValue {
+    background: #2a4a6f;
+    color: #60a5fa;
+}
+

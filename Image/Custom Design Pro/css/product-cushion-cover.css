@@ -1,0 +1,33 @@
+body.cushion-cover-theme {
+  background: linear-gradient(180deg, #fffcf6 0%, #f4ecdf 42%, #eadfce 100%);
+  color: #1f1a14;
+}
+
+body.cushion-cover-theme.dark-mode {
+  background: radial-gradient(circle at top, rgba(14, 12, 10, 0.92), #050302 95%);
+  color: #f8f3ec;
+}
+
+.cushion-cover-theme .cdp-card--product {
+  border: 1px solid rgba(217, 162, 107, 0.35);
+  box-shadow: 0 18px 48px rgba(86, 64, 36, 0.25);
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.cushion-cover-theme .cdp-product-name {
+  color: #a15927;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cushion-cover-theme .cdp-view-btn.cdp-view-btn--active {
+  border-color: #d9a26b;
+  background: rgba(217, 162, 107, 0.2);
+  color: #5c371c;
+}
+
+.cushion-cover-theme .cdp-toggle-color .cdp-toggle-knob {
+  background: linear-gradient(135deg, #f8eedc, #d9a26b);
+}
+

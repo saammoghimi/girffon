@@ -1,0 +1,100 @@
+.review-strip{
+  width:100%;
+  padding:40px 0;
+  background:#efefef;
+  box-sizing:border-box;
+  overflow:hidden;
+}
+
+.review-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(6, minmax(260px, 1fr));
+  gap:18px;
+  align-items:stretch;
+}
+
+.review-card{
+  background:#f7f7f7;
+  border-radius:14px;
+  padding:26px 20px 22px;
+  box-sizing:border-box;
+  box-shadow:0 4px 14px rgba(0,0,0,0.06);
+  min-height:195px;
+}
+
+.review-stars{
+  color:#17b26a;
+  font-size:22px;
+  line-height:1;
+  letter-spacing:2px;
+  margin-bottom:16px;
+}
+
+.review-card h3{
+  margin:0 0 10px;
+  font-size:20px;
+  font-weight:700;
+  color:#373737;
+  line-height:1.2;
+}
+
+.review-card p{
+  margin:0;
+  font-size:15px;
+  line-height:1.55;
+  color:#4a4a4a;
+}
+
+/* tablet */
+@media (max-width: 1400px){
+  .review-grid{
+    grid-template-columns:repeat(3, 1fr);
+  }
+}
+
+/* mobile */
+@media (max-width: 768px){
+  .review-strip{
+    padding:24px 14px;
+  }
+
+  .review-grid{
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+
+  .review-card{
+    min-height:auto;
+    padding:22px 18px 18px;
+  }
+
+  .review-stars{
+    font-size:20px;
+  }
+
+  .review-card h3{
+    font-size:18px;
+  }
+
+  .review-card p{
+    font-size:14px;
+  }
+}
+
+.review-grid{
+  display:flex;              /* به جای grid */
+  gap:18px;
+  overflow:hidden;          /* اسکرول مخفی */
+  cursor:grab;
+  user-select:none;
+}
+
+.review-grid:active{
+  cursor:grabbing;
+}
+
+.review-card{
+  min-width:280px;          /* مهم برای افقی شدن */
+  flex:0 0 auto;
+}

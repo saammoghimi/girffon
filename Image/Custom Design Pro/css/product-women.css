@@ -1,0 +1,31 @@
+body.women-theme {
+    background: #ffffff;
+    color: #111322;
+}
+
+body.women-theme.dark-mode {
+    background: radial-gradient(circle at top, rgba(244, 114, 182, 0.18), transparent 45%),
+                #0f172a;
+    color: #fdf2f8;
+}
+
+.women-theme .cdp-card--product {
+    border: 1px solid rgba(244, 114, 182, 0.35);
+    box-shadow: 0 15px 40px rgba(244, 114, 182, 0.25);
+}
+
+.women-theme .cdp-product-name {
+    color: #be185d;
+    letter-spacing: 0.04em;
+}
+
+.women-theme .cdp-view-btn.cdp-view-btn--active {
+    border-color: #f472b6;
+    background: rgba(244, 114, 182, 0.14);
+    color: #be185d;
+}
+
+.women-theme .cdp-toggle-color .cdp-toggle-knob {
+    background: linear-gradient(135deg, #fcd34d, #f472b6);
+}
+

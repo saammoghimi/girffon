@@ -1,0 +1,21 @@
+@import url('./print.css');
+
+/* Cushion cover print windows */
+body.cushion-cover-theme #boxFront {
+  top: 15%;
+  left: 14%;
+  width: 72%;
+  height: 70%;
+}
+
+body.cushion-cover-theme #boxBack {
+  top: 15%;
+  left: 14%;
+  width: 72%;
+  height: 70%;
+}
+
+body.cushion-cover-theme #boxRight,
+body.cushion-cover-theme #boxLeft {
+  display: none;
+}
