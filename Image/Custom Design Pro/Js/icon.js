@@ -1163,6 +1163,9 @@ window.attachDoubleTapHandler = attachDoubleTapHandler;
         }
     };
 
+    window.cdpBeginIconDrag = beginIconDrag;
+    window.cdpAttachIconEvents = attachIconEvents;
+
     iconBtn.addEventListener('click', showPanel);
 
     document.addEventListener('keydown', (e) => {
@@ -1197,7 +1200,9 @@ window.reattachIconEvents = function(iconElement) {
     });
     
     if (layerData) {
-        attachIconEvents(iconElement, layerData);
+        if (typeof window.cdpAttachIconEvents === 'function') {
+            window.cdpAttachIconEvents(iconElement, layerData);
+        }
         console.log("✅ Icon events attached, locked =", layerData.locked);
     } else {
         console.error("❌ Icon layer data not found!");
@@ -1221,8 +1226,8 @@ window.reattachIconEventsWithData = function(iconElement, layerData) {
         if (e.type === 'mousedown' && e.button !== 0) return;
         
         // استفاده از متغیرهای global drag
-        if (typeof window.iconDragState !== 'undefined') {
-            beginIconDrag(window.iconDragState, iconElement, e, true);
+        if (typeof window.iconDragState !== 'undefined' && typeof window.cdpBeginIconDrag === 'function') {
+            window.cdpBeginIconDrag(window.iconDragState, iconElement, e, true);
         }
 
         iconElement.style.cursor = 'grabbing';
