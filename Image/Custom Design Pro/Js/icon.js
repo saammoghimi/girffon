@@ -1251,12 +1251,14 @@ window.reattachIconEventsWithData = function(iconElement, layerData) {
         e.stopPropagation();
     }, false);
 
-window.attachDoubleTapHandler(iconElement, function(e) {
-        if (layerData.locked) return;
-        if (typeof window.showIconResizePanel === 'function') {
-            window.showIconResizePanel(iconElement, layerData);
-        }
-    }, () => window.iconDragState.isDragging || layerData.locked);
+    if (typeof window.attachDoubleTapHandler === 'function') {
+        window.attachDoubleTapHandler(iconElement, function(e) {
+            if (layerData.locked) return;
+            if (typeof window.showIconResizePanel === 'function') {
+                window.showIconResizePanel(iconElement, layerData);
+            }
+        }, () => (window.iconDragState && window.iconDragState.isDragging) || layerData.locked);
+    }
     
     console.log("✅ Icon events attached!");
 };

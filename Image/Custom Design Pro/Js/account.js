@@ -218,6 +218,31 @@
         return ACCOUNT_FALLBACKS[raw] || "us";
     }
 
+    function detectAppBasePath() {
+        const scriptNode = Array.from(document.scripts).find(function (node) {
+            return /\/Image\/Custom(?:%20| )Design(?:%20| )Pro\/Js\/account\.js(?:\?|$)/i.test(node.src || "");
+        });
+
+        if (scriptNode && scriptNode.src) {
+            const scriptUrl = new URL(scriptNode.src, window.location.href);
+            return scriptUrl.pathname.replace(/\/Image\/Custom(?:%20| )Design(?:%20| )Pro\/Js\/account\.js$/i, "");
+        }
+
+        const currentPath = window.location.pathname || "/";
+        return currentPath.replace(/\/Image\/Custom(?:%20| )Design(?:%20| )Pro\/[^/]*$/i, "") || "/";
+    }
+
+    function buildAppPath(relativePath) {
+        const normalizedPath = String(relativePath || "").replace(/^\/+/, "");
+        const basePath = detectAppBasePath().replace(/\/+$/, "");
+
+        if (!basePath) {
+            return `/${normalizedPath}`;
+        }
+
+        return `${basePath}/${normalizedPath}`.replace(/\/+/g, "/");
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
         const trigger = document.querySelector('[data-tool="account"]');
         const panel = document.getElementById("cdpAccountPanel");
@@ -233,6 +258,7 @@
         const loginForm = document.getElementById("cdpAccountLoginForm");
         const loginIdentifierInput = document.getElementById("cdpLoginIdentifier");
         const loginPasswordInput = document.getElementById("cdpLoginPassword");
+        const loginBtn = document.getElementById("cdpLoginBtn");
         const signupBtn = document.getElementById("cdpSignupBtn");
         const forgotBtn = document.getElementById("cdpForgotAccountBtn");
         const googleLoginBtn = document.getElementById("cdpGoogleLoginBtn");
@@ -246,17 +272,158 @@
 
         const userNameEl = document.getElementById("cdpUserName");
         const userEmailEl = document.getElementById("cdpUserEmail");
+        const userAvatarWrap = panel.querySelector(".cdp-account-profile-icon");
 
-        const LOGIN_KEY = "cdpLoggedIn";
-        const USER_KEY = "cdpUserData";
+        const LOGIN_URL = buildAppPath("backend/auth/login.php");
+        const SESSION_URL = buildAppPath("backend/auth/session.php");
+        const LOGOUT_URL = buildAppPath("logout.php");
+        const PROFILE_DATA_URL = buildAppPath("backend/profile/profile-data.php");
+        const PROFILE_URL = buildAppPath("ProfilePage.php");
+        const REGISTER_URL = buildAppPath("register.php");
+        const RESET_PASSWORD_URL = buildAppPath("reset-password.php");
+        const AVATAR_STORAGE_KEY = "girffon_profile_avatar";
 
-        let isLoggedIn = false;
-        let userData = null;
+        let authStatus = null;
+        let isAuthenticated = false;
+        let currentUser = null;
+        let isSyncingSession = false;
 
         function t(key) {
             const lang = resolveAccountLang();
             const dict = ACCOUNT_STRINGS[lang] || ACCOUNT_STRINGS.us;
             return dict[key] || ACCOUNT_STRINGS.us[key] || "";
+        }
+
+        function ensureAuthStatusNode() {
+            if (authStatus || !loginForm) {
+                return authStatus;
+            }
+
+            authStatus = document.createElement("p");
+            authStatus.className = "cdp-account-note cdp-account-auth-status";
+            authStatus.setAttribute("role", "status");
+            authStatus.setAttribute("aria-live", "polite");
+            loginForm.appendChild(authStatus);
+            return authStatus;
+        }
+
+        function setAuthStatus(message, isError) {
+            ensureAuthStatusNode();
+            if (!authStatus) {
+                return;
+            }
+
+            authStatus.textContent = String(message || "");
+            authStatus.style.color = isError ? "#d46a6a" : "#6b7280";
+        }
+
+        function setButtonBusy(button, busy, label) {
+            if (!button) {
+                return;
+            }
+
+            button.disabled = Boolean(busy);
+            const labelNode = button.querySelector("span");
+            if (labelNode && label) {
+                labelNode.textContent = label;
+            }
+        }
+
+        function readStoredAvatar() {
+            try {
+                return String(window.localStorage.getItem(AVATAR_STORAGE_KEY) || "").trim();
+            } catch (_error) {
+                return "";
+            }
+        }
+
+        function writeStoredAvatar(value) {
+            try {
+                if (!value) {
+                    window.localStorage.removeItem(AVATAR_STORAGE_KEY);
+                    return;
+                }
+
+                window.localStorage.setItem(AVATAR_STORAGE_KEY, value);
+            } catch (_error) {
+            }
+        }
+
+        function normalizeUser(user) {
+            if (!user || typeof user !== "object") {
+                return null;
+            }
+
+            const firstName = String(user.first_name || "").trim();
+            const lastName = String(user.last_name || "").trim();
+            const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+            return {
+                id: Number(user.id || 0),
+                username: String(user.username || "").trim(),
+                name: fullName || String(user.name || user.username || "GirffoN Member"),
+                email: String(user.email || "").trim(),
+                phone: String(user.phone || "").trim(),
+                avatar: String(user.avatar || "").trim()
+            };
+        }
+
+        function normalizeAvatarSource(value) {
+            const avatarPath = String(value || "").trim();
+            if (!avatarPath) {
+                return "";
+            }
+
+            if (/^(?:https?:)?\/\//i.test(avatarPath) || avatarPath.startsWith("data:")) {
+                return avatarPath;
+            }
+
+            return buildAppPath(avatarPath);
+        }
+
+        function resolveAvatarSource() {
+            if (!currentUser) {
+                return "";
+            }
+
+            return normalizeAvatarSource(currentUser.avatar || readStoredAvatar());
+        }
+
+        function renderUserAvatar() {
+            if (!userAvatarWrap) {
+                return;
+            }
+
+            const avatarSrc = resolveAvatarSource();
+            if (avatarSrc) {
+                const avatarImage = document.createElement("img");
+                avatarImage.className = "cdp-account-profile-photo";
+                avatarImage.src = avatarSrc;
+                avatarImage.width = 56;
+                avatarImage.height = 56;
+                avatarImage.alt = `${currentUser && currentUser.name ? currentUser.name : "GirffoN Member"} avatar`;
+                userAvatarWrap.replaceChildren(avatarImage);
+                return;
+            }
+
+            userAvatarWrap.innerHTML = '<i class="fa-solid fa-user"></i>';
+        }
+
+        async function readTextResponse(response) {
+            const text = await response.text();
+            let json = null;
+
+            try {
+                json = text ? JSON.parse(text) : null;
+            } catch (_error) {
+                json = null;
+            }
+
+            return {
+                ok: response.ok,
+                text: text,
+                json: json
+            };
         }
 
         function applyAccountTranslations() {
@@ -350,62 +517,165 @@
             }
         }
 
-        function loadAuthState() {
-            isLoggedIn = localStorage.getItem(LOGIN_KEY) === "true";
-            userData = null;
-
-            if (isLoggedIn) {
-                const saved = localStorage.getItem(USER_KEY);
-
-                if (saved) {
-                    try {
-                        userData = JSON.parse(saved);
-                    } catch (_error) {
-                        isLoggedIn = false;
-                    }
-                }
-            }
-        }
-
-        function saveAuthState() {
-            if (!isLoggedIn || !userData) {
-                localStorage.removeItem(LOGIN_KEY);
-                localStorage.removeItem(USER_KEY);
-                return;
-            }
-
-            localStorage.setItem(LOGIN_KEY, "true");
-            localStorage.setItem(USER_KEY, JSON.stringify(userData));
-        }
-
         function updateAccountView() {
-            if (isLoggedIn && userData) {
+            if (isAuthenticated && currentUser) {
                 setActiveView("user");
 
                 if (userNameEl) {
-                    userNameEl.textContent = userData.name || t("userFallback");
+                    userNameEl.textContent = currentUser.name || t("userFallback");
                 }
 
                 if (userEmailEl) {
-                    userEmailEl.textContent = userData.email || t("userEmailFallback");
+                    userEmailEl.textContent = currentUser.email || currentUser.username || t("userEmailFallback");
                 }
             } else {
                 setActiveView("guest");
+                if (userNameEl) {
+                    userNameEl.textContent = t("userFallback");
+                }
+                if (userEmailEl) {
+                    userEmailEl.textContent = t("userEmailFallback");
+                }
+            }
+
+            renderUserAvatar();
+        }
+
+        function setAuthUser(user, shouldSyncAvatar = true) {
+            currentUser = user ? normalizeUser(user) : null;
+            isAuthenticated = Boolean(currentUser);
+            updateAccountView();
+
+            if (isAuthenticated && shouldSyncAvatar) {
+                syncProfileAvatar().catch(function () {
+                    return "";
+                });
             }
         }
 
-        function loginWith(user) {
-            userData = user;
-            isLoggedIn = true;
-            saveAuthState();
-            updateAccountView();
+        async function syncProfileAvatar() {
+            if (!isAuthenticated || !currentUser) {
+                renderUserAvatar();
+                return "";
+            }
+
+            try {
+                const response = await fetch(PROFILE_DATA_URL, {
+                    method: "GET",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+                const payload = await readTextResponse(response);
+
+                if (!payload.ok || !payload.json || !payload.json.success || !payload.json.user) {
+                    renderUserAvatar();
+                    return "";
+                }
+
+                const profileUser = normalizeUser(payload.json.user);
+                if (profileUser) {
+                    currentUser = {
+                        ...currentUser,
+                        ...profileUser,
+                        avatar: String(payload.json.user.avatar || profileUser.avatar || "").trim()
+                    };
+                }
+
+                writeStoredAvatar(currentUser.avatar || "");
+                updateAccountView();
+                return currentUser.avatar || "";
+            } catch (_error) {
+                renderUserAvatar();
+                return "";
+            }
         }
 
-        function doLogout() {
-            isLoggedIn = false;
-            userData = null;
-            saveAuthState();
-            updateAccountView();
+        async function syncSession() {
+            if (isSyncingSession) {
+                return currentUser;
+            }
+
+            isSyncingSession = true;
+
+            try {
+                const response = await fetch(SESSION_URL, {
+                    method: "GET",
+                    credentials: "same-origin",
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+                const payload = await readTextResponse(response);
+
+                if (payload.json && payload.json.authenticated && payload.json.user) {
+                    setAuthUser(payload.json.user);
+                    return currentUser;
+                }
+
+                setAuthUser(null, false);
+                return null;
+            } catch (_error) {
+                updateAccountView();
+                return currentUser;
+            } finally {
+                isSyncingSession = false;
+            }
+        }
+
+        async function loginRemote(identifier, password) {
+            const formData = new URLSearchParams();
+            formData.set("identifier", identifier);
+            formData.set("username", identifier);
+            formData.set("password", password);
+
+            const response = await fetch(LOGIN_URL, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+                },
+                body: formData.toString()
+            });
+
+            const payload = await readTextResponse(response);
+
+            if (!payload.ok) {
+                throw new Error((payload.json && payload.json.message) || payload.text.trim() || "Unable to sign in.");
+            }
+
+            if (payload.json && payload.json.ok && payload.json.user) {
+                setAuthUser(payload.json.user);
+                return currentUser;
+            }
+
+            const sessionUser = await syncSession();
+            if (sessionUser) {
+                return sessionUser;
+            }
+
+            throw new Error(payload.text.trim() || "Unable to sign in.");
+        }
+
+        async function logoutRemote() {
+            const response = await fetch(LOGOUT_URL, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+            const payload = await readTextResponse(response);
+
+            if (!payload.ok || !payload.json || !payload.json.ok) {
+                throw new Error((payload.json && payload.json.message) || payload.text.trim() || "Unable to log out.");
+            }
+
+            writeStoredAvatar("");
+            setAuthUser(null, false);
+            return true;
         }
 
         function goToAccountSection(sectionId) {
@@ -413,14 +683,13 @@
             const targetHash = normalizedSection.startsWith("#") ? normalizedSection : "#gfProfileDetails";
 
             setPanelVisibility(false);
-            window.location.href = "../../ProfilePage.php" + targetHash;
+            window.location.href = PROFILE_URL + targetHash;
         }
 
-        trigger.addEventListener("click", (event) => {
+        trigger.addEventListener("click", async (event) => {
             event.preventDefault();
             event.stopPropagation();
-            loadAuthState();
-            updateAccountView();
+            await syncSession();
             setPanelVisibility(true);
         });
 
@@ -432,7 +701,7 @@
             }
         });
 
-        loginForm?.addEventListener("submit", (event) => {
+        loginForm?.addEventListener("submit", async (event) => {
             event.preventDefault();
 
             const identifier = (loginIdentifierInput?.value || "").trim();
@@ -447,36 +716,42 @@
                 return;
             }
 
-            const displayName = identifier.includes("@")
-                ? identifier.split("@")[0]
-                : identifier;
+            setAuthStatus("", false);
+            setButtonBusy(loginBtn, true, "Signing in...");
 
-            loginWith({
-                name: displayName.replace(/[._-]+/g, " ").replace(/\b\w/g, (match) => match.toUpperCase()) || "GirffoN Member",
-                email: identifier.includes("@") ? identifier : identifier + "@girffon.com",
-                provider: "email"
-            });
-
-            loginForm.reset();
+            try {
+                await loginRemote(identifier, password);
+                loginForm.reset();
+            } catch (error) {
+                setAuthStatus(error && error.message ? error.message : "Unable to sign in.", true);
+            } finally {
+                setButtonBusy(loginBtn, false, t("login"));
+            }
         });
 
         signupBtn?.addEventListener("click", () => {
-            loginWith({ name: "New User", email: "newuser@example.com", provider: "email" });
+            window.location.href = REGISTER_URL;
         });
 
         forgotBtn?.addEventListener("click", () => {
-            loginIdentifierInput?.focus();
+            window.location.href = RESET_PASSWORD_URL;
         });
 
         googleLoginBtn?.addEventListener("click", () => {
-            loginWith({ name: "Google User", email: "user@gmail.com", provider: "google" });
+            setAuthStatus("Google sign-in is not configured yet.", true);
         });
 
         appleLoginBtn?.addEventListener("click", () => {
-            loginWith({ name: "Apple User", email: "user@icloud.com", provider: "apple" });
+            setAuthStatus("Apple sign-in is not configured yet.", true);
         });
 
-        logoutBtn?.addEventListener("click", doLogout);
+        logoutBtn?.addEventListener("click", async () => {
+            try {
+                await logoutRemote();
+            } catch (error) {
+                setAuthStatus(error && error.message ? error.message : "Unable to log out.", true);
+            }
+        });
 
         manageAccountBtn?.addEventListener("click", () => {
             goToAccountSection("#gfProfileDetails");
@@ -499,16 +774,18 @@
         });
 
         window.addEventListener("storage", (event) => {
-            if (event.key === LOGIN_KEY || event.key === USER_KEY) {
-                loadAuthState();
-                updateAccountView();
+            if (event.key === AVATAR_STORAGE_KEY) {
+                renderUserAvatar();
             }
         });
 
         window.addEventListener("cdp-locale-changed", applyAccountTranslations);
 
-        loadAuthState();
-        updateAccountView();
+        ensureAuthStatusNode();
+        setAuthStatus("Sign in to continue with your GirffoN account, or open your profile to manage your details.", false);
         applyAccountTranslations();
+        syncSession().catch(function () {
+            updateAccountView();
+        });
     });
 })();
