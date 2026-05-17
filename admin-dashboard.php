@@ -30,8 +30,12 @@ $adminVisitorAnalytics = girffonAdminFetchVisitorAnalytics();
 $adminCurrentAdminProfile = girffonAdminFetchAdminProfile($pdo, $adminCurrentId);
 $adminWeatherCity = trim((string) ($adminCurrentAdminProfile['city'] ?? '')) ?: 'Milan';
 $adminWeatherCountry = trim((string) ($adminCurrentAdminProfile['country'] ?? '')) ?: 'Italy';
+$adminAnalyticsExplorer = girffonAdminFetchAnalyticsExplorer($pdo);
 $escapeAdminDashboard = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
+};
+$escapeAdminDashboardJson = static function ($value) {
+  return htmlspecialchars(json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ENT_QUOTES, "UTF-8");
 };
 $formatAdminDashboardCurrency = static function ($value) {
   return "EUR " . number_format((float) $value, 2, ".", ",");
@@ -46,9 +50,9 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Dashboard</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r1">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r6">
 </head>
-<body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database" data-admin-weather-city="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" data-admin-weather-country="<?php echo $escapeAdminDashboard($adminWeatherCountry); ?>">
+<body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database" data-admin-weather-city="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" data-admin-weather-country="<?php echo $escapeAdminDashboard($adminWeatherCountry); ?>" data-admin-analytics="<?php echo $escapeAdminDashboardJson($adminAnalyticsExplorer); ?>">
   <div class="admin-layout">
     <aside class="admin-sidebar" aria-label="Admin navigation">
       <div class="admin-sidebar-header">
@@ -130,7 +134,7 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
         <article class="admin-stat-card">
           <span>Last Login Time</span>
           <strong id="adminLastLoginTime"><?php echo $escapeAdminDashboard($adminLastLoginTime !== '' ? date('Y-m-d H:i', strtotime($adminLastLoginTime)) : 'No data'); ?></strong>
-          <p class="admin-status">Most recent admin login captured for this account.</p>
+          <p class="admin-status">Exact latest admin sign-in recorded for this account.</p>
         </article>
       </section>
 
@@ -269,18 +273,35 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
           <div class="admin-panel-head">
             <div>
               <h2>Daily / Monthly / Yearly Stats</h2>
-              <p class="admin-panel-note">Orders, revenue, invoices, and new members by period.</p>
+              <p class="admin-panel-note">Professional exact analytics with selectable year and month.</p>
             </div>
           </div>
-          <div class="admin-period-stats">
-            <?php foreach ($adminPeriodStats as $period): ?>
-              <div class="admin-period-card">
-                <span><?php echo $escapeAdminDashboard($period['label'] ?? 'Period'); ?></span>
-                <strong><?php echo $escapeAdminDashboard((string) ($period['orders'] ?? 0)); ?> orders</strong>
-                <p><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($period['revenue'] ?? 0)); ?> revenue</p>
-                <small><?php echo $escapeAdminDashboard((string) ($period['invoices'] ?? 0)); ?> invoices, <?php echo $escapeAdminDashboard((string) ($period['members'] ?? 0)); ?> new members</small>
+          <div class="admin-analytics-explorer" data-admin-analytics-explorer>
+            <div class="admin-analytics-controls">
+              <div class="admin-analytics-toggle-group" role="tablist" aria-label="Analytics period">
+                <button type="button" class="admin-chip is-active" data-analytics-period="daily">Daily</button>
+                <button type="button" class="admin-chip" data-analytics-period="monthly">Monthly</button>
+                <button type="button" class="admin-chip" data-analytics-period="yearly">Yearly</button>
               </div>
-            <?php endforeach; ?>
+              <div class="admin-analytics-filter-group" data-analytics-year-group>
+                <?php foreach (($adminAnalyticsExplorer['years'] ?? []) as $year): ?>
+                  <button type="button" class="admin-chip <?php echo ((int) $year === (int) ($adminAnalyticsExplorer['selectedYear'] ?? date('Y'))) ? 'is-active' : ''; ?>" data-analytics-year="<?php echo $escapeAdminDashboard($year); ?>"><?php echo $escapeAdminDashboard($year); ?></button>
+                <?php endforeach; ?>
+              </div>
+              <label class="admin-inline-select" data-analytics-month-wrap>
+                <span>Month</span>
+                <select data-analytics-month>
+                  <?php for ($month = 1; $month <= 12; $month++): ?>
+                    <option value="<?php echo $escapeAdminDashboard($month); ?>" <?php echo ((int) $month === (int) ($adminAnalyticsExplorer['selectedMonth'] ?? date('n'))) ? 'selected' : ''; ?>><?php echo $escapeAdminDashboard(date('F', mktime(0, 0, 0, $month, 1))); ?></option>
+                  <?php endfor; ?>
+                </select>
+              </label>
+              <div class="admin-analytics-action-row">
+                <button type="button" class="admin-button admin-button-soft" data-analytics-download-pdf>Download PDF</button>
+              </div>
+            </div>
+            <div class="admin-analytics-summary-grid" data-analytics-summary></div>
+            <div class="admin-analytics-chart" data-analytics-chart></div>
           </div>
         </article>
 
@@ -288,19 +309,107 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
           <div class="admin-panel-head">
             <div>
               <h2>Weather Widget</h2>
-              <p class="admin-panel-note">Live weather for the current admin city.</p>
+              <p class="admin-panel-note">Live weather with selectable country, region, and city.</p>
             </div>
           </div>
           <div class="admin-weather-shell">
+            <div class="admin-weather-controls">
+              <label class="admin-inline-select">
+                <span>Region</span>
+                <select data-admin-weather-region>
+                  <option value="Italy">Italy</option>
+                  <option value="Iran">Iran</option>
+                  <option value="United States">United States</option>
+                  <option value="France">France</option>
+                  <option value="Germany">Germany</option>
+                  <option value="Europe">Europe</option>
+                  <option value="Americas">Americas</option>
+                  <option value="Asia">Asia</option>
+                  <option value="World">World</option>
+                </select>
+              </label>
+              <label class="admin-inline-input">
+                <span>City</span>
+                <input type="text" data-admin-weather-city-input value="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" placeholder="Enter city">
+              </label>
+              <div class="admin-weather-actions">
+                <button type="button" class="admin-button admin-button-soft" data-admin-weather-apply>Apply</button>
+                <button type="button" class="admin-button admin-button-soft" data-admin-weather-clear>Clear</button>
+              </div>
+            </div>
             <div class="admin-weather-main">
+              <div class="admin-weather-condition-badge" data-admin-weather-badge data-weather-kind="neutral">
+                <span class="admin-weather-condition-icon" data-admin-weather-icon aria-hidden="true">--</span>
+                <span class="admin-weather-condition-label" data-admin-weather-label>Loading</span>
+              </div>
               <strong data-admin-weather-temp>--</strong>
               <span data-admin-weather-condition>Loading live weather...</span>
             </div>
             <div class="admin-weather-meta">
               <div><span>City</span><strong data-admin-weather-city><?php echo $escapeAdminDashboard($adminWeatherCity); ?></strong></div>
-              <div><span>Country</span><strong><?php echo $escapeAdminDashboard($adminWeatherCountry); ?></strong></div>
+              <div><span>Country</span><strong data-admin-weather-country><?php echo $escapeAdminDashboard($adminWeatherCountry); ?></strong></div>
               <div><span>Wind</span><strong data-admin-weather-wind>--</strong></div>
             </div>
+            <div class="admin-weather-forecast" data-admin-weather-forecast>
+              <div class="admin-weather-forecast-card" data-admin-weather-forecast-item>
+                <span class="admin-weather-forecast-day">Today</span>
+                <span class="admin-weather-forecast-icon" aria-hidden="true">--</span>
+                <strong class="admin-weather-forecast-temp">-- / --</strong>
+                <span class="admin-weather-forecast-label">Loading</span>
+              </div>
+              <div class="admin-weather-forecast-card" data-admin-weather-forecast-item>
+                <span class="admin-weather-forecast-day">Tomorrow</span>
+                <span class="admin-weather-forecast-icon" aria-hidden="true">--</span>
+                <strong class="admin-weather-forecast-temp">-- / --</strong>
+                <span class="admin-weather-forecast-label">Loading</span>
+              </div>
+              <div class="admin-weather-forecast-card" data-admin-weather-forecast-item>
+                <span class="admin-weather-forecast-day">Day After</span>
+                <span class="admin-weather-forecast-icon" aria-hidden="true">--</span>
+                <strong class="admin-weather-forecast-temp">-- / --</strong>
+                <span class="admin-weather-forecast-label">Loading</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="admin-panel admin-world-clock-widget" data-admin-world-clock-widget>
+          <div class="admin-panel-head">
+            <div>
+              <h2>World Clock</h2>
+              <p class="admin-panel-note">Live world time with timezone offset, day or night status, and quick city comparison.</p>
+            </div>
+          </div>
+          <div class="admin-world-clock-shell">
+            <label class="admin-inline-select">
+              <span>Location</span>
+              <select data-admin-world-clock-zone>
+                <option value="America/New_York">USA, New York</option>
+                <option value="America/Los_Angeles">USA, Los Angeles</option>
+                <option value="America/Toronto">Canada, Toronto</option>
+                <option value="America/Vancouver">Canada, Vancouver</option>
+                <option value="Europe/Rome">Italy, Rome</option>
+                <option value="Europe/Paris">France, Paris</option>
+                <option value="Europe/Berlin">Germany, Berlin</option>
+                <option value="Europe/London">Europe, London</option>
+                <option value="Asia/Tehran">Iran, Tehran</option>
+                <option value="Asia/Dubai">Middle East, Dubai</option>
+                <option value="Asia/Tokyo">Asia, Tokyo</option>
+                <option value="Australia/Sydney">Australia, Sydney</option>
+                <option value="UTC">World, UTC</option>
+              </select>
+            </label>
+            <div class="admin-world-clock-face">
+              <strong data-admin-world-clock-time>--:--:--</strong>
+              <span data-admin-world-clock-date>Loading date...</span>
+            </div>
+            <div class="admin-world-clock-meta">
+              <div><span>Zone</span><strong data-admin-world-clock-label>USA, New York</strong></div>
+              <div><span>UTC Offset</span><strong data-admin-world-clock-offset>UTC</strong></div>
+              <div><span>Status</span><strong data-admin-world-clock-status>Daytime</strong></div>
+              <div><span>Format</span><strong>24 Hours</strong></div>
+            </div>
+            <div class="admin-world-clock-grid" data-admin-world-clock-grid></div>
           </div>
         </article>
 
@@ -348,6 +457,6 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260518r1"></script>
+  <script src="JS/admin-girffon.js?v=20260518r6"></script>
 </body>
 </html>

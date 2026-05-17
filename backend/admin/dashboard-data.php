@@ -247,6 +247,235 @@ function girffonAdminFetchPeriodStats(PDO $pdo): array
     return $stats;
 }
 
+function girffonAdminFetchAvailableStatYears(PDO $pdo): array
+{
+    return [2026, 2027, 2028, 2029, 2030];
+}
+
+function girffonAdminAnalyticsBuildBaseSeries(array $labels): array
+{
+    $series = [];
+    foreach ($labels as $key => $label) {
+        $series[(string) $key] = [
+            'key' => (string) $key,
+            'label' => (string) $label,
+            'orders' => 0,
+            'revenue' => 0.0,
+            'invoices' => 0,
+            'members' => 0,
+        ];
+    }
+
+    return $series;
+}
+
+function girffonAdminAnalyticsSeriesValues(array $series): array
+{
+    return array_values($series);
+}
+
+function girffonAdminAnalyticsSeriesSummary(array $series): array
+{
+    $summary = [
+        'orders' => 0,
+        'revenue' => 0.0,
+        'invoices' => 0,
+        'members' => 0,
+    ];
+
+    foreach ($series as $bucket) {
+        $summary['orders'] += (int) ($bucket['orders'] ?? 0);
+        $summary['revenue'] += (float) ($bucket['revenue'] ?? 0);
+        $summary['invoices'] += (int) ($bucket['invoices'] ?? 0);
+        $summary['members'] += (int) ($bucket['members'] ?? 0);
+    }
+
+    return $summary;
+}
+
+function girffonAdminAnalyticsDailySeries(PDO $pdo, int $year, int $month): array
+{
+    $year = max(2024, min(2035, $year));
+    $month = max(1, min(12, $month));
+    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+    $labels = [];
+    for ($day = 1; $day <= $daysInMonth; $day++) {
+        $labels[(string) $day] = str_pad((string) $day, 2, '0', STR_PAD_LEFT);
+    }
+    $series = girffonAdminAnalyticsBuildBaseSeries($labels);
+
+    try {
+        $statement = $pdo->prepare("SELECT DAY(created_at) AS bucket_day, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue FROM orders WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month GROUP BY DAY(created_at)");
+        $statement->execute([':year' => $year, ':month' => $month]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ((int) ($row['bucket_day'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['orders'] = (int) ($row['orders'] ?? 0);
+                $series[$key]['revenue'] = (float) ($row['revenue'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    try {
+        $statement = $pdo->prepare("SELECT DAY(created_at) AS bucket_day, COUNT(*) AS invoices FROM invoices WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month GROUP BY DAY(created_at)");
+        $statement->execute([':year' => $year, ':month' => $month]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ((int) ($row['bucket_day'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['invoices'] = (int) ($row['invoices'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    try {
+        $statement = $pdo->prepare("SELECT DAY(created_at) AS bucket_day, COUNT(*) AS members FROM users WHERE role = 'customer' AND YEAR(created_at) = :year AND MONTH(created_at) = :month GROUP BY DAY(created_at)");
+        $statement->execute([':year' => $year, ':month' => $month]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ((int) ($row['bucket_day'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['members'] = (int) ($row['members'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    return [
+        'label' => date('F Y', strtotime(sprintf('%04d-%02d-01', $year, $month))),
+        'summary' => girffonAdminAnalyticsSeriesSummary($series),
+        'series' => girffonAdminAnalyticsSeriesValues($series),
+    ];
+}
+
+function girffonAdminAnalyticsMonthlySeries(PDO $pdo, int $year): array
+{
+    $year = max(2024, min(2035, $year));
+    $labels = [
+        '1' => 'Jan', '2' => 'Feb', '3' => 'Mar', '4' => 'Apr', '5' => 'May', '6' => 'Jun',
+        '7' => 'Jul', '8' => 'Aug', '9' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec',
+    ];
+    $series = girffonAdminAnalyticsBuildBaseSeries($labels);
+
+    try {
+        $statement = $pdo->prepare("SELECT MONTH(created_at) AS bucket_month, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue FROM orders WHERE YEAR(created_at) = :year GROUP BY MONTH(created_at)");
+        $statement->execute([':year' => $year]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ((int) ($row['bucket_month'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['orders'] = (int) ($row['orders'] ?? 0);
+                $series[$key]['revenue'] = (float) ($row['revenue'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    try {
+        $statement = $pdo->prepare("SELECT MONTH(created_at) AS bucket_month, COUNT(*) AS invoices FROM invoices WHERE YEAR(created_at) = :year GROUP BY MONTH(created_at)");
+        $statement->execute([':year' => $year]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ((int) ($row['bucket_month'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['invoices'] = (int) ($row['invoices'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    try {
+        $statement = $pdo->prepare("SELECT MONTH(created_at) AS bucket_month, COUNT(*) AS members FROM users WHERE role = 'customer' AND YEAR(created_at) = :year GROUP BY MONTH(created_at)");
+        $statement->execute([':year' => $year]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $key = (string) ((int) ($row['bucket_month'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['members'] = (int) ($row['members'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    return [
+        'label' => (string) $year,
+        'summary' => girffonAdminAnalyticsSeriesSummary($series),
+        'series' => girffonAdminAnalyticsSeriesValues($series),
+    ];
+}
+
+function girffonAdminAnalyticsYearlySeries(PDO $pdo, array $years): array
+{
+    $keys = [];
+    foreach ($years as $year) {
+        $keys[(string) $year] = (string) $year;
+    }
+    $series = girffonAdminAnalyticsBuildBaseSeries($keys);
+
+    try {
+        $statement = $pdo->query("SELECT YEAR(created_at) AS bucket_year, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue FROM orders WHERE created_at IS NOT NULL GROUP BY YEAR(created_at)");
+        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+            $key = (string) ((int) ($row['bucket_year'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['orders'] = (int) ($row['orders'] ?? 0);
+                $series[$key]['revenue'] = (float) ($row['revenue'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    try {
+        $statement = $pdo->query("SELECT YEAR(created_at) AS bucket_year, COUNT(*) AS invoices FROM invoices WHERE created_at IS NOT NULL GROUP BY YEAR(created_at)");
+        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+            $key = (string) ((int) ($row['bucket_year'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['invoices'] = (int) ($row['invoices'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    try {
+        $statement = $pdo->query("SELECT YEAR(created_at) AS bucket_year, COUNT(*) AS members FROM users WHERE role = 'customer' AND created_at IS NOT NULL GROUP BY YEAR(created_at)");
+        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+            $key = (string) ((int) ($row['bucket_year'] ?? 0));
+            if (isset($series[$key])) {
+                $series[$key]['members'] = (int) ($row['members'] ?? 0);
+            }
+        }
+    } catch (PDOException $exception) {
+    }
+
+    return [
+        'label' => count($years) > 1 ? ((string) min($years) . ' - ' . (string) max($years)) : ((string) ($years[0] ?? date('Y'))),
+        'summary' => girffonAdminAnalyticsSeriesSummary($series),
+        'series' => girffonAdminAnalyticsSeriesValues($series),
+    ];
+}
+
+function girffonAdminFetchAnalyticsExplorer(PDO $pdo): array
+{
+    $years = girffonAdminFetchAvailableStatYears($pdo);
+    $selectedYear = 2026;
+    $selectedMonth = (int) date('n');
+
+    $daily = [];
+    $monthly = [];
+    foreach ($years as $year) {
+        $monthly[(string) $year] = girffonAdminAnalyticsMonthlySeries($pdo, (int) $year);
+        $daily[(string) $year] = [];
+        for ($month = 1; $month <= 12; $month++) {
+            $daily[(string) $year][(string) $month] = girffonAdminAnalyticsDailySeries($pdo, (int) $year, $month);
+        }
+    }
+
+    return [
+        'years' => $years,
+        'selectedYear' => $selectedYear,
+        'selectedMonth' => $selectedMonth,
+        'daily' => $daily,
+        'monthly' => $monthly,
+        'yearly' => girffonAdminAnalyticsYearlySeries($pdo, $years),
+    ];
+}
+
 function girffonAdminCountOrdersToday(PDO $pdo): int
 {
     return girffonAdminCountOrdersForDateRange($pdo, 'CURDATE()', 'DATE_ADD(CURDATE(), INTERVAL 1 DAY)');

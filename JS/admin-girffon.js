@@ -231,12 +231,193 @@
   }
 
   function initDashboardPage() {
+    initDashboardAnalyticsExplorer();
     initDashboardWeatherWidget();
+    initDashboardWorldClock();
     if (document.body.dataset.adminDashboardSource === "database") {
       return;
     }
     renderCounts();
     renderDashboardLists();
+  }
+
+  function initDashboardAnalyticsExplorer() {
+    const body = document.body;
+    const root = document.querySelector("[data-admin-analytics-explorer]");
+    if (!root) {
+      return;
+    }
+
+    let analyticsData = null;
+    try {
+      analyticsData = JSON.parse(body.dataset.adminAnalytics || "{}");
+    } catch (_error) {
+      analyticsData = null;
+    }
+
+    if (!analyticsData) {
+      return;
+    }
+
+    const summaryNode = root.querySelector("[data-analytics-summary]");
+    const chartNode = root.querySelector("[data-analytics-chart]");
+    const monthWrap = root.querySelector("[data-analytics-month-wrap]");
+    const monthSelect = root.querySelector("[data-analytics-month]");
+    const downloadButton = root.querySelector("[data-analytics-download-pdf]");
+    const periodButtons = Array.from(root.querySelectorAll("[data-analytics-period]"));
+    const yearButtons = Array.from(root.querySelectorAll("[data-analytics-year]"));
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const state = {
+      period: "daily",
+      year: Number(analyticsData.selectedYear || new Date().getFullYear()),
+      month: Number(analyticsData.selectedMonth || (new Date().getMonth() + 1))
+    };
+
+    const getDataset = function () {
+      if (state.period === "yearly") {
+        return analyticsData.yearly || { summary: {}, series: [] };
+      }
+
+      if (state.period === "monthly") {
+        return ((analyticsData.monthly || {})[String(state.year)]) || { summary: {}, series: [] };
+      }
+
+      return ((((analyticsData.daily || {})[String(state.year)] || {})[String(state.month)]) || { summary: {}, series: [] });
+    };
+
+    const syncControls = function () {
+      periodButtons.forEach(function (button) {
+        button.classList.toggle("is-active", button.dataset.analyticsPeriod === state.period);
+      });
+      yearButtons.forEach(function (button) {
+        button.classList.toggle("is-active", Number(button.dataset.analyticsYear || 0) === state.year);
+      });
+      if (monthSelect) {
+        monthSelect.value = String(state.month);
+      }
+      if (monthWrap) {
+        monthWrap.hidden = state.period === "yearly";
+      }
+    };
+
+    const renderSummary = function (dataset) {
+      if (!summaryNode) {
+        return;
+      }
+
+      const summary = dataset.summary || {};
+      const periodLabel = state.period === "yearly"
+        ? (dataset.label || "Yearly")
+        : (state.period === "monthly" ? ("Year " + state.year) : (monthNames[state.month - 1] + " " + state.year));
+
+      summaryNode.innerHTML = [
+        { label: periodLabel, value: String(summary.orders || 0) + " orders" },
+        { label: "Revenue", value: formatCurrency(summary.revenue || 0) },
+        { label: "Invoices", value: String(summary.invoices || 0) },
+        { label: "New Members", value: String(summary.members || 0) }
+      ].map(function (item) {
+        return '<div class="admin-analytics-summary-card"><span>' + escapeHtml(item.label) + '</span><strong>' + escapeHtml(item.value) + '</strong></div>';
+      }).join("");
+    };
+
+    const renderChart = function (dataset) {
+      if (!chartNode) {
+        return;
+      }
+
+      const series = Array.isArray(dataset.series) ? dataset.series : [];
+      const maxOrders = Math.max.apply(null, series.map(function (item) {
+        return Number(item.orders || 0);
+      }).concat([1]));
+
+      chartNode.innerHTML = series.map(function (item) {
+        const orders = Number(item.orders || 0);
+        const width = orders <= 0 ? 0 : Math.max(6, Math.round((orders / maxOrders) * 100));
+
+        return '<div class="admin-analytics-bar">' +
+          '<span class="admin-analytics-bar-label">' + escapeHtml(item.label || '-') + '</span>' +
+          '<div class="admin-analytics-bar-track"><span class="admin-analytics-bar-fill" style="width:' + width + '%"></span></div>' +
+          '<span class="admin-analytics-bar-value">' + escapeHtml(String(orders)) + '</span>' +
+          '</div>';
+      }).join("");
+    };
+
+    const render = function () {
+      const dataset = getDataset();
+      syncControls();
+      renderSummary(dataset);
+      renderChart(dataset);
+    };
+
+    const buildReportTitle = function () {
+      if (state.period === "yearly") {
+        return "Yearly Stats Report " + ((getDataset() || {}).label || "2026 - 2030");
+      }
+
+      if (state.period === "monthly") {
+        return "Monthly Stats Report " + state.year;
+      }
+
+      return "Daily Stats Report " + monthNames[state.month - 1] + " " + state.year;
+    };
+
+    const downloadPdfReport = function () {
+      const dataset = getDataset() || { summary: {}, series: [] };
+      const reportWindow = window.open("", "_blank", "width=1080,height=860");
+      if (!reportWindow) {
+        return;
+      }
+
+      const rows = (Array.isArray(dataset.series) ? dataset.series : []).map(function (item) {
+        return "<tr>" +
+          "<td>" + escapeHtml(item.label || "-") + "</td>" +
+          "<td>" + escapeHtml(String(item.orders || 0)) + "</td>" +
+          "<td>" + escapeHtml(formatCurrency(item.revenue || 0)) + "</td>" +
+          "<td>" + escapeHtml(String(item.invoices || 0)) + "</td>" +
+          "<td>" + escapeHtml(String(item.members || 0)) + "</td>" +
+          "</tr>";
+      }).join("");
+
+      reportWindow.document.open();
+      reportWindow.document.write(
+        "<!DOCTYPE html><html><head><title>" + escapeHtml(buildReportTitle()) + "</title>" +
+        "<style>body{font-family:Georgia,serif;padding:32px;color:#2b241b}h1{margin:0 0 12px;font-size:28px}p{margin:0 0 18px;color:#6b5a3b}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 24px}.card{border:1px solid #e7d7ad;border-radius:16px;padding:14px;background:#fffaf0}.card span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a7753}.card strong{display:block;margin-top:8px;font-size:22px}table{width:100%;border-collapse:collapse}th,td{padding:10px 12px;border-bottom:1px solid #eadfca;text-align:left}th{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b5a3b} @media print {button{display:none}}</style></head><body>" +
+        "<h1>" + escapeHtml(buildReportTitle()) + "</h1>" +
+        "<p>Generated from GirffoN Admin Dashboard analytics.</p>" +
+        "<div class='summary'>" +
+        "<div class='card'><span>Orders</span><strong>" + escapeHtml(String((dataset.summary || {}).orders || 0)) + "</strong></div>" +
+        "<div class='card'><span>Revenue</span><strong>" + escapeHtml(formatCurrency((dataset.summary || {}).revenue || 0)) + "</strong></div>" +
+        "<div class='card'><span>Invoices</span><strong>" + escapeHtml(String((dataset.summary || {}).invoices || 0)) + "</strong></div>" +
+        "<div class='card'><span>New Members</span><strong>" + escapeHtml(String((dataset.summary || {}).members || 0)) + "</strong></div>" +
+        "</div>" +
+        "<table><thead><tr><th>Period</th><th>Orders</th><th>Revenue</th><th>Invoices</th><th>New Members</th></tr></thead><tbody>" + rows + "</tbody></table>" +
+        "<script>window.onload=function(){window.print();};</script></body></html>"
+      );
+      reportWindow.document.close();
+    };
+
+    periodButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.period = button.dataset.analyticsPeriod || "daily";
+        render();
+      });
+    });
+
+    yearButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.year = Number(button.dataset.analyticsYear || state.year);
+        render();
+      });
+    });
+
+    monthSelect && monthSelect.addEventListener("change", function () {
+      state.month = Number(monthSelect.value || state.month);
+      render();
+    });
+
+    downloadButton && downloadButton.addEventListener("click", downloadPdfReport);
+
+    render();
   }
 
   function initDashboardWeatherWidget() {
@@ -246,15 +427,75 @@
     }
 
     const body = document.body;
-    const city = String(body.dataset.adminWeatherCity || "Milan").trim() || "Milan";
+    const defaultCity = String(body.dataset.adminWeatherCity || "Milan").trim() || "Milan";
+    const defaultCountry = String(body.dataset.adminWeatherCountry || "Italy").trim() || "Italy";
     const conditionNode = widget.querySelector("[data-admin-weather-condition]");
+    const badgeNode = widget.querySelector("[data-admin-weather-badge]");
+    const iconNode = widget.querySelector("[data-admin-weather-icon]");
+    const labelNode = widget.querySelector("[data-admin-weather-label]");
     const tempNode = widget.querySelector("[data-admin-weather-temp]");
     const windNode = widget.querySelector("[data-admin-weather-wind]");
     const cityNode = widget.querySelector("[data-admin-weather-city]");
+    const countryNode = widget.querySelector("[data-admin-weather-country]");
+    const forecastItems = Array.from(widget.querySelectorAll("[data-admin-weather-forecast-item]"));
+    const regionSelect = widget.querySelector("[data-admin-weather-region]");
+    const cityInput = widget.querySelector("[data-admin-weather-city-input]");
+    const applyButton = widget.querySelector("[data-admin-weather-apply]");
+    const clearButton = widget.querySelector("[data-admin-weather-clear]");
+    const weatherStorageKey = "girffon_admin_dashboard_weather";
+    const regionDefaults = {
+      "Italy": { country: "Italy", city: "Milan" },
+      "Iran": { country: "Iran", city: "Tehran" },
+      "United States": { country: "United States", city: "New York" },
+      "France": { country: "France", city: "Paris" },
+      "Germany": { country: "Germany", city: "Berlin" },
+      "Europe": { country: "Europe", city: "Brussels" },
+      "Americas": { country: "Americas", city: "New York" },
+      "Asia": { country: "Asia", city: "Tokyo" },
+      "World": { country: "World", city: "London" }
+    };
 
-    if (cityNode) {
-      cityNode.textContent = city;
-    }
+    const readSavedLocation = function () {
+      try {
+        return JSON.parse(localStorage.getItem(weatherStorageKey) || "null");
+      } catch (_error) {
+        return null;
+      }
+    };
+
+    const writeSavedLocation = function (value) {
+      try {
+        if (!value) {
+          localStorage.removeItem(weatherStorageKey);
+          return;
+        }
+        localStorage.setItem(weatherStorageKey, JSON.stringify(value));
+      } catch (_error) {
+      }
+    };
+
+    let activeLocation = readSavedLocation() || {
+      country: defaultCountry,
+      city: defaultCity
+    };
+
+    const syncWeatherLabels = function () {
+      if (cityNode) {
+        cityNode.textContent = activeLocation.city || defaultCity;
+      }
+      if (countryNode) {
+        countryNode.textContent = activeLocation.country || defaultCountry;
+      }
+      if (cityInput) {
+        cityInput.value = activeLocation.city || defaultCity;
+      }
+      if (regionSelect) {
+        const nextCountry = activeLocation.country || defaultCountry;
+        regionSelect.value = Array.from(regionSelect.options).some(function (option) {
+          return option.value === nextCountry;
+        }) ? nextCountry : defaultCountry;
+      }
+    };
 
     const weatherCodes = {
       0: "Clear sky",
@@ -278,7 +519,68 @@
       95: "Thunderstorm"
     };
 
-    const setWeatherState = function (temperature, condition, wind) {
+    const weatherKinds = {
+      clear: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.9 19.1l1.7-1.7M17.4 6.6l1.7-1.7"></path></svg>',
+        label: "Sunny"
+      },
+      cloudy: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 18.5h9.2a3.3 3.3 0 0 0 .3-6.6 5.2 5.2 0 0 0-9.9-1.5A4 4 0 0 0 7.5 18.5Z"></path></svg>',
+        label: "Cloudy"
+      },
+      fog: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.5h14"></path><path d="M3.5 13h17"></path><path d="M6.5 16.5h11"></path></svg>',
+        label: "Foggy"
+      },
+      rain: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 14.5h9.2a3.3 3.3 0 0 0 .3-6.6 5.2 5.2 0 0 0-9.9-1.5A4 4 0 0 0 7.5 14.5Z"></path><path d="M9 17.5l-.8 2"></path><path d="M13 17.5l-.8 2"></path><path d="M17 17.5l-.8 2"></path></svg>',
+        label: "Rainy"
+      },
+      snow: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 13.5h9.2a3.3 3.3 0 0 0 .3-6.6 5.2 5.2 0 0 0-9.9-1.5A4 4 0 0 0 7.5 13.5Z"></path><path d="M9 17.5h0"></path><path d="M12 17v3"></path><path d="M10.5 18.5h3"></path><path d="M10.9 16.9l2.2 2.2"></path><path d="M13.1 16.9l-2.2 2.2"></path><path d="M17 17v3"></path><path d="M15.5 18.5h3"></path><path d="M15.9 16.9l2.2 2.2"></path><path d="M18.1 16.9l-2.2 2.2"></path></svg>',
+        label: "Snow"
+      },
+      storm: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 13.5h9.2a3.3 3.3 0 0 0 .3-6.6 5.2 5.2 0 0 0-9.9-1.5A4 4 0 0 0 7.5 13.5Z"></path><path d="M12.8 14l-2.2 4h2l-1.2 4 4-5h-2.2l1.6-3Z"></path></svg>',
+        label: "Storm"
+      },
+      neutral: {
+        icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="1.6"></circle><path d="M12 4v2.2M12 17.8V20M4 12h2.2M17.8 12H20M6.4 6.4l1.5 1.5M16.1 16.1l1.5 1.5M6.4 17.6l1.5-1.5M16.1 7.9l1.5-1.5"></path></svg>',
+        label: "Loading"
+      }
+    };
+
+    const resolveWeatherKind = function (weatherCode) {
+      if (weatherCode === 0 || weatherCode === 1) {
+        return "clear";
+      }
+      if (weatherCode === 2 || weatherCode === 3) {
+        return "cloudy";
+      }
+      if (weatherCode === 45 || weatherCode === 48) {
+        return "fog";
+      }
+      if ((weatherCode >= 51 && weatherCode <= 65) || (weatherCode >= 80 && weatherCode <= 82)) {
+        return "rain";
+      }
+      if (weatherCode >= 71 && weatherCode <= 75) {
+        return "snow";
+      }
+      if (weatherCode >= 95) {
+        return "storm";
+      }
+      return "cloudy";
+    };
+
+    const getWeatherVisual = function (weatherCode) {
+      const kindKey = typeof weatherCode === "number" ? resolveWeatherKind(weatherCode) : "neutral";
+      return {
+        key: kindKey,
+        data: weatherKinds[kindKey] || weatherKinds.neutral
+      };
+    };
+
+    const setWeatherState = function (temperature, condition, wind, weatherCode) {
       if (tempNode) {
         tempNode.textContent = temperature;
       }
@@ -288,43 +590,278 @@
       if (windNode) {
         windNode.textContent = wind;
       }
+
+      const weatherVisual = getWeatherVisual(weatherCode);
+      const kindKey = weatherVisual.key;
+      const kind = weatherVisual.data;
+      if (badgeNode) {
+        badgeNode.dataset.weatherKind = kindKey;
+      }
+      if (iconNode) {
+        iconNode.innerHTML = kind.icon;
+      }
+      if (labelNode) {
+        labelNode.textContent = kind.label;
+      }
     };
 
-    setWeatherState("--", "Loading live weather...", "--");
+    const setForecastState = function (forecastDays) {
+      const labels = ["Today", "Tomorrow", "Day After"];
+      forecastItems.forEach(function (item, index) {
+        const dayData = Array.isArray(forecastDays) ? forecastDays[index] : null;
+        const dayNode = item.querySelector(".admin-weather-forecast-day");
+        const iconForecastNode = item.querySelector(".admin-weather-forecast-icon");
+        const tempForecastNode = item.querySelector(".admin-weather-forecast-temp");
+        const labelForecastNode = item.querySelector(".admin-weather-forecast-label");
+        const weatherVisual = dayData ? getWeatherVisual(dayData.weatherCode) : getWeatherVisual();
 
-    fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=en&format=json")
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (geoPayload) {
-        const result = geoPayload && Array.isArray(geoPayload.results) ? geoPayload.results[0] : null;
-        if (!result) {
-          throw new Error("City not found");
+        if (dayNode) {
+          dayNode.textContent = labels[index] || "Forecast";
         }
-
-        return fetch(
-          "https://api.open-meteo.com/v1/forecast?latitude=" + encodeURIComponent(result.latitude) +
-          "&longitude=" + encodeURIComponent(result.longitude) +
-          "&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto"
-        );
-      })
-      .then(function (response) {
-        return response.json();
-      })
-      .then(function (weatherPayload) {
-        const current = weatherPayload && weatherPayload.current ? weatherPayload.current : null;
-        if (!current) {
-          throw new Error("Weather unavailable");
+        if (iconForecastNode) {
+          iconForecastNode.innerHTML = weatherVisual.data.icon;
         }
-
-        const temperature = typeof current.temperature_2m === "number" ? current.temperature_2m.toFixed(1) + "°C" : "--";
-        const condition = weatherCodes[current.weather_code] || "Live weather";
-        const wind = typeof current.wind_speed_10m === "number" ? current.wind_speed_10m.toFixed(0) + " km/h" : "--";
-        setWeatherState(temperature, condition, wind);
-      })
-      .catch(function () {
-        setWeatherState("--", "Weather unavailable right now.", "--");
+        if (tempForecastNode) {
+          tempForecastNode.textContent = dayData ? dayData.temperature : "-- / --";
+        }
+        if (labelForecastNode) {
+          labelForecastNode.textContent = dayData ? dayData.label : "Loading";
+        }
+        item.dataset.weatherKind = weatherVisual.key;
       });
+    };
+
+    const loadWeather = function () {
+      const city = String(activeLocation.city || defaultCity).trim() || defaultCity;
+      syncWeatherLabels();
+      setWeatherState("--", "Loading live weather...", "--");
+      setForecastState(null);
+
+      fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=en&format=json")
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (geoPayload) {
+          const result = geoPayload && Array.isArray(geoPayload.results) ? geoPayload.results[0] : null;
+          if (!result) {
+            throw new Error("City not found");
+          }
+
+          return fetch(
+            "https://api.open-meteo.com/v1/forecast?latitude=" + encodeURIComponent(result.latitude) +
+            "&longitude=" + encodeURIComponent(result.longitude) +
+            "&current=temperature_2m,weather_code,wind_speed_10m" +
+            "&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=3&timezone=auto"
+          );
+        })
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (weatherPayload) {
+          const current = weatherPayload && weatherPayload.current ? weatherPayload.current : null;
+          if (!current) {
+            throw new Error("Weather unavailable");
+          }
+
+          const temperature = typeof current.temperature_2m === "number" ? current.temperature_2m.toFixed(1) + "°C" : "--";
+          const condition = weatherCodes[current.weather_code] || "Live weather";
+          const wind = typeof current.wind_speed_10m === "number" ? current.wind_speed_10m.toFixed(0) + " km/h" : "--";
+          setWeatherState(temperature, condition, wind, Number(current.weather_code));
+
+          const daily = weatherPayload && weatherPayload.daily ? weatherPayload.daily : null;
+          const forecastDays = daily && Array.isArray(daily.weather_code) ? daily.weather_code.slice(0, 3).map(function (weatherCode, index) {
+            const maxTemp = Array.isArray(daily.temperature_2m_max) ? daily.temperature_2m_max[index] : null;
+            const minTemp = Array.isArray(daily.temperature_2m_min) ? daily.temperature_2m_min[index] : null;
+            const maxText = typeof maxTemp === "number" ? Math.round(maxTemp) + "°" : "--";
+            const minText = typeof minTemp === "number" ? Math.round(minTemp) + "°" : "--";
+
+            return {
+              weatherCode: Number(weatherCode),
+              temperature: maxText + " / " + minText,
+              label: weatherCodes[weatherCode] || "Forecast"
+            };
+          }) : [];
+          setForecastState(forecastDays);
+        })
+        .catch(function () {
+          setWeatherState("--", "Weather unavailable right now.", "--");
+          setForecastState([]);
+        });
+    };
+
+    regionSelect && regionSelect.addEventListener("change", function () {
+      const selected = regionDefaults[regionSelect.value] || { city: defaultCity };
+      if (cityInput && !cityInput.value.trim()) {
+        cityInput.value = selected.city;
+      }
+    });
+
+    applyButton && applyButton.addEventListener("click", function () {
+      const selectedRegion = regionSelect ? regionSelect.value : defaultCountry;
+      const fallback = regionDefaults[selectedRegion] || { country: selectedRegion, city: defaultCity };
+      activeLocation = {
+        country: selectedRegion || fallback.country || defaultCountry,
+        city: cityInput && cityInput.value.trim() ? cityInput.value.trim() : fallback.city
+      };
+      writeSavedLocation(activeLocation);
+      loadWeather();
+    });
+
+    clearButton && clearButton.addEventListener("click", function () {
+      activeLocation = {
+        country: defaultCountry,
+        city: defaultCity
+      };
+      writeSavedLocation(null);
+      loadWeather();
+    });
+
+    syncWeatherLabels();
+    loadWeather();
+  }
+
+  function initDashboardWorldClock() {
+    const widget = document.querySelector("[data-admin-world-clock-widget]");
+    if (!widget) {
+      return;
+    }
+
+    const select = widget.querySelector("[data-admin-world-clock-zone]");
+    const timeNode = widget.querySelector("[data-admin-world-clock-time]");
+    const dateNode = widget.querySelector("[data-admin-world-clock-date]");
+    const labelNode = widget.querySelector("[data-admin-world-clock-label]");
+    const offsetNode = widget.querySelector("[data-admin-world-clock-offset]");
+    const statusNode = widget.querySelector("[data-admin-world-clock-status]");
+    const quickGrid = widget.querySelector("[data-admin-world-clock-grid]");
+    const storageKey = "girffon_admin_world_clock_zone";
+
+    const featuredZones = [
+      { label: "New York", zone: "America/New_York" },
+      { label: "Toronto", zone: "America/Toronto" },
+      { label: "Rome", zone: "Europe/Rome" },
+      { label: "Berlin", zone: "Europe/Berlin" },
+      { label: "Tehran", zone: "Asia/Tehran" },
+      { label: "Tokyo", zone: "Asia/Tokyo" },
+      { label: "Sydney", zone: "Australia/Sydney" },
+      { label: "UTC", zone: "UTC" }
+    ];
+
+    const formatInZone = function (zone, options) {
+      return new Intl.DateTimeFormat("en-GB", Object.assign({ timeZone: zone }, options)).format(new Date());
+    };
+
+    const getHourInZone = function (zone) {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        hour12: false,
+        timeZone: zone
+      }).formatToParts(new Date());
+      const hourPart = parts.find(function (part) {
+        return part.type === "hour";
+      });
+      return Number(hourPart ? hourPart.value : 0);
+    };
+
+    const getOffsetLabel = function (zone) {
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: zone,
+          timeZoneName: "shortOffset",
+          hour: "2-digit"
+        }).formatToParts(new Date());
+        const zonePart = parts.find(function (part) {
+          return part.type === "timeZoneName";
+        });
+        return zonePart ? zonePart.value.replace("GMT", "UTC") : "UTC";
+      } catch (_error) {
+        return "UTC";
+      }
+    };
+
+    const getDayPhase = function (zone) {
+      const hour = getHourInZone(zone);
+      if (hour >= 6 && hour < 12) {
+        return "Morning";
+      }
+      if (hour >= 12 && hour < 18) {
+        return "Afternoon";
+      }
+      if (hour >= 18 && hour < 22) {
+        return "Evening";
+      }
+      return "Night";
+    };
+
+    const renderQuickGrid = function () {
+      if (!quickGrid) {
+        return;
+      }
+
+      quickGrid.innerHTML = featuredZones.map(function (item) {
+        return '<div class="admin-world-clock-card">' +
+          '<span class="admin-world-clock-card-label">' + escapeHtml(item.label) + '</span>' +
+          '<strong class="admin-world-clock-card-time">' + escapeHtml(formatInZone(item.zone, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })) + '</strong>' +
+          '<small class="admin-world-clock-card-meta">' + escapeHtml(getOffsetLabel(item.zone) + ' • ' + getDayPhase(item.zone)) + '</small>' +
+          '</div>';
+      }).join("");
+    };
+
+    const formatClock = function () {
+      const zone = select && select.value ? select.value : "UTC";
+      const label = select && select.selectedOptions && select.selectedOptions[0] ? select.selectedOptions[0].textContent : zone;
+
+      if (labelNode) {
+        labelNode.textContent = label;
+      }
+
+      if (timeNode) {
+        timeNode.textContent = formatInZone(zone, {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        });
+      }
+
+      if (dateNode) {
+        dateNode.textContent = new Intl.DateTimeFormat("en-GB", {
+          weekday: "long",
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          timeZone: zone
+        }).format(new Date());
+      }
+
+      if (offsetNode) {
+        offsetNode.textContent = getOffsetLabel(zone);
+      }
+
+      if (statusNode) {
+        statusNode.textContent = getDayPhase(zone);
+      }
+
+      renderQuickGrid();
+    };
+
+    try {
+      const savedZone = localStorage.getItem(storageKey);
+      if (savedZone && select && Array.from(select.options).some(function (option) { return option.value === savedZone; })) {
+        select.value = savedZone;
+      }
+    } catch (_error) {
+    }
+
+    select && select.addEventListener("change", function () {
+      try {
+        localStorage.setItem(storageKey, select.value);
+      } catch (_error) {
+      }
+      formatClock();
+    });
+
+    formatClock();
+    window.setInterval(formatClock, 1000);
   }
 
   function initProductsPage() {
