@@ -17,6 +17,19 @@ $adminRecentMessages = girffonAdminFetchMessages($pdo, 4);
 $adminRecentOrders = girffonAdminFetchOrders($pdo, 4);
 $adminTodayOrders = girffonAdminFetchTodayOrders($pdo, 4);
 $adminRecentInvoices = girffonAdminFetchInvoices($pdo, 4);
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+girffonAdminTrackDashboardVisit($adminCurrentId, $adminCurrentUsername);
+$adminOrdersTodayCount = girffonAdminCountOrdersToday($pdo);
+$adminRevenueThisMonth = girffonAdminRevenueThisMonth($pdo);
+$adminLastLoginTime = girffonAdminFetchLastLoginTime($adminCurrentId, $adminCurrentUsername);
+$adminPeriodStats = girffonAdminFetchPeriodStats($pdo);
+$adminLoginActivity = girffonAdminFetchRecentLoginActivity(6);
+$adminActiveAdmins = girffonAdminFetchActiveAdmins(30, 2);
+$adminVisitorAnalytics = girffonAdminFetchVisitorAnalytics();
+$adminCurrentAdminProfile = girffonAdminFetchAdminProfile($pdo, $adminCurrentId);
+$adminWeatherCity = trim((string) ($adminCurrentAdminProfile['city'] ?? '')) ?: 'Milan';
+$adminWeatherCountry = trim((string) ($adminCurrentAdminProfile['country'] ?? '')) ?: 'Italy';
 $escapeAdminDashboard = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 };
@@ -33,9 +46,9 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Dashboard</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r1">
 </head>
-<body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database">
+<body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database" data-admin-weather-city="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" data-admin-weather-country="<?php echo $escapeAdminDashboard($adminWeatherCountry); ?>">
   <div class="admin-layout">
     <aside class="admin-sidebar" aria-label="Admin navigation">
       <div class="admin-sidebar-header">
@@ -103,6 +116,21 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
           <span>Unread Messages</span>
           <strong id="adminUnreadMessages"><?php echo $escapeAdminDashboard($adminUnreadMessageCount); ?></strong>
           <p class="admin-status">Customer messages waiting for review.</p>
+        </article>
+        <article class="admin-stat-card">
+          <span>Orders Today</span>
+          <strong id="adminOrdersTodayCount"><?php echo $escapeAdminDashboard($adminOrdersTodayCount); ?></strong>
+          <p class="admin-status">New orders created since midnight.</p>
+        </article>
+        <article class="admin-stat-card">
+          <span>Revenue This Month</span>
+          <strong id="adminRevenueThisMonth"><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($adminRevenueThisMonth)); ?></strong>
+          <p class="admin-status">Gross order revenue booked this month.</p>
+        </article>
+        <article class="admin-stat-card">
+          <span>Last Login Time</span>
+          <strong id="adminLastLoginTime"><?php echo $escapeAdminDashboard($adminLastLoginTime !== '' ? date('Y-m-d H:i', strtotime($adminLastLoginTime)) : 'No data'); ?></strong>
+          <p class="admin-status">Most recent admin login captured for this account.</p>
         </article>
       </section>
 
@@ -217,9 +245,109 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
           </div>
         </article>
       </section>
+
+      <section class="admin-dashboard-extras" aria-label="Dashboard insights">
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Login Activity</h2>
+              <p class="admin-panel-note">Who signed in and when.</p>
+            </div>
+          </div>
+          <div class="admin-mini-list">
+            <?php if ($adminLoginActivity): ?>
+              <?php foreach ($adminLoginActivity as $activity): ?>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($activity['username'] ?? 'GirffoN Admin'); ?><br><small><?php echo $escapeAdminDashboard($activity['ip'] ?? ''); ?></small></span><strong><?php echo $escapeAdminDashboard(date('Y-m-d H:i', strtotime((string) ($activity['created_at'] ?? 'now')))); ?></strong></div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p class="admin-empty">No login activity captured yet.</p>
+            <?php endif; ?>
+          </div>
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Daily / Monthly / Yearly Stats</h2>
+              <p class="admin-panel-note">Orders, revenue, invoices, and new members by period.</p>
+            </div>
+          </div>
+          <div class="admin-period-stats">
+            <?php foreach ($adminPeriodStats as $period): ?>
+              <div class="admin-period-card">
+                <span><?php echo $escapeAdminDashboard($period['label'] ?? 'Period'); ?></span>
+                <strong><?php echo $escapeAdminDashboard((string) ($period['orders'] ?? 0)); ?> orders</strong>
+                <p><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($period['revenue'] ?? 0)); ?> revenue</p>
+                <small><?php echo $escapeAdminDashboard((string) ($period['invoices'] ?? 0)); ?> invoices, <?php echo $escapeAdminDashboard((string) ($period['members'] ?? 0)); ?> new members</small>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </article>
+
+        <article class="admin-panel admin-weather-widget" data-admin-weather-widget>
+          <div class="admin-panel-head">
+            <div>
+              <h2>Weather Widget</h2>
+              <p class="admin-panel-note">Live weather for the current admin city.</p>
+            </div>
+          </div>
+          <div class="admin-weather-shell">
+            <div class="admin-weather-main">
+              <strong data-admin-weather-temp>--</strong>
+              <span data-admin-weather-condition>Loading live weather...</span>
+            </div>
+            <div class="admin-weather-meta">
+              <div><span>City</span><strong data-admin-weather-city><?php echo $escapeAdminDashboard($adminWeatherCity); ?></strong></div>
+              <div><span>Country</span><strong><?php echo $escapeAdminDashboard($adminWeatherCountry); ?></strong></div>
+              <div><span>Wind</span><strong data-admin-weather-wind>--</strong></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Active Admins</h2>
+              <p class="admin-panel-note">Admins active in the last 30 minutes.</p>
+            </div>
+          </div>
+          <div class="admin-mini-list">
+            <?php if ($adminActiveAdmins): ?>
+              <?php foreach ($adminActiveAdmins as $activeAdmin): ?>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($activeAdmin['username'] ?? 'GirffoN Admin'); ?></span><strong><?php echo $escapeAdminDashboard(date('H:i', strtotime((string) ($activeAdmin['created_at'] ?? 'now')))); ?></strong></div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p class="admin-empty">No admins are marked online right now.</p>
+            <?php endif; ?>
+          </div>
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Visitors Analytics</h2>
+              <p class="admin-panel-note">Dashboard visits tracked on this admin panel.</p>
+            </div>
+          </div>
+          <div class="admin-analytics-grid">
+            <div class="admin-analytics-card"><span>Today</span><strong><?php echo $escapeAdminDashboard($adminVisitorAnalytics['today'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>This Month</span><strong><?php echo $escapeAdminDashboard($adminVisitorAnalytics['month'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>This Year</span><strong><?php echo $escapeAdminDashboard($adminVisitorAnalytics['year'] ?? 0); ?></strong></div>
+          </div>
+          <div class="admin-mini-list admin-mini-list-compact">
+            <?php if (!empty($adminVisitorAnalytics['recent'])): ?>
+              <?php foreach ($adminVisitorAnalytics['recent'] as $visit): ?>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($visit['username'] ?? 'Visitor'); ?></span><strong><?php echo $escapeAdminDashboard(date('m-d H:i', strtotime((string) ($visit['created_at'] ?? 'now')))); ?></strong></div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p class="admin-empty">No visit analytics yet.</p>
+            <?php endif; ?>
+          </div>
+        </article>
+      </section>
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-girffon.js?v=20260518r1"></script>
 </body>
 </html>

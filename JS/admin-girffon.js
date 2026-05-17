@@ -231,11 +231,100 @@
   }
 
   function initDashboardPage() {
+    initDashboardWeatherWidget();
     if (document.body.dataset.adminDashboardSource === "database") {
       return;
     }
     renderCounts();
     renderDashboardLists();
+  }
+
+  function initDashboardWeatherWidget() {
+    const widget = document.querySelector("[data-admin-weather-widget]");
+    if (!widget) {
+      return;
+    }
+
+    const body = document.body;
+    const city = String(body.dataset.adminWeatherCity || "Milan").trim() || "Milan";
+    const conditionNode = widget.querySelector("[data-admin-weather-condition]");
+    const tempNode = widget.querySelector("[data-admin-weather-temp]");
+    const windNode = widget.querySelector("[data-admin-weather-wind]");
+    const cityNode = widget.querySelector("[data-admin-weather-city]");
+
+    if (cityNode) {
+      cityNode.textContent = city;
+    }
+
+    const weatherCodes = {
+      0: "Clear sky",
+      1: "Mainly clear",
+      2: "Partly cloudy",
+      3: "Overcast",
+      45: "Fog",
+      48: "Rime fog",
+      51: "Light drizzle",
+      53: "Drizzle",
+      55: "Dense drizzle",
+      61: "Light rain",
+      63: "Rain",
+      65: "Heavy rain",
+      71: "Light snow",
+      73: "Snow",
+      75: "Heavy snow",
+      80: "Rain showers",
+      81: "Showers",
+      82: "Heavy showers",
+      95: "Thunderstorm"
+    };
+
+    const setWeatherState = function (temperature, condition, wind) {
+      if (tempNode) {
+        tempNode.textContent = temperature;
+      }
+      if (conditionNode) {
+        conditionNode.textContent = condition;
+      }
+      if (windNode) {
+        windNode.textContent = wind;
+      }
+    };
+
+    setWeatherState("--", "Loading live weather...", "--");
+
+    fetch("https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=en&format=json")
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (geoPayload) {
+        const result = geoPayload && Array.isArray(geoPayload.results) ? geoPayload.results[0] : null;
+        if (!result) {
+          throw new Error("City not found");
+        }
+
+        return fetch(
+          "https://api.open-meteo.com/v1/forecast?latitude=" + encodeURIComponent(result.latitude) +
+          "&longitude=" + encodeURIComponent(result.longitude) +
+          "&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto"
+        );
+      })
+      .then(function (response) {
+        return response.json();
+      })
+      .then(function (weatherPayload) {
+        const current = weatherPayload && weatherPayload.current ? weatherPayload.current : null;
+        if (!current) {
+          throw new Error("Weather unavailable");
+        }
+
+        const temperature = typeof current.temperature_2m === "number" ? current.temperature_2m.toFixed(1) + "°C" : "--";
+        const condition = weatherCodes[current.weather_code] || "Live weather";
+        const wind = typeof current.wind_speed_10m === "number" ? current.wind_speed_10m.toFixed(0) + " km/h" : "--";
+        setWeatherState(temperature, condition, wind);
+      })
+      .catch(function () {
+        setWeatherState("--", "Weather unavailable right now.", "--");
+      });
   }
 
   function initProductsPage() {

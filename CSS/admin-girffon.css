@@ -643,6 +643,13 @@ body.admin-page {
   margin-top: 22px;
 }
 
+.admin-dashboard-extras {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 22px;
+}
+
 .admin-stat-card,
 .admin-panel,
 .admin-table-panel {
@@ -694,6 +701,87 @@ body.admin-page {
 .admin-panel,
 .admin-table-panel {
   padding: 24px 24px 22px;
+}
+
+.admin-period-stats,
+.admin-analytics-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-period-card,
+.admin-analytics-card {
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(199, 165, 75, 0.16);
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.96) 0%, rgba(248, 240, 221, 0.92) 100%);
+}
+
+.admin-period-card span,
+.admin-analytics-card span,
+.admin-weather-meta span {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--admin-text-soft);
+}
+
+.admin-period-card strong,
+.admin-analytics-card strong,
+.admin-weather-main strong {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--admin-font-display);
+  font-size: 1.55rem;
+  letter-spacing: -0.03em;
+}
+
+.admin-period-card p {
+  margin: 8px 0 4px;
+  font-size: 0.95rem;
+  color: var(--admin-text-main);
+}
+
+.admin-period-card small {
+  color: var(--admin-text-soft);
+}
+
+.admin-mini-list-compact {
+  margin-top: 14px;
+}
+
+.admin-weather-shell {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(250, 240, 206, 0.95) 0%, rgba(255, 253, 248, 0.98) 100%);
+  border: 1px solid rgba(199, 165, 75, 0.18);
+}
+
+.admin-weather-main {
+  display: grid;
+  gap: 6px;
+}
+
+.admin-weather-main span {
+  font-size: 1rem;
+  color: var(--admin-text-main);
+}
+
+.admin-weather-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-weather-meta strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1rem;
+  color: var(--admin-text-main);
 }
 
 .admin-table-panel {
@@ -1650,6 +1738,14 @@ body.admin-page {
   }
 
   .admin-dashboard-subgrid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-extras {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-weather-meta {
     grid-template-columns: 1fr;
   }
 }

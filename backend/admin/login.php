@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/dashboard-data.php";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     header("Location: /GirffoN/admin-login.html");
@@ -37,6 +38,8 @@ $_SESSION["girffon_admin_id"] = (int) $user["id"];
 $_SESSION["admin_username"] = $user["username"];
 $_SESSION["admin_role"] = "admin";
 $_SESSION["admin_logged_in"] = true;
+
+girffonAdminRecordLoginActivity((int) $user['id'], (string) $user['username']);
 
 header("Location: /GirffoN/admin-dashboard.php");
 exit;
