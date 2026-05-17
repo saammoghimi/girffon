@@ -215,36 +215,40 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
-        let lastTapTime = 0;
-        let lastTapX = 0;
-        let lastTapY = 0;
+function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+    let lastTapTime = 0;
+    let lastTapX = 0;
+    let lastTapY = 0;
 
-        element.addEventListener('touchend', function(e) {
-            if (isBlocked()) {
-                lastTapTime = 0;
-                return;
-            }
-
-            const touch = e.changedTouches?.[0];
-            if (!touch) return;
-
-            const now = Date.now();
-            const withinTime = now - lastTapTime <= 320;
-            const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
-
-            lastTapTime = now;
-            lastTapX = touch.clientX;
-            lastTapY = touch.clientY;
-
-            if (!withinTime || !withinDistance) return;
-
+    element.addEventListener('touchend', function(e) {
+        if (isBlocked()) {
             lastTapTime = 0;
+            return;
+        }
+
+        const touch = e.changedTouches?.[0];
+        if (!touch) return;
+
+        const now = Date.now();
+        const withinTime = now - lastTapTime <= 320;
+        const withinDistance =
+            Math.abs(touch.clientX - lastTapX) <= 24 &&
+            Math.abs(touch.clientY - lastTapY) <= 24;
+
+        lastTapTime = now;
+        lastTapX = touch.clientX;
+        lastTapY = touch.clientY;
+
+        if (withinTime && withinDistance) {
             e.preventDefault();
             e.stopPropagation();
             onActivate(e);
-        }, { passive: false });
-    }
+            lastTapTime = 0;
+        }
+    }, { passive: false });
+}
+
+window.attachDoubleTapHandler = attachDoubleTapHandler;
 
     function beginIconDrag(state, element, event, useGlobalState = false) {
         const point = getEventPoint(event);
