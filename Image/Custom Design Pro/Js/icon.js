@@ -1242,7 +1242,7 @@ window.reattachIconEventsWithData = function(iconElement, layerData) {
         e.stopPropagation();
     }, false);
 
-    attachDoubleTapHandler(iconElement, function(e) {
+window.attachDoubleTapHandler(iconElement, function(e) {
         if (layerData.locked) return;
         if (typeof window.showIconResizePanel === 'function') {
             window.showIconResizePanel(iconElement, layerData);
