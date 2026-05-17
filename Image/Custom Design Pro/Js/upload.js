@@ -329,6 +329,7 @@
     let colorBalanceMagentaGreenValue = 0;
     let colorBalanceYellowBlueValue = 0;
     let colorBalancePreserveLuminosity = true;
+    let uploadFileInput = null;
 
     // =========================
     // Initialize Upload Button
@@ -479,11 +480,38 @@
     }
 
     function triggerFileInput() {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.addEventListener('change', handleFileSelect);
+        const input = ensureUploadFileInput();
+        input.value = '';
+
+        if (typeof input.showPicker === 'function') {
+            input.showPicker();
+            return;
+        }
+
         input.click();
+    }
+
+    function ensureUploadFileInput() {
+        if (uploadFileInput && document.body.contains(uploadFileInput)) {
+            return uploadFileInput;
+        }
+
+        uploadFileInput = document.createElement('input');
+        uploadFileInput.type = 'file';
+        uploadFileInput.accept = 'image/*';
+        uploadFileInput.setAttribute('aria-hidden', 'true');
+        uploadFileInput.tabIndex = -1;
+        uploadFileInput.style.position = 'fixed';
+        uploadFileInput.style.left = '-9999px';
+        uploadFileInput.style.top = '0';
+        uploadFileInput.style.width = '1px';
+        uploadFileInput.style.height = '1px';
+        uploadFileInput.style.opacity = '0';
+        uploadFileInput.style.pointerEvents = 'none';
+        uploadFileInput.addEventListener('change', handleFileSelect);
+        document.body.appendChild(uploadFileInput);
+
+        return uploadFileInput;
     }
 
     function handleFileSelect(e) {
@@ -684,6 +712,45 @@
         let isDragging = false;
         let startX, startY, initialLeft, initialTop;
 
+        function getEventPoint(event) {
+            const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+            return {
+                clientX: source.clientX,
+                clientY: source.clientY
+            };
+        }
+
+        function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+            let lastTapTime = 0;
+            let lastTapX = 0;
+            let lastTapY = 0;
+
+            element.addEventListener('touchend', function(e) {
+                if (isBlocked()) {
+                    lastTapTime = 0;
+                    return;
+                }
+
+                const touch = e.changedTouches?.[0];
+                if (!touch) return;
+
+                const now = Date.now();
+                const withinTime = now - lastTapTime <= 320;
+                const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
+
+                lastTapTime = now;
+                lastTapX = touch.clientX;
+                lastTapY = touch.clientY;
+
+                if (!withinTime || !withinDistance) return;
+
+                lastTapTime = 0;
+                e.preventDefault();
+                e.stopPropagation();
+                onActivate(e);
+            }, { passive: false });
+        }
+
         const isLayerLocked = () => {
             if (layerData && typeof layerData.locked === 'boolean') {
                 return Boolean(layerData.locked);
@@ -709,7 +776,7 @@
 
         refreshIdleCursor();
 
-        imgEl.addEventListener('mousedown', function(e) {
+        const handleImageDragStart = function(e) {
             if (e.target !== imgEl) return;
 
             if (isLayerLocked()) {
@@ -717,12 +784,14 @@
                 nudgeLockHint();
                 return;
             }
+            if (e.type === 'mousedown' && e.button !== 0) return;
             
             isDragging = true;
             imgEl.style.cursor = 'grabbing';
             
-            startX = e.clientX;
-            startY = e.clientY;
+            const point = getEventPoint(e);
+            startX = point.clientX;
+            startY = point.clientY;
             
             const rect = imgEl.getBoundingClientRect();
             const parent = imgEl.parentElement.getBoundingClientRect();
@@ -730,25 +799,42 @@
             initialTop = rect.top - parent.top;
             
             e.preventDefault();
-        });
+        };
 
-        document.addEventListener('mousemove', function(e) {
+        imgEl.style.touchAction = 'none';
+        imgEl.addEventListener('mousedown', handleImageDragStart);
+        imgEl.addEventListener('pointerdown', handleImageDragStart);
+        imgEl.addEventListener('touchstart', handleImageDragStart, { passive: false });
+
+        const handleImageDragMove = function(e) {
             if (!isDragging) return;
+            const point = getEventPoint(e);
             
-            const dx = e.clientX - startX;
-            const dy = e.clientY - startY;
+            const dx = point.clientX - startX;
+            const dy = point.clientY - startY;
             
             imgEl.style.left = (initialLeft + dx) + 'px';
             imgEl.style.top = (initialTop + dy) + 'px';
             imgEl.style.transform = imgEl.style.transform.replace(/translate\([^)]+\)/, '');
-        });
+        };
 
-        document.addEventListener('mouseup', function() {
+        const handleImageDragEnd = function() {
             if (isDragging) {
                 isDragging = false;
             }
             refreshIdleCursor();
-        });
+        };
+
+        document.addEventListener('mousemove', handleImageDragMove);
+        document.addEventListener('pointermove', handleImageDragMove, { passive: false });
+        document.addEventListener('touchmove', handleImageDragMove, { passive: false });
+        document.addEventListener('mouseup', handleImageDragEnd);
+        document.addEventListener('pointerup', handleImageDragEnd);
+        document.addEventListener('pointercancel', handleImageDragEnd);
+        document.addEventListener('touchend', handleImageDragEnd);
+        document.addEventListener('touchcancel', handleImageDragEnd);
+
+        attachDoubleTapHandler(imgEl, () => openEditPanel(imgEl, layerData), () => isDragging || isLayerLocked());
 
         const lockObserver = new MutationObserver(() => {
             refreshIdleCursor();
@@ -2828,14 +2914,14 @@
         advancedEraseOverlay.innerHTML = `
             <div class="cdp-advanced-erase-shell">
                 <aside class="cdp-advanced-erase-toolbar">
-                    <button type="button" class="cdp-advanced-erase-tool" title="Zoom in" data-erase-action="zoom-in"><i class="fa-solid fa-plus"></i></button>
-                    <button type="button" class="cdp-advanced-erase-tool" title="Zoom out" data-erase-action="zoom-out"><i class="fa-solid fa-minus"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool" title="Zoom in" data-mobile-label="Zoom +" data-erase-action="zoom-in"><i class="fa-solid fa-plus"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool" title="Zoom out" data-mobile-label="Zoom -" data-erase-action="zoom-out"><i class="fa-solid fa-minus"></i></button>
                     <div class="cdp-advanced-erase-divider"></div>
-                    <button type="button" class="cdp-advanced-erase-tool cdp-advanced-erase-tool--active" title="Erase" data-erase-action="brush" id="cdpAdvancedEraseBrushBtn"><i class="fa-solid fa-eraser"></i></button>
-                    <button type="button" class="cdp-advanced-erase-tool" title="Smart auto cut" data-erase-action="remove-bg"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
-                    <button type="button" class="cdp-advanced-erase-tool" title="Undo" data-erase-action="undo"><i class="fa-solid fa-arrow-rotate-left"></i></button>
-                    <button type="button" class="cdp-advanced-erase-tool" title="Move canvas" data-erase-action="move-toggle" id="cdpAdvancedEraseMoveBtn"><i class="fa-solid fa-up-down-left-right"></i></button>
-                    <button type="button" class="cdp-advanced-erase-tool" title="Reset" data-erase-action="reset"><i class="fa-solid fa-arrows-rotate"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool cdp-advanced-erase-tool--active" title="Erase" data-mobile-label="Erase" data-erase-action="brush" id="cdpAdvancedEraseBrushBtn"><i class="fa-solid fa-eraser"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool" title="Smart auto cut" data-mobile-label="Auto cut" data-erase-action="remove-bg"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool" title="Undo" data-mobile-label="Undo" data-erase-action="undo"><i class="fa-solid fa-arrow-rotate-left"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool" title="Move canvas" data-mobile-label="Move" data-erase-action="move-toggle" id="cdpAdvancedEraseMoveBtn"><i class="fa-solid fa-up-down-left-right"></i></button>
+                    <button type="button" class="cdp-advanced-erase-tool" title="Reset" data-mobile-label="Reset" data-erase-action="reset"><i class="fa-solid fa-arrows-rotate"></i></button>
                 </aside>
                 <section class="cdp-advanced-erase-stage">
                     <header class="cdp-advanced-erase-header">
@@ -6239,6 +6325,102 @@
                 background: rgba(15, 23, 42, 0.98);
                 color: #fbbf24;
             }
+            @media (max-width: 768px) {
+                .cdp-upload-modal {
+                    left: 0;
+                    width: 100vw;
+                    height: 100svh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 12px;
+                    box-sizing: border-box;
+                    background: rgba(15, 23, 42, 0.24);
+                }
+                .cdp-upload-content {
+                    width: min(92vw, 472px);
+                    max-width: calc(100vw - 24px);
+                    height: auto;
+                    max-height: min(88svh, 760px);
+                    border-radius: 18px;
+                    box-shadow: 0 20px 44px rgba(15, 23, 42, 0.22);
+                    overflow: hidden;
+                }
+                .cdp-upload-header {
+                    padding: 13px 14px 11px;
+                    align-items: center;
+                }
+                .cdp-upload-header h3 {
+                    font-size: calc(var(--cdp-font-scale, 1) * 15px);
+                }
+                .cdp-upload-body {
+                    padding: 14px 16px 16px;
+                    max-height: none;
+                }
+                .cdp-upload-preview {
+                    min-height: 148px;
+                    padding: 16px;
+                }
+                .cdp-upload-footer {
+                    position: static;
+                    flex-direction: row;
+                    flex-wrap: nowrap;
+                    justify-content: stretch;
+                    align-items: center;
+                    padding: 13px 16px 16px;
+                    background: #ffffff;
+                }
+                .cdp-btn {
+                    width: auto;
+                    min-width: 0;
+                    min-height: 44px;
+                    padding: 12px 16px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 13px);
+                    justify-content: center;
+                    flex: 1 1 0;
+                }
+                .cdp-upload-step {
+                    gap: 8px;
+                }
+                .cdp-step-number {
+                    width: 22px;
+                    height: 22px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 11.5px);
+                }
+                .cdp-step-text,
+                .cdp-upload-info p,
+                .cdp-upload-preview p {
+                    font-size: calc(var(--cdp-font-scale, 1) * 11.5px);
+                }
+            }
+            @media (max-width: 480px) {
+                .cdp-upload-modal {
+                    padding: 10px;
+                }
+                .cdp-upload-content {
+                    width: min(94vw, 430px);
+                    max-width: calc(100vw - 20px);
+                    max-height: min(86svh, 710px);
+                }
+                .cdp-upload-header {
+                    gap: 8px;
+                }
+                .cdp-upload-info {
+                    padding: 10px;
+                    margin-bottom: 14px;
+                }
+                .cdp-upload-step {
+                    align-items: flex-start;
+                }
+                .cdp-upload-footer {
+                    gap: 6px;
+                }
+                .cdp-btn {
+                    flex: 1 1 0;
+                    font-size: calc(var(--cdp-font-scale, 1) * 12px);
+                    padding: 11px 12px;
+                }
+            }
         `;
         document.head.appendChild(style);
     }
@@ -6916,26 +7098,45 @@
             }
             @media (max-width: 1024px) {
                 .cdp-filter-workspace {
-                    padding: 24px;
+                    padding: 20px;
                 }
                 .cdp-filter-workspace-panel {
-                    width: 100%;
-                    height: calc(100vh - 56px);
+                    width: min(100%, 960px);
+                    height: calc(100vh - 40px);
                     max-height: none;
+                    padding: 24px 22px;
+                    gap: 18px;
                 }
                 .cdp-filter-panel-top {
                     flex-direction: column;
                     align-items: flex-start;
-                    gap: 16px;
+                    gap: 14px;
                 }
                 .cdp-filter-panel-actions {
                     width: 100%;
-                    flex-wrap: wrap;
-                    justify-content: flex-start;
+                    display: grid;
+                    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+                    gap: 10px;
+                    align-items: stretch;
+                }
+                .cdp-filter-zoom-controls {
+                    width: 100%;
+                    min-height: 42px;
+                }
+                .cdp-filter-undo,
+                .cdp-filter-apply,
+                .cdp-filter-close {
+                    width: 100%;
+                    min-height: 42px;
+                    justify-content: center;
+                }
+                .cdp-filter-close {
+                    height: 42px;
                 }
                 .cdp-filter-panel-body {
                     flex-direction: column;
                     overflow-y: auto;
+                    gap: 18px;
                 }
                 .cdp-filter-list {
                     width: 100%;
@@ -6943,37 +7144,50 @@
                     flex-wrap: wrap;
                     max-height: none;
                     overflow-x: auto;
-                    padding-bottom: 8px;
-                    column-gap: 8px;
+                    padding-bottom: 6px;
+                    column-gap: 6px;
+                    row-gap: 6px;
                 }
                 .cdp-filter-menu-btn {
-                    flex: 1 1 calc(50% - 8px);
+                    flex: 1 1 calc(33.333% - 6px);
+                    min-height: 40px;
+                    padding: 10px 12px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 13px);
                 }
             }
             @media (max-width: 720px) {
                 .cdp-filter-workspace {
-                    padding: 16px;
+                    padding: 12px;
                 }
                 .cdp-filter-workspace-panel {
                     border-radius: 18px;
-                    padding: 24px 20px;
-                    gap: 18px;
+                    padding: 18px 16px;
+                    gap: 14px;
                 }
                 .cdp-filter-panel-actions {
+                    grid-template-columns: 1fr 1fr;
                     gap: 8px;
                 }
+                .cdp-filter-zoom-controls {
+                    grid-column: 1 / -1;
+                }
                 .cdp-filter-panel-body {
-                    gap: 16px;
+                    gap: 14px;
                 }
                 .cdp-filter-preview-stage {
-                    padding: 18px;
+                    padding: 14px;
                 }
                 .cdp-filter-preview-frame {
-                    max-height: 360px;
+                    max-height: 300px;
                 }
                 .cdp-filter-properties-card {
-                    padding: 20px;
+                    padding: 16px;
                     max-height: none;
+                }
+                .cdp-filter-menu-btn {
+                    flex: 1 1 calc(50% - 6px);
+                    min-height: 38px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 12px);
                 }
             }
             @media (max-width: 560px) {
@@ -6982,25 +7196,72 @@
                 }
                 .cdp-filter-workspace-panel {
                     border-radius: 0;
-                    height: 100vh;
-                    padding: 20px 16px 24px;
-                    gap: 16px;
+                    height: 100dvh;
+                    padding: 12px 10px calc(14px + env(safe-area-inset-bottom, 0px));
+                    gap: 10px;
                 }
                 .cdp-filter-panel-top {
-                    gap: 16px;
+                    gap: 8px;
                 }
                 .cdp-filter-panel-actions {
-                    justify-content: space-between;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 6px;
                 }
                 .cdp-filter-zoom-controls {
                     width: 100%;
                     justify-content: space-between;
+                    grid-column: 1 / -1;
+                    min-height: 36px;
+                    padding: 4px 10px;
+                }
+                .cdp-filter-undo,
+                .cdp-filter-apply,
+                .cdp-filter-close {
+                    width: 100%;
+                    justify-content: center;
+                    min-height: 36px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 12px);
+                    gap: 6px;
+                }
+                .cdp-filter-close {
+                    height: 36px;
+                    border-radius: 8px;
                 }
                 .cdp-filter-menu-btn {
                     flex: 1 1 100%;
+                    min-height: 36px;
+                    padding: 9px 10px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 11px);
                 }
                 .cdp-filter-preview-stage {
-                    min-height: 240px;
+                    min-height: 196px;
+                    padding: 10px;
+                }
+                .cdp-filter-properties-card {
+                    padding: 14px;
+                    border-radius: 15px;
+                }
+                .cdp-filter-properties-section {
+                    padding: 12px;
+                    gap: 12px;
+                }
+                .cdp-filter-slider-inputs {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 7px;
+                }
+                .cdp-filter-slider-inputs input[type="number"] {
+                    width: 100%;
+                }
+                .cdp-blur-slider-inputs {
+                    gap: 7px;
+                }
+                .cdp-blur-value-pill {
+                    width: 100%;
+                    justify-content: space-between;
+                }
+                .cdp-blur-value-pill input {
+                    width: 100%;
                 }
             }
             .cdp-crop-overlay {
@@ -7237,15 +7498,33 @@
             }
             @media (max-width: 1024px) {
                 .cdp-crop-overlay {
-                    padding: 32px 24px;
+                    padding: 24px 20px;
                 }
                 .cdp-crop-shell {
-                    height: calc(100vh - 48px);
+                    width: min(100%, 960px);
+                    height: calc(100vh - 40px);
                     min-height: 0;
+                    padding: 24px 22px;
+                    gap: 18px;
+                }
+                .cdp-crop-header {
+                    gap: 16px;
+                }
+                .cdp-crop-header-actions {
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    gap: 10px;
+                    width: min(100%, 360px);
+                }
+                .cdp-crop-header-actions > * {
+                    width: 100%;
+                    min-height: 42px;
                 }
                 .cdp-crop-stage {
                     flex-direction: column;
                     flex-wrap: nowrap;
+                    padding: 18px;
+                    gap: 18px;
                 }
                 .cdp-crop-stage-original,
                 .cdp-crop-preview-card {
@@ -7256,33 +7535,42 @@
             }
             @media (max-width: 720px) {
                 .cdp-crop-overlay {
-                    padding: 24px 16px;
+                    padding: 12px;
                 }
                 .cdp-crop-shell {
                     border-radius: 18px;
-                    padding: 20px;
-                    gap: 16px;
+                    padding: 18px 16px;
+                    gap: 14px;
                     min-height: 0;
                 }
                 .cdp-crop-header {
                     flex-direction: column;
                     align-items: flex-start;
-                    gap: 12px;
+                    gap: 8px;
                 }
                 .cdp-crop-header-actions {
                     width: 100%;
-                    justify-content: flex-end;
+                    grid-template-columns: 1fr 1fr;
                 }
                 .cdp-crop-body-top {
                     flex-direction: column;
                     align-items: flex-start;
-                    gap: 10px;
+                    gap: 8px;
                 }
                 .cdp-crop-stage {
-                    padding: 16px;
+                    padding: 14px;
                 }
                 .cdp-crop-preview-card {
-                    padding: 16px;
+                    padding: 14px;
+                }
+                .cdp-crop-footer {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                }
+                .cdp-crop-footer > * {
+                    width: 100%;
+                    min-height: 40px;
                 }
             }
             @media (max-width: 560px) {
@@ -7291,17 +7579,39 @@
                 }
                 .cdp-crop-shell {
                     width: 100%;
-                    height: 100vh;
+                    height: 100dvh;
                     border-radius: 0;
-                    padding: 18px 14px;
+                    padding: 10px 8px calc(12px + env(safe-area-inset-bottom, 0px));
                     min-height: 0;
+                    gap: 8px;
+                }
+                .cdp-crop-header {
+                    gap: 6px;
+                }
+                .cdp-crop-header h3 {
+                    font-size: calc(var(--cdp-font-scale, 1) * 13px);
+                }
+                .cdp-crop-header-actions {
+                    width: 100%;
+                    gap: 6px;
+                }
+                .cdp-crop-header-actions > * {
+                    min-height: 30px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 11px);
                 }
                 .cdp-crop-stage {
-                    gap: 16px;
+                    gap: 8px;
+                    padding: 8px;
+                }
+                .cdp-crop-preview-card {
+                    padding: 10px;
                 }
                 .cdp-crop-footer {
-                    flex-direction: column;
-                    align-items: stretch;
+                    gap: 6px;
+                }
+                .cdp-crop-footer > * {
+                    min-height: 30px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 11px);
                 }
             }
             .cdp-edit-preview {
@@ -7326,6 +7636,152 @@
                 padding: 20px 24px;
                 border-top: 1px solid #e5e7eb;
                 justify-content: flex-end;
+            }
+            @media (max-width: 768px) {
+                .cdp-image-edit-panel {
+                    justify-content: center;
+                    padding-left: 0;
+                    padding: 14px;
+                    align-items: flex-start;
+                    overflow-y: auto;
+                    pointer-events: auto;
+                    background: rgba(15, 23, 42, 0.36);
+                }
+                .cdp-edit-content {
+                    width: min(100%, 442px);
+                    max-width: 100%;
+                    margin: 0 auto;
+                    border-radius: 17px;
+                    max-height: calc(100dvh - 28px);
+                    overflow: hidden auto;
+                }
+                .cdp-edit-header,
+                .cdp-edit-transform,
+                .cdp-edit-body,
+                .cdp-edit-footer {
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+                .cdp-edit-transform {
+                    flex-wrap: wrap;
+                }
+                .cdp-transform-btn {
+                    width: 32px;
+                    height: 32px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 15px);
+                }
+                .cdp-edit-tools {
+                    gap: 8px;
+                }
+                .cdp-tool-btn {
+                    min-height: 38px;
+                    padding: 9px 8px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 11px);
+                }
+                .cdp-filter-shell {
+                    padding: 12px;
+                }
+                .cdp-filter-header {
+                    flex-direction: column;
+                    align-items: stretch;
+                    gap: 8px;
+                }
+                .cdp-filter-actions {
+                    width: 100%;
+                    flex-wrap: wrap;
+                    gap: 8px;
+                }
+                .cdp-filter-actions > * {
+                    flex: 1 1 calc(50% - 5px);
+                }
+                .cdp-filter-reset {
+                    justify-content: center;
+                    min-height: 38px;
+                    padding: 8px 10px;
+                    border-radius: 8px;
+                    background: #fff7df;
+                }
+                .cdp-edit-footer {
+                    flex-wrap: wrap;
+                }
+                .cdp-edit-footer > * {
+                    flex: 1 1 calc(50% - 6px);
+                }
+            }
+            @media (max-width: 560px) {
+                .cdp-image-edit-panel {
+                    padding: 0;
+                    align-items: stretch;
+                }
+                .cdp-edit-content {
+                    width: 100%;
+                    min-height: 100dvh;
+                    max-height: 100dvh;
+                    border-radius: 0;
+                    box-shadow: none;
+                }
+                .cdp-edit-header {
+                    padding: 14px 14px 12px;
+                }
+                .cdp-edit-transform {
+                    padding: 10px 14px;
+                    gap: 5px;
+                }
+                .cdp-edit-body {
+                    padding: 14px;
+                }
+                .cdp-edit-group,
+                .cdp-edit-tools,
+                .cdp-eraser-controls,
+                .cdp-filter-shell {
+                    margin-bottom: 14px;
+                }
+                .cdp-edit-tools {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                }
+                .cdp-tool-btn {
+                    width: 100%;
+                    min-height: 44px;
+                    padding: 10px 12px;
+                    font-size: calc(var(--cdp-font-scale, 1) * 12px);
+                    font-weight: 700;
+                    gap: 8px;
+                }
+                .cdp-filter-actions {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8px;
+                }
+                .cdp-filter-actions > * {
+                    width: 100%;
+                    flex: 1 1 100%;
+                }
+                .cdp-filter-toggle {
+                    min-height: 44px;
+                    padding: 10px 12px;
+                    border-color: #d9a300;
+                    background: linear-gradient(180deg, #fff8dc 0%, #ffefb3 100%);
+                    color: #8a6500;
+                    font-weight: 800;
+                    box-shadow: 0 6px 14px rgba(217, 163, 0, 0.16);
+                }
+                .cdp-filter-toggle i {
+                    font-size: calc(var(--cdp-font-scale, 1) * 14px);
+                }
+                .cdp-filter-reset {
+                    min-height: 44px;
+                }
+                .cdp-eraser-controls {
+                    padding: 12px;
+                }
+                .cdp-edit-footer {
+                    padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+                }
+                .cdp-edit-footer > * {
+                    flex: 1 1 100%;
+                }
             }
             body.dark-mode .cdp-filter-shell {
                 background: #1f2937;
@@ -7813,12 +8269,13 @@
             }
             @media (max-width: 1024px) {
                 .cdp-advanced-erase-overlay {
-                    padding: 24px;
+                    padding: 20px;
                 }
                 .cdp-advanced-erase-shell {
                     flex-direction: column;
-                    width: min(100%, calc(100vw - 32px));
-                    height: calc(100vh - 48px);
+                    width: min(100%, 960px);
+                    height: calc(100vh - 40px);
+                    border-radius: 24px;
                 }
                 .cdp-advanced-erase-toolbar {
                     width: 100%;
@@ -7827,6 +8284,33 @@
                     border-right: none;
                     border-bottom: 1px solid #e2e8f0;
                     justify-content: center;
+                    flex-wrap: wrap;
+                    padding: 14px 16px;
+                    gap: 8px;
+                }
+                .cdp-advanced-erase-tool {
+                    width: 38px;
+                    height: 38px;
+                    border-radius: 12px;
+                    font-size: 14px;
+                }
+                .cdp-advanced-erase-divider {
+                    width: 2px;
+                    height: 24px;
+                    margin: 0 2px;
+                }
+                .cdp-advanced-erase-header {
+                    padding: 18px 22px 10px;
+                }
+                .cdp-advanced-erase-canvas-wrap {
+                    padding: 22px;
+                }
+                .cdp-advanced-erase-status {
+                    padding: 0 22px 10px;
+                }
+                .cdp-advanced-erase-footer {
+                    padding: 14px 22px 20px;
+                    gap: 18px;
                 }
                 .cdp-advanced-erase-stage {
                     flex: 1;
@@ -7839,26 +8323,99 @@
                 .cdp-advanced-erase-shell {
                     border-radius: 0;
                     width: 100%;
-                    height: 100vh;
+                    height: 100dvh;
+                    overflow: hidden;
                 }
                 .cdp-advanced-erase-toolbar {
-                    padding: 12px;
-                    gap: 10px;
-                    overflow-x: auto;
+                    padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 8px;
+                    gap: 5px;
+                    overflow: visible;
+                    justify-content: stretch;
+                    position: relative;
+                    top: auto;
+                    z-index: 3;
+                    display: grid;
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                    align-items: stretch;
+                    background: #f8fafc;
+                    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+                    flex: 0 0 auto;
+                }
+                .cdp-advanced-erase-tool {
+                    width: 100%;
+                    min-width: 0;
+                    height: 33px;
+                    border-radius: 10px;
+                    font-size: 11px;
+                    padding: 4px 6px;
+                    gap: 3px;
+                    flex: 0 0 auto;
+                    flex-direction: column;
+                }
+                .cdp-advanced-erase-tool::after {
+                    content: attr(data-mobile-label);
+                    font-size: 8px;
+                    font-weight: 700;
+                    line-height: 1.1;
+                    white-space: normal;
+                    text-align: center;
+                }
+                .cdp-advanced-erase-divider {
+                    display: none;
                 }
                 .cdp-advanced-erase-header {
                     flex-direction: column;
                     align-items: flex-start;
-                    gap: 12px;
+                    gap: 8px;
+                    padding: 14px 14px 10px;
+                    flex: 0 0 auto;
+                }
+                .cdp-advanced-erase-header-actions {
+                    width: 100%;
+                    justify-content: space-between;
+                }
+                .cdp-advanced-erase-stage {
+                    min-height: 0;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .cdp-advanced-erase-canvas-wrap {
+                    padding: 14px;
+                    flex: 0 0 auto;
+                    min-height: 280px;
+                }
+                .cdp-advanced-erase-status {
+                    flex: 0 0 auto;
                 }
                 .cdp-advanced-erase-footer {
                     flex-direction: column;
                     align-items: stretch;
-                    gap: 16px;
+                    gap: 12px;
+                    padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+                    flex: 0 0 auto;
+                    position: sticky;
+                    bottom: 0;
+                    background: #ffffff;
+                    box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.08);
                 }
                 .cdp-advanced-erase-footer-actions {
                     width: 100%;
-                    justify-content: space-between;
+                    justify-content: stretch;
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8px;
+                }
+                .cdp-advanced-erase-footer-actions > * {
+                    min-height: 40px;
+                }
+            }
+            @media (max-width: 420px) {
+                .cdp-advanced-erase-toolbar {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+                .cdp-advanced-erase-tool {
+                    height: 32px;
                 }
             }
             body.dark-mode .cdp-advanced-erase-shell {

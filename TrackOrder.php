@@ -26,6 +26,46 @@ function girffonTrackFormatMoney($value): string
     return 'EUR ' . number_format((float) $value, 2, '.', ',');
 }
 
+function girffonTrackFormatShortDate(?string $value): string
+{
+  if (!$value) {
+    return '-';
+  }
+
+  $timestamp = strtotime($value);
+  if ($timestamp === false) {
+    return $value;
+  }
+
+  return date('d M Y', $timestamp);
+}
+
+function girffonTrackRenderTimeline(array $timeline): string
+{
+  if (!$timeline) {
+    return '';
+  }
+
+  $items = '';
+  foreach ($timeline as $step) {
+    $classes = ['gf-track-timeline-step'];
+    if (!empty($step['completed'])) {
+      $classes[] = 'is-complete';
+    }
+    if (!empty($step['current'])) {
+      $classes[] = 'is-current';
+    }
+
+    $items .= '<article class="' . implode(' ', $classes) . '">'
+      . '<span class="gf-track-timeline-dot" aria-hidden="true"></span>'
+      . '<div><strong>' . girffonTrackEscape((string) ($step['label'] ?? 'Update')) . '</strong>'
+      . '<p>' . girffonTrackEscape(!empty($step['current']) ? 'Current stage' : (!empty($step['completed']) ? 'Completed' : 'Pending')) . '</p></div>'
+      . '</article>';
+  }
+
+  return '<div class="gf-track-timeline">' . $items . '</div>';
+}
+
 $searchedOrderNumber = strtoupper(trim((string) ($_GET['order_number'] ?? '')));
 $trackState = '';
 $trackMessage = '';
@@ -68,23 +108,33 @@ if ($orderItems) {
 $invoiceButtonMarkup = '';
 if (!empty($order['invoice_id'])) {
   $invoiceNumberLabel = trim((string) ($order['invoice_number'] ?? ''));
-  $invoiceButtonMarkup = '<a class="gf-track-submit gf-track-invoice-button" href="/GirffoN/backend/admin/invoice-pdf.php?id=' . rawurlencode((string) $order['invoice_id']) . '">Download Invoice' . ($invoiceNumberLabel !== '' ? ' (' . girffonTrackEscape($invoiceNumberLabel) . ')' : '') . '</a>';
+  $invoiceButtonMarkup = '<a class="gf-track-submit gf-track-invoice-button" href="/GirffoN/invoice-pdf.php?id=' . rawurlencode((string) $order['invoice_id']) . '">Download Invoice' . ($invoiceNumberLabel !== '' ? ' (' . girffonTrackEscape($invoiceNumberLabel) . ')' : '') . '</a>';
 }
 
 $resultMarkup = '';
 if ($order) {
+    $timelineMarkup = girffonTrackRenderTimeline($order['timeline'] ?? []);
+    $estimatedDeliveryLabel = girffonTrackFormatShortDate((string) ($order['estimated_delivery_date'] ?? ''));
+    $updateNoteMarkup = '';
+    if (!empty($order['admin_note'])) {
+        $updateNoteMarkup = '<div class="gf-track-order-note"><span>Latest Update</span><strong>' . nl2br(girffonTrackEscape((string) $order['admin_note'])) . '</strong></div>';
+    }
+
     $resultMarkup = '<section class="gf-track-order-panel">'
         . '<div class="gf-track-order-card">'
         . '<div class="gf-track-order-card-head"><div><p class="gf-track-order-kicker">Order Overview</p><h3>' . girffonTrackEscape((string) $order['order_number']) . '</h3></div>' . $invoiceButtonMarkup . '</div>'
         . '<div class="gf-track-order-meta-grid">'
         . '<article><span>Customer Name</span><strong>' . girffonTrackEscape((string) ($order['customer_name'] ?? '-')) . '</strong></article>'
         . '<article><span>Created At</span><strong>' . girffonTrackEscape(girffonTrackFormatDate((string) ($order['created_at'] ?? ''))) . '</strong></article>'
-        . '<article><span>Order Status</span><strong>' . girffonTrackEscape(ucwords(str_replace('_', ' ', (string) ($order['order_status'] ?? '')))) . '</strong></article>'
-        . '<article><span>Payment Status</span><strong>' . girffonTrackEscape(ucwords(str_replace('_', ' ', (string) ($order['payment_status'] ?? '')))) . '</strong></article>'
-        . '<article><span>Tracking Code</span><strong>' . girffonTrackEscape((string) ($order['tracking_code'] ?: '-')) . '</strong></article>'
+        . '<article><span>Order Status</span><strong>' . girffonTrackEscape((string) ($order['order_status_label'] ?? '-')) . '</strong></article>'
+        . '<article><span>Payment Status</span><strong>' . girffonTrackEscape((string) ($order['payment_status_label'] ?? '-')) . '</strong></article>'
+        . '<article><span>Tracking Number</span><strong>' . girffonTrackEscape((string) ($order['tracking_code'] ?: '-')) . '</strong></article>'
+        . '<article><span>Courier</span><strong>' . girffonTrackEscape((string) (($order['courier_name'] ?? '') !== '' ? $order['courier_name'] : '-')) . '</strong></article>'
+        . '<article><span>Estimated Delivery</span><strong>' . girffonTrackEscape($estimatedDeliveryLabel) . '</strong></article>'
         . '<article><span>Invoice Number</span><strong>' . girffonTrackEscape((string) (($order['invoice_number'] ?? '') !== '' ? $order['invoice_number'] : 'Not issued yet')) . '</strong></article>'
         . '<article><span>Total</span><strong>' . girffonTrackEscape(girffonTrackFormatMoney($order['total'] ?? 0)) . '</strong></article>'
-        . '</div></div>'
+        . '</div>' . $updateNoteMarkup . '</div>'
+        . '<div class="gf-track-order-card gf-track-timeline-card"><div class="gf-track-items-head"><div><p class="gf-track-order-kicker">Order Progress</p><h3>Timeline</h3></div><p>Follow each stage from confirmation to delivery.</p></div>' . $timelineMarkup . '</div>'
         . '<div class="gf-track-items-panel"><div class="gf-track-items-head"><h3>Order Items</h3><p>All products saved for this order are shown below.</p></div>'
         . '<div class="gf-track-items-grid">' . $itemsMarkup . '</div></div></section>';
 }
@@ -262,6 +312,73 @@ $trackBlock = <<<HTML
       text-decoration: none;
       width: auto;
       min-width: 190px;
+    }
+    .gf-track-order-note {
+      margin-top: 18px;
+      border-radius: 16px;
+      padding: 16px 18px;
+      background: #fff7ed;
+      border: 1px solid rgba(180, 83, 9, 0.14);
+      display: grid;
+      gap: 8px;
+    }
+    .gf-track-order-note span {
+      color: #b45309;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .gf-track-order-note strong {
+      color: #7c2d12;
+      font-size: 0.96rem;
+      line-height: 1.7;
+      font-weight: 600;
+    }
+    .gf-track-timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+    }
+    .gf-track-timeline-step {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #f8fafc;
+    }
+    .gf-track-timeline-step.is-complete {
+      background: #ecfdf5;
+      border-color: rgba(5, 150, 105, 0.18);
+    }
+    .gf-track-timeline-step.is-current {
+      background: #fff7ed;
+      border-color: rgba(180, 83, 9, 0.2);
+    }
+    .gf-track-timeline-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      box-shadow: 0 0 0 5px rgba(203, 213, 225, 0.22);
+    }
+    .gf-track-timeline-step.is-complete .gf-track-timeline-dot {
+      background: #059669;
+      box-shadow: 0 0 0 5px rgba(5, 150, 105, 0.16);
+    }
+    .gf-track-timeline-step.is-current .gf-track-timeline-dot {
+      background: #b45309;
+      box-shadow: 0 0 0 5px rgba(180, 83, 9, 0.14);
+    }
+    .gf-track-timeline-step strong {
+      color: #111827;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .gf-track-timeline-step p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 0.88rem;
     }
     @media (max-width: 720px) {
       .gf-track-page-shell {

@@ -17,6 +17,7 @@ $invoiceIdQuery = rawurlencode((string) ($invoice['id'] ?? '0'));
 $invoiceViewUrl = girffonInvoiceUrl('invoice-view.php?id=' . $invoiceIdQuery . '&autoprint=0');
 $invoicePrintUrl = girffonInvoiceUrl('invoice-print.php?id=' . $invoiceIdQuery);
 $invoicePdfUrl = girffonInvoiceUrl('invoice-pdf.php?id=' . $invoiceIdQuery);
+$company = is_array($invoice['company'] ?? null) ? $invoice['company'] : girffonInvoiceCompanyProfile();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -241,12 +242,19 @@ $invoicePdfUrl = girffonInvoiceUrl('invoice-pdf.php?id=' . $invoiceIdQuery);
       .invoice-toolbar { padding: 10px; }
       .invoice-toolbar-actions { width: 100%; }
       .invoice-toolbar-button { flex: 1 1 100%; }
-      .invoice-print-head, .invoice-grid, .invoice-footer-grid { grid-template-columns: 1fr; }
+      .invoice-print-head {
+        grid-template-columns: minmax(0, 1.06fr) minmax(250px, 0.94fr);
+        gap: 12px;
+      }
       .invoice-summary-row { grid-template-columns: 1fr; gap: 4px; }
       .invoice-totals { justify-content: stretch; }
       .invoice-totals-card { min-width: 0; }
       .invoice-table-wrap { overflow-x: auto; }
       table { min-width: 720px; }
+    }
+    @media (max-width: 640px) {
+      .invoice-print-head, .invoice-grid, .invoice-footer-grid { grid-template-columns: 1fr; }
+      .invoice-brand-logo { width: 180px; }
     }
     @media print {
       html, body { width: 210mm; min-height: 297mm; background: #ffffff; }
@@ -289,12 +297,13 @@ $invoicePdfUrl = girffonInvoiceUrl('invoice-pdf.php?id=' . $invoiceIdQuery);
       <section class="invoice-brand-card">
         <img class="invoice-brand-logo" src="<?php echo girffonInvoiceEscape((string) ($invoice['logo_url'] ?? '')); ?>" alt="GirffoN Premium Clothing Logo">
         <div class="invoice-brand-copy">
-          <p class="invoice-company-tag">Premium Clothing</p>
-          <h1>GirffoN Premium Clothing</h1>
+          <p class="invoice-company-tag"><?php echo girffonInvoiceEscape((string) ($company['tagline'] ?? 'Premium Clothing')); ?></p>
+          <h1><?php echo girffonInvoiceEscape((string) ($company['name'] ?? 'GirffoN Premium Clothing')); ?></h1>
           <div class="invoice-company-meta">
-            <div>Email: info@girffon.com</div>
-            <div>Website: www.girffon.com</div>
-            <div>Location: Italy</div>
+            <div>Email: <?php echo girffonInvoiceEscape((string) ($company['email'] ?? '-')); ?></div>
+            <div>Website: <?php echo girffonInvoiceEscape((string) ($company['website'] ?? '-')); ?></div>
+            <div>Phone: <?php echo girffonInvoiceEscape((string) ($company['phone'] ?? '-')); ?></div>
+            <div>Location: <?php echo girffonInvoiceEscape((string) ($company['location'] ?? '-')); ?></div>
           </div>
         </div>
       </section>

@@ -87,107 +87,126 @@ document.addEventListener("DOMContentLoaded", function () {
     "#8b6f61", "#5c5c5c", "#f5f0ea", "#000000"
   ];
 
-  const productData = {
-    men: [
-      {
-        title: "Men Essential White T-Shirt",
-        price: "39,00 €",
-        images: ["Image/Men/men1.jpg", "Image/Men/men1-2.jpg", "Image/Men/men1-3.jpg"]
-      },
-      {
-        title: "Men Premium Black T-Shirt",
-        price: "45,00 €",
-        images: ["Image/Men/men2.jpg", "Image/Men/men2-2.jpg", "Image/Men/men2-3.jpg"]
-      },
-      {
-        title: "Men Graphic Oversized Tee",
-        price: "49,00 €",
-        images: ["Image/Men/men3.jpg", "Image/Men/men3-2.jpg", "Image/Men/men3-3.jpg"]
-      },
-      {
-        title: "Men Urban Cotton Tee",
-        price: "42,00 €",
-        images: ["Image/Men/men4.jpg", "Image/Men/men4-2.jpg", "Image/Men/men4-3.jpg"]
-      },
-      {
-        title: "Men Minimal Print Shirt",
-        price: "46,00 €",
-        images: ["Image/Men/men5.jpg", "Image/Men/men5-2.jpg", "Image/Men/men5-3.jpg"]
-      },
-      {
-        title: "Men Casual Modern Tee",
-        price: "44,00 €",
-        images: ["Image/Men/men6.jpg", "Image/Men/men6-2.jpg", "Image/Men/men6-3.jpg"]
-      }
-    ],
+const productData = {
+  men: [
+    {
+      title: "Men Essential T-Shirt",
+      price: "39,00 €",
+      images: [
+        "Cart/products/tshirt-men/50/400.png",
+        "Cart/products/tshirt-men/50/400-1.png",
+        "Cart/products/tshirt-men/50/400-2.png",
+        "Cart/products/tshirt-men/50/400-3.png"
+      ]
+    },
+    {
+      title: "Men France T-Shirt",
+      price: "45,00 €",
+      images: [
+        "Cart/products/tshirt-men/Men france/Bk/400.jpg",
+        "Cart/products/tshirt-men/Men france/Bk/400-1.jpg",
+        "Cart/products/tshirt-men/Men france/Bk/400-2.jpg",
+        "Cart/products/tshirt-men/Men france/Bk/400-3.jpg"
+      ]
+    },
+    {
+      title: "Men Italy T-Shirt",
+      price: "42,00 €",
+      images: [
+        "Cart/products/tshirt-men/men italy/Bk/400.jpg",
+        "Cart/products/tshirt-men/men italy/Bk/400-1.jpg",
+        "Cart/products/tshirt-men/men italy/Bk/400-2.jpg",
+        "Cart/products/tshirt-men/men italy/Bk/400-3.jpg"
+      ]
+    },
+    {
+      title: "Men USA T-Shirt",
+      price: "44,00 €",
+      images: [
+        "Cart/products/tshirt-men/men usa/Bk/400.jpg",
+        "Cart/products/tshirt-men/men usa/Bk/400-1.jpg",
+        "Cart/products/tshirt-men/men usa/Bk/400-2.jpg",
+        "Cart/products/tshirt-men/men usa/Bk/400-3.jpg"
+      ]
+    }
+  ],
 
-    women: [
-      {
-        title: "Women Soft Premium T-Shirt",
-        price: "41,00 €",
-        images: ["Image/Women/women1.jpg", "Image/Women/women1-2.jpg", "Image/Women/women1-3.jpg"]
-      },
-      {
-        title: "Women Relaxed Cotton Tee",
-        price: "43,00 €",
-        images: ["Image/Women/women2.jpg", "Image/Women/women2-2.jpg", "Image/Women/women2-3.jpg"]
-      },
-      {
-        title: "Women Graphic Fashion Tee",
-        price: "47,00 €",
-        images: ["Image/Women/women3.jpg", "Image/Women/women3-2.jpg", "Image/Women/women3-3.jpg"]
-      },
-      {
-        title: "Women Streetwear Shirt",
-        price: "46,00 €",
-        images: ["Image/Women/women4.jpg", "Image/Women/women4-2.jpg", "Image/Women/women4-3.jpg"]
-      },
-      {
-        title: "Women Minimal Design Tee",
-        price: "44,00 €",
-        images: ["Image/Women/women5.jpg", "Image/Women/women5-2.jpg", "Image/Women/women5-3.jpg"]
-      },
-      {
-        title: "Women Creative Print Tee",
-        price: "48,00 €",
-        images: ["Image/Women/women6.jpg", "Image/Women/women6-2.jpg", "Image/Women/women6-3.jpg"]
-      }
-    ],
+  women: [
+    {
+      title: "Women Essential T-Shirt",
+      price: "41,00 €",
+      images: [
+        "Cart/products/tshirt-women/50/400.png",
+        "Cart/products/tshirt-women/50/400-1.png",
+        "Cart/products/tshirt-women/50/400-2.png",
+        "Cart/products/tshirt-women/50/400-3.png"
+      ]
+    },
+    {
+      title: "Women France T-Shirt",
+      price: "43,00 €",
+      images: [
+        "Cart/products/tshirt-women/women france/Bk/400.jpg",
+        "Cart/products/tshirt-women/women france/Bk/400-1.jpg",
+        "Cart/products/tshirt-women/women france/Bk/400-2.jpg",
+        "Cart/products/tshirt-women/women france/Bk/400-3.jpg"
+      ]
+    },
+    {
+      title: "Women Italy T-Shirt",
+      price: "44,00 €",
+      images: [
+        "Cart/products/tshirt-women/Women italy/Bk/400.jpg",
+        "Cart/products/tshirt-women/Women italy/Bk/400-1.jpg",
+        "Cart/products/tshirt-women/Women italy/Bk/400-2.jpg",
+        "Cart/products/tshirt-women/Women italy/Bk/400-3.jpg"
+      ]
+    },
+    {
+      title: "Women Japan T-Shirt",
+      price: "48,00 €",
+      images: [
+        "Cart/products/tshirt-women/Women japon/Bk/400.jpg",
+        "Cart/products/tshirt-women/Women japon/Bk/400-1.jpg",
+        "Cart/products/tshirt-women/Women japon/Bk/400-2.jpg",
+        "Cart/products/tshirt-women/Women japon/Bk/400-3.jpg"
+      ]
+    }
+  ],
 
-    kids: [
-      {
-        title: "Kids Fun Cotton T-Shirt",
-        price: "29,00 €",
-        images: ["Image/Kids/kids1.jpg", "Image/Kids/kids1-2.jpg", "Image/Kids/kids1-3.jpg"]
-      },
-      {
-        title: "Kids Color Print Tee",
-        price: "31,00 €",
-        images: ["Image/Kids/kids2.jpg", "Image/Kids/kids2-2.jpg", "Image/Kids/kids2-3.jpg"]
-      },
-      {
-        title: "Kids Smile Graphic Shirt",
-        price: "30,00 €",
-        images: ["Image/Kids/kids3.jpg", "Image/Kids/kids3-2.jpg", "Image/Kids/kids3-3.jpg"]
-      },
-      {
-        title: "Kids Everyday Soft Tee",
-        price: "28,00 €",
-        images: ["Image/Kids/kids4.jpg", "Image/Kids/kids4-2.jpg", "Image/Kids/kids4-3.jpg"]
-      },
-      {
-        title: "Kids Play Collection Tee",
-        price: "32,00 €",
-        images: ["Image/Kids/kids5.jpg", "Image/Kids/kids5-2.jpg", "Image/Kids/kids5-3.jpg"]
-      },
-      {
-        title: "Kids Custom Print Shirt",
-        price: "33,00 €",
-        images: ["Image/Kids/kids6.jpg", "Image/Kids/kids6-2.jpg", "Image/Kids/kids6-3.jpg"]
-      }
-    ]
-  };
-
+  kids: [
+    {
+      title: "Kids Basic T-Shirt",
+      price: "29,00 €",
+      images: [
+        "Cart/products/tshirt-men/47/400.png",
+        "Cart/products/tshirt-men/47/400-1.png",
+        "Cart/products/tshirt-men/47/400-2.png",
+        "Cart/products/tshirt-men/47/400-3.png"
+      ]
+    },
+    {
+      title: "Kids Color T-Shirt",
+      price: "31,00 €",
+      images: [
+        "Cart/products/tshirt-men/48/400.png",
+        "Cart/products/tshirt-men/48/400-1.png",
+        "Cart/products/tshirt-men/48/400-2.png",
+        "Cart/products/tshirt-men/48/400-3.png"
+      ]
+    },
+    {
+      title: "Kids Smile T-Shirt",
+      price: "30,00 €",
+      images: [
+        "Cart/products/tshirt-men/49/400.png",
+        "Cart/products/tshirt-men/49/400-1.png",
+        "Cart/products/tshirt-men/49/400-2.png",
+        "Cart/products/tshirt-men/49/400-3.png"
+      ]
+    }
+  ]
+};
   function createCard(product) {
     const colorsHtml = colorSet.map((color, index) => `
       <span class="gx25-color ${index === 0 ? "active" : ""}" style="background:${color};"></span>

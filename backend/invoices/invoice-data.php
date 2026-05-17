@@ -27,6 +27,37 @@ function girffonInvoiceFormatDate($value): string
     return $timestamp ? date('Y-m-d H:i', $timestamp) : (string) $value;
 }
 
+function girffonInvoiceCompanyProfile(): array
+{
+    return [
+        'name' => 'GirffoN Premium Clothing',
+        'tagline' => 'Premium Clothing',
+        'email' => 'info@girffon.com',
+        'website' => 'www.girffon.com',
+        'phone' => '+39 344 426 8927',
+        'location' => 'Italy',
+        'vat_note' => 'VAT Registered Seller',
+    ];
+}
+
+function girffonInvoiceStringStartsWith(string $haystack, string $needle): bool
+{
+    if ($needle === '') {
+        return true;
+    }
+
+    return substr($haystack, 0, strlen($needle)) === $needle;
+}
+
+function girffonInvoiceStringContains(string $haystack, string $needle): bool
+{
+    if ($needle === '') {
+        return true;
+    }
+
+    return strpos($haystack, $needle) !== false;
+}
+
 function girffonInvoiceAppBasePath(): string
 {
     $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
@@ -44,7 +75,7 @@ function girffonInvoiceUrl(string $path): string
     return girffonInvoiceAppBasePath() . $cleanPath;
 }
 
-function girffonInvoiceResolveAssetUrl(?string $path): ?string
+function girffonInvoiceResolveAssetUrl($path)
 {
     $value = trim((string) $path);
     if ($value === '') {
@@ -55,18 +86,18 @@ function girffonInvoiceResolveAssetUrl(?string $path): ?string
         return $value;
     }
 
-    if (str_starts_with($value, '/GirffoN/')) {
+    if (girffonInvoiceStringStartsWith($value, '/GirffoN/')) {
         return girffonInvoiceUrl(substr($value, strlen('/GirffoN/')));
     }
 
-    if (str_starts_with($value, '/')) {
+    if (girffonInvoiceStringStartsWith($value, '/')) {
         return girffonInvoiceUrl(ltrim($value, '/'));
     }
 
     return girffonInvoiceUrl($value);
 }
 
-function girffonInvoiceResolveAssetPath(?string $path): ?string
+function girffonInvoiceResolveAssetPath($path)
 {
     $value = trim((string) $path);
     if ($value === '') {
@@ -78,18 +109,18 @@ function girffonInvoiceResolveAssetPath(?string $path): ?string
     }
 
     $normalized = str_replace('\\', '/', $value);
-    if (str_starts_with($normalized, '/GirffoN/')) {
+    if (girffonInvoiceStringStartsWith($normalized, '/GirffoN/')) {
         return dirname(__DIR__, 2) . '/' . ltrim(substr($normalized, strlen('/GirffoN/')), '/');
     }
 
-    if (str_starts_with($normalized, '/')) {
+    if (girffonInvoiceStringStartsWith($normalized, '/')) {
         return dirname(__DIR__, 2) . '/' . ltrim($normalized, '/');
     }
 
     return dirname(__DIR__, 2) . '/' . ltrim($normalized, '/');
 }
 
-function girffonInvoiceResolveItemImage(array $item): ?string
+function girffonInvoiceResolveItemImage(array $item)
 {
     $directImage = girffonInvoiceResolveAssetUrl($item['image'] ?? '');
     if ($directImage) {
@@ -108,20 +139,20 @@ function girffonInvoiceResolveItemImage(array $item): ?string
     }
 
     $productName = strtolower(trim((string) (($item['product_name'] ?? '') !== '' ? $item['product_name'] : ($item['name'] ?? ''))));
-    if (str_contains($productName, 'hoodie')) {
+    if (girffonInvoiceStringContains($productName, 'hoodie')) {
         return girffonInvoiceUrl('Cart/products/tshirt-men/48/160.png');
     }
-    if (str_contains($productName, 'sweatshirt')) {
+    if (girffonInvoiceStringContains($productName, 'sweatshirt')) {
         return girffonInvoiceUrl('Cart/products/tshirt-men/49/160.png');
     }
-    if (str_contains($productName, 'shirt') || str_contains($productName, 't-shirt') || str_contains($productName, 'tee')) {
+    if (girffonInvoiceStringContains($productName, 'shirt') || girffonInvoiceStringContains($productName, 't-shirt') || girffonInvoiceStringContains($productName, 'tee')) {
         return girffonInvoiceUrl('Cart/products/tshirt-men/47/160.png');
     }
 
     return null;
 }
 
-function girffonInvoiceFetchById(PDO $pdo, int $invoiceId): ?array
+function girffonInvoiceFetchById(PDO $pdo, int $invoiceId)
 {
     $invoice = $invoiceId > 0 ? girffonAdminFetchInvoiceDetail($pdo, $invoiceId) : null;
     if (!$invoice) {
@@ -175,6 +206,7 @@ function girffonInvoiceFetchById(PDO $pdo, int $invoiceId): ?array
     $invoice['payment_status_label'] = girffonInvoiceFormatLabel($invoice['order_payment_status'] ?? $invoice['invoice_status'] ?? 'pending');
     $invoice['logo_url'] = girffonInvoiceUrl('Image/Logo/Logo -PDF.png');
     $invoice['logo_path'] = dirname(__DIR__, 2) . '/Image/Logo/Logo -PDF.png';
+    $invoice['company'] = girffonInvoiceCompanyProfile();
 
     return $invoice;
 }

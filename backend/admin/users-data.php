@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/../profile/communication-common.php";
 
 function girffonAdminBuildUsersWhereClause(array $filters, array &$params): string
 {
@@ -72,6 +73,36 @@ function girffonAdminFetchUserById(PDO $pdo, int $userId): ?array
     } catch (PDOException $exception) {
         return null;
     }
+}
+
+function girffonAdminFetchUserCommunicationSnapshot(PDO $pdo, int $userId): array
+{
+    $user = girffonAdminFetchUserById($pdo, $userId);
+    if (!$user) {
+        return [
+            'preferences' => [],
+            'newsletter' => [],
+            'latest_test_email' => [],
+        ];
+    }
+
+    $email = strtolower(trim((string) ($user['email'] ?? '')));
+    $preferencesRow = girffonCommunicationFetchUserPreferences($pdo, $userId);
+
+    return [
+        'preferences' => [
+            'promotional_emails' => !empty($preferencesRow['promotional_emails']),
+            'catalog_emails' => !empty($preferencesRow['catalog_emails']),
+            'birthday_discount_emails' => !empty($preferencesRow['birthday_discount_emails']),
+            'order_updates' => !empty($preferencesRow['order_updates']),
+            'sms_notifications' => !empty($preferencesRow['sms_notifications']),
+            'two_factor_enabled' => !empty($preferencesRow['two_factor_enabled']),
+            'updated_at' => (string) ($preferencesRow['updated_at'] ?? ''),
+            'sms_note' => 'Available soon',
+        ],
+        'newsletter' => $email !== '' ? girffonCommunicationFetchNewsletterSubscriber($pdo, $email) : [],
+        'latest_test_email' => $email !== '' ? girffonCommunicationFetchLatestTestEmailLog($pdo, $email) : [],
+    ];
 }
 
 function girffonAdminFetchRecentOrdersForUser(PDO $pdo, int $userId, int $limit = 5): array

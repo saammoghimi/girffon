@@ -31,9 +31,12 @@ if (!$user || !password_verify($password, $user["password_hash"])) {
 }
 
 session_regenerate_id(true);
-$_SESSION["admin_id"] = $user["id"];
+$_SESSION["admin_id"] = (int) $user["id"];
+$_SESSION["admin_user_id"] = (int) $user["id"];
+$_SESSION["girffon_admin_id"] = (int) $user["id"];
 $_SESSION["admin_username"] = $user["username"];
 $_SESSION["admin_role"] = "admin";
+$_SESSION["admin_logged_in"] = true;
 
 header("Location: /GirffoN/admin-dashboard.php");
 exit;

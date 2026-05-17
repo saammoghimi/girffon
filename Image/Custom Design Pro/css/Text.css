@@ -395,8 +395,14 @@
 
 @media (max-width: 768px) {
     .cdp-text-panel {
-        width: 100vw;
+        top: 8px;
+        bottom: calc(env(safe-area-inset-bottom) + 8px);
+        width: min(78vw, 320px);
         left: -100vw;
+        height: auto;
+        max-height: calc(100dvh - 16px - env(safe-area-inset-bottom));
+        border-radius: 0 18px 18px 0;
+        overflow: hidden;
     }
 
     .cdp-text-panel[data-visible="true"] {
@@ -438,11 +444,77 @@
     }
 
     .cdp-text-panel-footer {
-        flex-direction: column;
+        flex-direction: row;
+        align-items: center;
     }
 
     .cdp-text-btn {
-        width: 100%;
+        width: auto;
+        flex: 1 1 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .cdp-text-panel {
+        height: auto;
+        max-height: calc(100dvh - 16px - env(safe-area-inset-bottom));
+    }
+
+    .cdp-text-panel-header {
+        padding: calc(env(safe-area-inset-top) + 10px) 12px 10px;
+    }
+
+    .cdp-text-panel-body {
+        padding: 10px 12px 12px;
+        min-height: 0;
+    }
+
+    .cdp-text-panel-footer {
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        position: static;
+        background: #ffffff;
+        z-index: 2;
+        margin-top: auto;
+        flex-shrink: 0;
+    }
+
+    .cdp-text-font-scroll {
+        max-height: min(28vh, 240px);
+    }
+}
+
+@media (max-width: 480px) {
+    .cdp-text-panel {
+        width: min(74vw, 292px);
+        top: 6px;
+        bottom: calc(env(safe-area-inset-bottom) + 6px);
+        height: auto;
+        max-height: calc(100dvh - 12px - env(safe-area-inset-bottom));
+    }
+
+    .cdp-text-font-preview {
+        font-size: calc(var(--cdp-font-scale, 1) * 16px);
+    }
+
+    .cdp-text-input,
+    .cdp-text-font-item,
+    .cdp-text-btn {
+        font-size: calc(var(--cdp-font-scale, 1) * 14px);
+    }
+
+    .cdp-text-panel-footer {
+        gap: 8px;
+    }
+
+    .cdp-text-btn {
+        padding: 10px 16px;
+        min-height: 44px;
+        border-radius: 7px;
+        font-size: calc(var(--cdp-font-scale, 1) * 12px);
+    }
+
+    .cdp-text-panel-header h3 {
+        font-size: calc(var(--cdp-font-scale, 1) * 16px);
     }
 }
 

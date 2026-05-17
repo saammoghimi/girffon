@@ -130,3 +130,21 @@ body.dark-mode .cdp-flag-tutorial-toast {
     background: rgba(15, 23, 42, 0.98);
     color: #fbbf24;
 }
+
+@media (max-width: 768px) {
+    .cdp-flag-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .cdp-flag-item {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 4 / 3;
+    }
+}
+
+@media (max-width: 480px) {
+    .cdp-flag-grid {
+        gap: 6px;
+    }
+}

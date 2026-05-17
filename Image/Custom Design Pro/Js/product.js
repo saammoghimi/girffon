@@ -67,6 +67,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log("ðŸš€ product.js Ø¨Ø§Ø±Ú¯Ø°Ø§Ø±ÛŒ Ø´Ø¯");
+    const isCompactViewport = () => window.matchMedia('(max-width: 1024px)').matches;
+    let colorPanelOpenedAt = 0;
 
     // =============================
     // 1ï¸âƒ£ Ø³ÛŒØ³ØªÙ… Ø§Ù†ØªØ®Ø§Ø¨ SIZE (Panel style)
@@ -130,6 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const colorOptions = document.querySelectorAll(".cdp-color-option");
     const shirtImg = document.getElementById("cdpShirtImage");
     const viewButtons = document.querySelectorAll(".cdp-view-btn");
+    const colorFieldControl = colorBtn ? colorBtn.closest(".cdp-field-control") : null;
 
     if (!colorBtn || !colorPanel || !shirtImg) {
         console.error("âŒ Color system elements not found:", {
@@ -141,6 +144,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     console.log("âœ… Color system elements found");
+
+    if (colorFieldControl) {
+        colorFieldControl.classList.add("cdp-field-control--color");
+    }
 
     if (colorNameEl && !colorNameEl.textContent.trim()) {
         colorNameEl.textContent = DEFAULT_COLOR_NAME;
@@ -193,25 +200,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Ø¨Ø§Ø² Ú©Ø±Ø¯Ù† Ù¾Ù†Ù„ Ø±Ù†Ú¯
     function openColorPanel() {
+        colorPanelOpenedAt = Date.now();
         colorPanel.setAttribute("data-visible", "true");
         console.log("ðŸŽ¨ Color panel opened");
     }
 
     // Ø¨Ø³ØªÙ† Ù¾Ù†Ù„ Ø±Ù†Ú¯
     function closeColorPanel() {
+        if (isCompactViewport() && Date.now() - colorPanelOpenedAt < 320) {
+            return;
+        }
         colorPanel.setAttribute("data-visible", "false");
         console.log("âŒ Color panel closed");
     }
 
     // Ú©Ù„ÛŒÚ© Ø±ÙˆÛŒ Ø¯Ú©Ù…Ù‡ Ø±Ù†Ú¯
     colorBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         openColorPanel();
     });
 
+    ["pointerdown", "touchstart", "touchend"].forEach((eventName) => {
+        colorBtn.addEventListener(eventName, (e) => {
+            e.stopPropagation();
+        }, { passive: eventName === "touchstart" ? false : true });
+    });
+
+    ["click", "pointerdown", "touchstart", "touchend"].forEach((eventName) => {
+        colorPanel.addEventListener(eventName, (e) => {
+            e.stopPropagation();
+        }, { passive: eventName === "touchstart" ? false : true });
+    });
+
     // Ø¨Ø³ØªÙ† Ù¾Ù†Ù„ Ø¨Ø§ Ø¯Ú©Ù…Ù‡ X
     if (colorCloseBtn) {
-        colorCloseBtn.addEventListener("click", closeColorPanel);
+        colorCloseBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            closeColorPanel();
+        });
     }
 
     // Ø§Ù†ØªØ®Ø§Ø¨ Ø±Ù†Ú¯ Ø§Ø² Ù…ÙˆØ¯Ø§Ù„

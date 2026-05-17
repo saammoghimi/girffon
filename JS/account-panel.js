@@ -1,6 +1,8 @@
 (function () {
   "use strict";
 
+  console.log("ACCOUNT PANEL JS FORGOT PASSWORD ACTIVE");
+
   function detectAppBasePath() {
     const scriptNode = Array.from(document.scripts).find(function (node) {
       return /\/JS\/account-panel\.js(?:\?|$)/i.test(node.src || "");
@@ -59,16 +61,21 @@
 
   const LOGIN_URL = buildAppPath("backend/auth/login.php");
   const REGISTER_URL = buildAppPath("backend/auth/register.php");
+  const FORGOT_PASSWORD_URL = buildAppPath("backend/auth/forgot-password.php");
   const SESSION_URL = buildAppPath("backend/auth/session.php");
   const LOGOUT_URL = buildAppPath("logout.php");
+  const PROFILE_DATA_URL = buildAppPath("backend/profile/profile-data.php");
   const PROFILE_URL = buildAppPath("ProfilePage.php");
+  const AVATAR_STORAGE_KEY = "girffon_profile_avatar";
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   let authStatus = document.getElementById("gfAccountAuthStatus");
   let registerNameInput = document.getElementById("gfRegisterName");
   let registerEmailInput = document.getElementById("gfRegisterEmail");
   let registerPhoneInput = document.getElementById("gfRegisterPhone");
+  let forgotEmailInput = document.getElementById("gfForgotPasswordEmail");
   let isRegisterMode = false;
+  let isForgotPasswordMode = false;
   let isAuthenticated = false;
   let currentUser = null;
   let isSyncingSession = false;
@@ -179,6 +186,16 @@
       autocomplete: "tel",
       iconClass: "fa-solid fa-mobile-screen-button"
     });
+
+    forgotEmailInput = forgotEmailInput || createInputGroup({
+      id: "gfForgotPasswordEmail",
+      name: "forgotPasswordEmail",
+      type: "email",
+      label: "Email address",
+      placeholder: "name@example.com",
+      autocomplete: "email",
+      iconClass: "fa-regular fa-envelope"
+    });
   }
 
   ensureAuthStatusNode();
@@ -189,6 +206,7 @@
   const registerNameGroup = findInputGroup(registerNameInput);
   const registerEmailGroup = findInputGroup(registerEmailInput);
   const registerPhoneGroup = findInputGroup(registerPhoneInput);
+  const forgotEmailGroup = findInputGroup(forgotEmailInput);
   const authRow = loginForm ? loginForm.querySelector(".gf-account-auth-row") : null;
 
   function splitDisplayName(name) {
@@ -199,8 +217,50 @@
     };
   }
 
+  function readStoredAvatar() {
+    try {
+      return String(window.localStorage.getItem(AVATAR_STORAGE_KEY) || "").trim();
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function normalizeAvatarSource(value) {
+    const avatarPath = String(value || "").trim();
+    if (!avatarPath) {
+      return "";
+    }
+
+    if (/^(?:https?:)?\/\//i.test(avatarPath) || avatarPath.startsWith("data:")) {
+      return avatarPath;
+    }
+
+    return buildAppPath(avatarPath);
+  }
+
+  function resolveAvatarSource() {
+    if (!currentUser) {
+      return "";
+    }
+
+    return normalizeAvatarSource(currentUser.avatar || "");
+  }
+
   function renderUserAvatar() {
     if (!userAvatarWrap) {
+      return;
+    }
+
+    const avatarSrc = resolveAvatarSource();
+
+    if (avatarSrc !== "") {
+      const avatarImage = document.createElement("img");
+      avatarImage.className = "gf-account-profile-photo";
+      avatarImage.src = avatarSrc;
+      avatarImage.width = 56;
+      avatarImage.height = 56;
+      avatarImage.alt = (currentUser && currentUser.name ? currentUser.name : "GirffoN Member") + " avatar";
+      userAvatarWrap.replaceChildren(avatarImage);
       return;
     }
 
@@ -241,8 +301,47 @@
       phone: String(user.phone || "").trim(),
       country: String(user.country || "").trim(),
       city: String(user.city || "").trim(),
-      address: String(user.address || "").trim()
+      address: String(user.address || "").trim(),
+      avatar: String(user.avatar || "").trim()
     };
+  }
+
+  async function syncProfileAvatar() {
+    if (!isAuthenticated || !currentUser) {
+      renderUserAvatar();
+      return "";
+    }
+
+    try {
+      const response = await fetch(PROFILE_DATA_URL, {
+        method: "GET",
+        credentials: "same-origin",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+      const payload = await readTextResponse(response);
+
+      if (!payload.ok || !payload.json || !payload.json.success || !payload.json.user) {
+        renderUserAvatar();
+        return "";
+      }
+
+      const avatar = String(payload.json.user.avatar || "").trim();
+      currentUser.avatar = avatar;
+      if (avatar) {
+        try {
+          window.localStorage.setItem(AVATAR_STORAGE_KEY, avatar);
+        } catch (_error) {
+        }
+      }
+
+      renderUserAvatar();
+      return avatar;
+    } catch (_error) {
+      renderUserAvatar();
+      return "";
+    }
   }
 
   function updateAccountView() {
@@ -271,6 +370,12 @@
     currentUser = user ? normalizeUser(user) : null;
     isAuthenticated = Boolean(currentUser);
     updateAccountView();
+
+    if (isAuthenticated) {
+      syncProfileAvatar().catch(function () {
+        return "";
+      });
+    }
 
     if (shouldDispatch !== false) {
       dispatchAuthUpdated();
@@ -301,12 +406,14 @@
 
   function setRegisterMode(enabled) {
     isRegisterMode = Boolean(enabled);
+    isForgotPasswordMode = false;
 
     toggleGroup(loginIdentifierGroup, !isRegisterMode);
     toggleGroup(loginPasswordGroup, true);
     toggleGroup(registerNameGroup, isRegisterMode);
     toggleGroup(registerEmailGroup, isRegisterMode);
     toggleGroup(registerPhoneGroup, isRegisterMode);
+    toggleGroup(forgotEmailGroup, false);
 
     if (authRow) {
       authRow.style.display = isRegisterMode ? "none" : "";
@@ -314,6 +421,7 @@
 
     if (loginBtn) {
       loginBtn.style.display = isRegisterMode ? "none" : "";
+      setButtonLabel(loginBtn, "Sign in");
     }
 
     if (loginIdentifierInput) {
@@ -332,6 +440,10 @@
       registerEmailInput.required = isRegisterMode;
     }
 
+    if (forgotEmailInput) {
+      forgotEmailInput.required = false;
+    }
+
     if (authHeadTitle) {
       authHeadTitle.textContent = isRegisterMode ? "Create account" : "Sign in";
     }
@@ -343,12 +455,82 @@
     }
 
     setButtonLabel(signupBtn, isRegisterMode ? "Create my account" : "Create an account");
+    if (forgotBtn) {
+      forgotBtn.style.display = isRegisterMode ? "none" : "";
+      setButtonLabel(forgotBtn, "Forgot password?");
+    }
+  }
+
+  function setForgotPasswordMode(enabled) {
+    isForgotPasswordMode = Boolean(enabled);
+    isRegisterMode = false;
+
+    toggleGroup(loginIdentifierGroup, !isForgotPasswordMode);
+    toggleGroup(loginPasswordGroup, !isForgotPasswordMode);
+    toggleGroup(registerNameGroup, false);
+    toggleGroup(registerEmailGroup, false);
+    toggleGroup(registerPhoneGroup, false);
+    toggleGroup(forgotEmailGroup, isForgotPasswordMode);
+
+    if (authRow) {
+      authRow.style.display = isForgotPasswordMode ? "none" : "";
+    }
+
+    if (loginBtn) {
+      loginBtn.style.display = "";
+      setButtonLabel(loginBtn, isForgotPasswordMode ? "Send reset link" : "Sign in");
+    }
+
+    if (signupBtn) {
+      signupBtn.style.display = "";
+      setButtonLabel(signupBtn, isForgotPasswordMode ? "Back to login" : "Create an account");
+    }
+
+    if (loginIdentifierInput) {
+      loginIdentifierInput.required = !isForgotPasswordMode;
+    }
+
+    if (loginPasswordInput) {
+      loginPasswordInput.required = !isForgotPasswordMode;
+      loginPasswordInput.autocomplete = "current-password";
+    }
+
+    if (registerNameInput) {
+      registerNameInput.required = false;
+    }
+
+    if (registerEmailInput) {
+      registerEmailInput.required = false;
+    }
+
+    if (forgotEmailInput) {
+      forgotEmailInput.required = isForgotPasswordMode;
+    }
+
+    if (authHeadTitle) {
+      authHeadTitle.textContent = isForgotPasswordMode ? "Forgot password" : "Sign in";
+    }
+
+    if (authHeadCopy) {
+      authHeadCopy.textContent = isForgotPasswordMode
+        ? "Enter your email address and GirffoN will send you a secure password reset link."
+        : "Use your GirffoN account to access saved designs, orders, and your premium profile.";
+    }
+
+    if (forgotBtn) {
+      forgotBtn.style.display = isForgotPasswordMode ? "none" : "";
+      setButtonLabel(forgotBtn, "Forgot password?");
+    }
   }
 
   function resetGuestState() {
+    setForgotPasswordMode(false);
     setRegisterMode(false);
     if (loginForm) {
       loginForm.reset();
+    }
+    if (forgotEmailInput) {
+      forgotEmailInput.value = "";
     }
     setAuthStatus("Sign in to continue with your GirffoN account, or create one to save profile and preference details.", false);
   }
@@ -492,11 +674,20 @@
     }
 
     setAuthUser(null);
+    try {
+      window.localStorage.removeItem(AVATAR_STORAGE_KEY);
+    } catch (_error) {
+    }
   }
 
   async function handleLoginSubmit(event) {
     event.preventDefault();
     setAuthStatus("", false);
+
+    if (isForgotPasswordMode) {
+      await handleForgotPasswordSubmit();
+      return;
+    }
 
     if (isRegisterMode) {
       await handleRegisterSubmit();
@@ -561,6 +752,48 @@
     }
   }
 
+  async function forgotPasswordRemote(email) {
+    const response = await fetch(FORGOT_PASSWORD_URL, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email: email
+      })
+    });
+
+    const payload = await readTextResponse(response);
+    if (!payload.ok) {
+      throw new Error((payload.json && payload.json.message) || payload.text.trim() || "Unable to send reset link.");
+    }
+
+    if (!payload.json || !payload.json.success) {
+      throw new Error((payload.json && payload.json.message) || "Unable to send reset link.");
+    }
+
+    return payload.json;
+  }
+
+  async function handleForgotPasswordSubmit() {
+    const email = String(forgotEmailInput ? forgotEmailInput.value : "").trim().toLowerCase();
+
+    if (!EMAIL_PATTERN.test(email)) {
+      setAuthStatus("Enter a valid email address.", true);
+      forgotEmailInput && forgotEmailInput.focus();
+      return;
+    }
+
+    try {
+      const payload = await forgotPasswordRemote(email);
+      setAuthStatus(payload.message || "If that email address exists, a reset link has been sent.", false);
+    } catch (error) {
+      setAuthStatus(error && error.message ? error.message : "Unable to send reset link.", true);
+    }
+  }
+
   function goToProfileSection(hash) {
     const sectionHash = typeof hash === "string" && hash ? hash : "#gfProfileDetails";
     setPanelVisibility(false);
@@ -574,6 +807,11 @@
       resetGuestState();
     }
     updateAccountView();
+    if (isAuthenticated) {
+      syncProfileAvatar().catch(function () {
+        return "";
+      });
+    }
     setPanelVisibility(true);
   });
 
@@ -594,6 +832,13 @@
   loginForm && loginForm.addEventListener("submit", handleLoginSubmit);
 
   signupBtn && signupBtn.addEventListener("click", async function () {
+    if (isForgotPasswordMode) {
+      setForgotPasswordMode(false);
+      setAuthStatus("Use your username, email, or mobile number to sign in.", false);
+      loginIdentifierInput && loginIdentifierInput.focus();
+      return;
+    }
+
     if (!isRegisterMode) {
       setRegisterMode(true);
       setAuthStatus("Complete the fields below to create your account.", false);
@@ -605,8 +850,9 @@
   });
 
   forgotBtn && forgotBtn.addEventListener("click", function () {
-    setAuthStatus("Use your username, email, or mobile number to sign in.", false);
-    loginIdentifierInput && loginIdentifierInput.focus();
+    setForgotPasswordMode(true);
+    setAuthStatus("Enter your email address and GirffoN will send a secure reset link.", false);
+    forgotEmailInput && forgotEmailInput.focus();
   });
 
   googleLoginBtn && googleLoginBtn.addEventListener("click", function () {

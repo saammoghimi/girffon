@@ -556,3 +556,45 @@ body.dark-mode .cdp-volume-control i,
 body.dark-mode #cdpVolumeValue {
     color: #9ca3af;
 }
+
+@media (max-width: 768px) {
+    .cdp-settings-panel {
+        width: 100vw;
+        height: 100svh;
+    }
+
+    .cdp-settings-body {
+        padding: 16px 14px calc(20px + env(safe-area-inset-bottom));
+    }
+
+    .cdp-settings-item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .cdp-theme-toggle,
+    .cdp-fontsize-toggle,
+    .cdp-music-toggle,
+    .cdp-sound-toggle {
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .cdp-theme-btn,
+    .cdp-fontsize-btn,
+    .cdp-music-btn,
+    .cdp-sound-btn {
+        flex: 1 1 120px;
+        justify-content: center;
+    }
+
+    .cdp-music-select {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .cdp-volume-control {
+        width: 100%;
+    }
+}

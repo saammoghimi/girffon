@@ -111,19 +111,63 @@ document.addEventListener('DOMContentLoaded', function() {
         return transformStr.replace(/translate\([^)]+\)\s*/g, '').trim();
     }
 
-    window.addEventListener('mousemove', function(e) {
+    function getEventPoint(event) {
+        const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+        return {
+            clientX: source.clientX,
+            clientY: source.clientY
+        };
+    }
+
+    function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+
+        element.addEventListener('touchend', function(e) {
+            if (isBlocked()) {
+                lastTapTime = 0;
+                return;
+            }
+
+            const touch = e.changedTouches?.[0];
+            if (!touch) return;
+
+            const now = Date.now();
+            const withinTime = now - lastTapTime <= 320;
+            const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
+
+            lastTapTime = now;
+            lastTapX = touch.clientX;
+            lastTapY = touch.clientY;
+
+            if (!withinTime || !withinDistance) return;
+
+            lastTapTime = 0;
+            e.preventDefault();
+            e.stopPropagation();
+            onActivate(e);
+        }, { passive: false });
+    }
+
+    function moveDraggedText(event) {
         if (isDragging && dragElement) {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+            if ((event.type === 'touchmove' || event.type === 'pointermove') && event.cancelable) {
+                event.preventDefault();
+            }
+
+            const point = getEventPoint(event);
+            const deltaX = point.clientX - startX;
+            const deltaY = point.clientY - startY;
             
             dragElement.style.left = (startLeft + deltaX) + 'px';
             dragElement.style.top = (startTop + deltaY) + 'px';
             const extras = dragTransformExtras || '';
             dragElement.style.transform = extras || 'none';
         }
-    });
+    }
 
-    window.addEventListener('mouseup', function() {
+    function stopDraggedText() {
         if (isDragging) {
             isDragging = false;
             if (dragElement) {
@@ -132,21 +176,33 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         dragTransformExtras = '';
-    });
+    }
+
+    document.addEventListener('mousemove', moveDraggedText);
+    document.addEventListener('pointermove', moveDraggedText, { passive: false });
+    document.addEventListener('touchmove', moveDraggedText, { passive: false });
+
+    document.addEventListener('mouseup', stopDraggedText);
+    document.addEventListener('pointerup', stopDraggedText);
+    document.addEventListener('pointercancel', stopDraggedText);
+    document.addEventListener('touchend', stopDraggedText);
+    document.addEventListener('touchcancel', stopDraggedText);
 
     // ===========================
     // Attach Events to Text Element
     // ===========================
 
     function attachTextEvents(textEl, layerData) {
-        textEl.addEventListener('mousedown', function(e) {
+        const handleTextDragStart = function(e) {
             if (layerData.locked) return;
+            if (e.type === 'mousedown' && e.button !== 0) return;
             
             console.log('🔴 MOUSEDOWN!');
             isDragging = true;
             dragElement = textEl;
-            startX = e.clientX;
-            startY = e.clientY;
+            const point = getEventPoint(e);
+            startX = point.clientX;
+            startY = point.clientY;
 
             const inlineTransform = textEl.style.transform || '';
             dragTransformExtras = stripTranslate(inlineTransform);
@@ -159,7 +215,12 @@ document.addEventListener('DOMContentLoaded', function() {
             textEl.style.cursor = 'grabbing';
             e.preventDefault();
             e.stopPropagation();
-        }, false);
+        };
+
+        textEl.style.touchAction = 'none';
+        textEl.addEventListener('mousedown', handleTextDragStart, false);
+        textEl.addEventListener('pointerdown', handleTextDragStart, false);
+        textEl.addEventListener('touchstart', handleTextDragStart, { passive: false });
 
         textEl.addEventListener('dblclick', function(e) {
             if (layerData.locked) return;
@@ -169,6 +230,11 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             showPanel(true, textEl, layerData);
         }, false);
+
+        attachDoubleTapHandler(textEl, function(e) {
+            if (layerData.locked) return;
+            showPanel(true, textEl, layerData);
+        }, () => isDragging || layerData.locked);
     }
 
     // ===========================

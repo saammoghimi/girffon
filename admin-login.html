@@ -4,37 +4,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Login</title>
+
   <script>
     if (window.location.protocol === "file:") {
       const targetUrl = "http://localhost/GirffoN/admin-login.html" + window.location.search + window.location.hash;
       window.location.replace(targetUrl);
     }
   </script>
-  <link rel="stylesheet" href="CSS/admin-girffon.css">
+
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260505r12">
 </head>
+
 <body class="admin-auth-page" data-admin-page="login">
-  <main class="admin-login-shell" aria-label="GirffoN admin login">
-    <span class="admin-login-brand" aria-label="GirffoN logo">
-      <img class="admin-brand-logo" src="Image/Logo/logo for gif.png" alt="GirffoN Logo">
+
+  <!-- آرم بزرگ پس‌زمینه -->
+  <img src="Image/Logo/logo for gif.png" class="admin-bg-logo">
+
+  <div class="admin-auth-watermark"></div>
+
+  <main class="admin-login-shell">
+    <span class="admin-login-brand">
+      <img class="admin-brand-logo" src="Image/Logo/logo for gif.png">
     </span>
+
     <h1>Simple Admin Login</h1>
 
-    <form id="adminLoginForm" class="admin-form" action="/GirffoN/backend/admin/login.php" method="POST" novalidate>
+    <form id="adminLoginForm" class="admin-form" action="/GirffoN/backend/admin/login.php" method="POST">
+      
       <div class="admin-field">
-        <label for="adminUsername">Username</label>
-        <input class="admin-input" id="adminUsername" name="username" type="text" placeholder="Enter admin username" autocomplete="username" required>
+        <label>Username</label>
+        <input class="admin-input" name="username" type="text" placeholder="Enter admin username">
       </div>
 
       <div class="admin-field">
-        <label for="adminPassword">Password</label>
-        <input class="admin-input" id="adminPassword" name="password" type="password" placeholder="Enter admin password" autocomplete="current-password" required>
+        <label>Password</label>
+        <input class="admin-input" name="password" type="password" placeholder="Enter admin password">
       </div>
 
-      <button class="admin-button admin-button-accent" type="submit">Login to Admin Panel</button>
-      <div id="adminLoginStatus" class="admin-feedback" role="status" aria-live="polite"></div>
+      <button class="admin-button admin-button-accent">Login to Admin Panel</button>
+
     </form>
   </main>
 
-  <script src="JS/admin-girffon.js"></script>
+  <script src="JS/admin-girffon.js?v=20260505r5"></script>
 </body>
 </html>

@@ -50,7 +50,7 @@ function girffonAdminCountInvoices(PDO $pdo): int
     }
 }
 
-function girffonAdminFetchInvoiceDetail(PDO $pdo, int $invoiceId): ?array
+function girffonAdminFetchInvoiceDetail(PDO $pdo, int $invoiceId)
 {
     try {
         $invoiceStatement = $pdo->prepare(

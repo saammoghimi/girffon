@@ -33,7 +33,7 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Dashboard</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
 </head>
 <body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database">
   <div class="admin-layout">
@@ -52,6 +52,7 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
+        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -71,6 +72,7 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
         </div>
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
           <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
@@ -218,6 +220,6 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js"></script>
+  <script src="JS/admin-girffon.js?v=20260505r5"></script>
 </body>
 </html>

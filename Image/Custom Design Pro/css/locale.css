@@ -131,3 +131,37 @@ body.dark-mode #cdpLocalePanel .cdp-icon-panel-footer .cdp-icon-btn--cancel:hove
     color: #6b7280;
     text-transform: uppercase;
 }
+
+@media (max-width: 768px) {
+    #cdpLocalePanel {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100svh;
+    }
+
+    #cdpLocalePanel .cdp-icon-panel-header {
+        padding: calc(env(safe-area-inset-top) + 14px) 16px 14px;
+    }
+
+    #cdpLocalePanel .cdp-icon-panel-footer {
+        position: sticky;
+        bottom: 0;
+        padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+    }
+
+    .cdp-locale-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 12px 16px calc(104px + env(safe-area-inset-bottom));
+    }
+}
+
+@media (max-width: 480px) {
+    .cdp-locale-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cdp-locale-item {
+        min-height: 112px;
+    }
+}

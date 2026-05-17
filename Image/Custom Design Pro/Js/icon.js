@@ -207,32 +207,127 @@ document.addEventListener('DOMContentLoaded', function() {
         previewItem.style.transform = `rotate(${rotation}deg) scale(${scaleX}, ${scaleY})`;
     }
 
+    function getEventPoint(event) {
+        const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+        return {
+            clientX: source.clientX,
+            clientY: source.clientY
+        };
+    }
+
+    function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+
+        element.addEventListener('touchend', function(e) {
+            if (isBlocked()) {
+                lastTapTime = 0;
+                return;
+            }
+
+            const touch = e.changedTouches?.[0];
+            if (!touch) return;
+
+            const now = Date.now();
+            const withinTime = now - lastTapTime <= 320;
+            const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
+
+            lastTapTime = now;
+            lastTapX = touch.clientX;
+            lastTapY = touch.clientY;
+
+            if (!withinTime || !withinDistance) return;
+
+            lastTapTime = 0;
+            e.preventDefault();
+            e.stopPropagation();
+            onActivate(e);
+        }, { passive: false });
+    }
+
+    function beginIconDrag(state, element, event, useGlobalState = false) {
+        const point = getEventPoint(event);
+        state.isDragging = true;
+        state.dragElement = element;
+        state.startX = point.clientX;
+        state.startY = point.clientY;
+
+        const rect = element.getBoundingClientRect();
+        const parent = element.parentElement.getBoundingClientRect();
+        state.startLeft = rect.left - parent.left;
+        state.startTop = rect.top - parent.top;
+        const inlineTransform = element.style.transform || '';
+        state.transformExtras = inlineTransform ? inlineTransform.replace(/translate\([^)]+\)\s*/g, '').trim() : '';
+
+        if (!useGlobalState) {
+            isDragging = state.isDragging;
+            dragElement = state.dragElement;
+            startX = state.startX;
+            startY = state.startY;
+            startLeft = state.startLeft;
+            startTop = state.startTop;
+            dragTransformExtras = state.transformExtras;
+        }
+    }
+
+    function moveIconDragState(state, event) {
+        if (!state.isDragging || !state.dragElement) return;
+        if ((event.type === 'touchmove' || event.type === 'pointermove') && event.cancelable) {
+            event.preventDefault();
+        }
+
+        const point = getEventPoint(event);
+        const deltaX = point.clientX - state.startX;
+        const deltaY = point.clientY - state.startY;
+        
+        state.dragElement.style.left = (state.startLeft + deltaX) + 'px';
+        state.dragElement.style.top = (state.startTop + deltaY) + 'px';
+        const extras = state.transformExtras || '';
+        state.dragElement.style.transform = extras || 'none';
+    }
+
+    function stopIconDragState(state) {
+        if (!state.isDragging) return;
+        state.isDragging = false;
+        if (state.dragElement) {
+            state.dragElement.style.cursor = 'grab';
+            state.dragElement = null;
+        }
+        state.transformExtras = '';
+    }
+
     // ===========================
     // Global Mouse Events
     // ===========================
 
-    window.addEventListener('mousemove', function(e) {
-        // Check both local and global drag states
+    function handleAnyIconDragMove(e) {
+        if ((window.iconDragState.isDragging || (isDragging && dragElement)) && (e.type === 'touchmove' || e.type === 'pointermove') && e.cancelable) {
+            e.preventDefault();
+        }
+
+        moveIconDragState({
+            isDragging,
+            dragElement,
+            startX,
+            startY,
+            startLeft,
+            startTop,
+            transformExtras: dragTransformExtras
+        }, e);
+        moveIconDragState(window.iconDragState, e);
         if (isDragging && dragElement) {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
-            
+            const point = getEventPoint(e);
+            const deltaX = point.clientX - startX;
+            const deltaY = point.clientY - startY;
             dragElement.style.left = (startLeft + deltaX) + 'px';
             dragElement.style.top = (startTop + deltaY) + 'px';
             const extras = dragTransformExtras || '';
             dragElement.style.transform = extras || 'none';
-        } else if (window.iconDragState.isDragging && window.iconDragState.dragElement) {
-            const deltaX = e.clientX - window.iconDragState.startX;
-            const deltaY = e.clientY - window.iconDragState.startY;
-            
-            window.iconDragState.dragElement.style.left = (window.iconDragState.startLeft + deltaX) + 'px';
-            window.iconDragState.dragElement.style.top = (window.iconDragState.startTop + deltaY) + 'px';
-            const extras = window.iconDragState.transformExtras || '';
-            window.iconDragState.dragElement.style.transform = extras || 'none';
         }
-    });
+    }
 
-    window.addEventListener('mouseup', function() {
+    function handleAnyIconDragEnd() {
         if (isDragging) {
             isDragging = false;
             if (dragElement) {
@@ -241,15 +336,18 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             dragTransformExtras = '';
         }
-        if (window.iconDragState.isDragging) {
-            window.iconDragState.isDragging = false;
-            if (window.iconDragState.dragElement) {
-                window.iconDragState.dragElement.style.cursor = 'grab';
-                window.iconDragState.dragElement = null;
-            }
-            window.iconDragState.transformExtras = '';
-        }
-    });
+        stopIconDragState(window.iconDragState);
+    }
+
+    document.addEventListener('mousemove', handleAnyIconDragMove);
+    document.addEventListener('pointermove', handleAnyIconDragMove, { passive: false });
+    document.addEventListener('touchmove', handleAnyIconDragMove, { passive: false });
+
+    document.addEventListener('mouseup', handleAnyIconDragEnd);
+    document.addEventListener('pointerup', handleAnyIconDragEnd);
+    document.addEventListener('pointercancel', handleAnyIconDragEnd);
+    document.addEventListener('touchend', handleAnyIconDragEnd);
+    document.addEventListener('touchcancel', handleAnyIconDragEnd);
 
     // ===========================
     // Attach Events to Icon Element
@@ -258,21 +356,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function attachIconEvents(iconEl, layerData) {
         console.log("📎 Attaching icon events:", iconEl.id, "locked =", layerData.locked);
         
-        iconEl.addEventListener('mousedown', function(e) {
+        const handleIconDragStart = function(e) {
             console.log("🖱️ Icon mousedown:", iconEl.id, "locked =", layerData.locked);
             if (layerData.locked) {
                 console.log("🔒 Icon is locked!");
                 return;
             }
+            if (e.type === 'mousedown' && e.button !== 0) return;
             
-            isDragging = true;
-            dragElement = iconEl;
-            startX = e.clientX;
-            startY = e.clientY;
+            beginIconDrag({
+                isDragging,
+                dragElement,
+                startX,
+                startY,
+                startLeft,
+                startTop,
+                transformExtras: dragTransformExtras
+            }, iconEl, e);
 
+            const point = getEventPoint(e);
+            startX = point.clientX;
+            startY = point.clientY;
             const inlineTransform = iconEl.style.transform || '';
             dragTransformExtras = stripTranslate(inlineTransform);
-
             const rect = iconEl.getBoundingClientRect();
             const parent = iconEl.parentElement.getBoundingClientRect();
             startLeft = rect.left - parent.left;
@@ -281,7 +387,12 @@ document.addEventListener('DOMContentLoaded', function() {
             iconEl.style.cursor = 'grabbing';
             e.preventDefault();
             e.stopPropagation();
-        }, false);
+        };
+
+        iconEl.style.touchAction = 'none';
+        iconEl.addEventListener('mousedown', handleIconDragStart, false);
+        iconEl.addEventListener('pointerdown', handleIconDragStart, false);
+        iconEl.addEventListener('touchstart', handleIconDragStart, { passive: false });
 
         iconEl.addEventListener('dblclick', function(e) {
             if (layerData.locked) return;
@@ -293,6 +404,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
         }, false);
+
+        attachDoubleTapHandler(iconEl, function(e) {
+            if (layerData.locked) return;
+            currentResizingIcon = iconEl;
+            currentResizingLayer = layerData;
+            showResizePanel();
+        }, () => isDragging || layerData.locked);
     }
 
     // ===========================
@@ -1090,32 +1208,28 @@ window.reattachIconEventsWithData = function(iconElement, layerData) {
     });
     
     // چون attachIconEvents داخل closure است، باید دوباره بسازیم
-    iconElement.addEventListener('mousedown', function(e) {
+    const handleReattachedIconDragStart = function(e) {
         console.log("🖱️ Icon mousedown (reattached):", iconElement.id, "locked =", layerData.locked);
         if (layerData.locked) {
             console.log("🔒 Icon is locked!");
             return;
         }
+        if (e.type === 'mousedown' && e.button !== 0) return;
         
         // استفاده از متغیرهای global drag
         if (typeof window.iconDragState !== 'undefined') {
-            window.iconDragState.isDragging = true;
-            window.iconDragState.dragElement = iconElement;
-            window.iconDragState.startX = e.clientX;
-            window.iconDragState.startY = e.clientY;
-
-            const rect = iconElement.getBoundingClientRect();
-            const parent = iconElement.parentElement.getBoundingClientRect();
-            window.iconDragState.startLeft = rect.left - parent.left;
-            window.iconDragState.startTop = rect.top - parent.top;
-            const inlineTransform = iconElement.style.transform || '';
-            window.iconDragState.transformExtras = inlineTransform ? inlineTransform.replace(/translate\([^)]+\)\s*/g, '').trim() : '';
+            beginIconDrag(window.iconDragState, iconElement, e, true);
         }
 
         iconElement.style.cursor = 'grabbing';
         e.preventDefault();
         e.stopPropagation();
-    }, false);
+    };
+
+    iconElement.style.touchAction = 'none';
+    iconElement.addEventListener('mousedown', handleReattachedIconDragStart, false);
+    iconElement.addEventListener('pointerdown', handleReattachedIconDragStart, false);
+    iconElement.addEventListener('touchstart', handleReattachedIconDragStart, { passive: false });
 
     iconElement.addEventListener('dblclick', function(e) {
         if (layerData.locked) return;
@@ -1127,6 +1241,13 @@ window.reattachIconEventsWithData = function(iconElement, layerData) {
         e.preventDefault();
         e.stopPropagation();
     }, false);
+
+    attachDoubleTapHandler(iconElement, function(e) {
+        if (layerData.locked) return;
+        if (typeof window.showIconResizePanel === 'function') {
+            window.showIconResizePanel(iconElement, layerData);
+        }
+    }, () => window.iconDragState.isDragging || layerData.locked);
     
     console.log("✅ Icon events attached!");
 };

@@ -3,10 +3,65 @@ require_once __DIR__ . '/backend/auth/session.php';
 require_once __DIR__ . '/backend/config/database.php';
 require_once __DIR__ . '/backend/profile/orders.php';
 
+function girffonProfileAvailableUserColumns(PDO $pdo): array
+{
+    static $columns = null;
+
+    if (is_array($columns)) {
+        return $columns;
+    }
+
+    $columns = [];
+
+    try {
+        $statement = $pdo->query('SHOW COLUMNS FROM users');
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $column) {
+            $name = (string) ($column['Field'] ?? '');
+            if ($name !== '') {
+                $columns[$name] = true;
+            }
+        }
+    } catch (PDOException $exception) {
+        $columns = [];
+    }
+
+    return $columns;
+}
+
+function girffonProfileTableExists(PDO $pdo, string $table): bool
+{
+    try {
+        $pdo->query('SHOW COLUMNS FROM `' . str_replace('`', '``', $table) . '`');
+        return true;
+    } catch (PDOException $exception) {
+        return false;
+    }
+}
+
 $userId = (int) ($_SESSION['user_id'] ?? 0);
 
+$availableUserColumns = girffonProfileAvailableUserColumns($pdo);
+$selectColumns = [
+    'id',
+    'username',
+    'first_name',
+    'last_name',
+    'email',
+    'phone',
+    'country',
+    'city',
+    'address',
+    'created_at',
+];
+
+foreach (['postal_code', 'preferred_language', 'date_of_birth', 'gender', 'updated_at', 'last_login_at'] as $column) {
+    if (isset($availableUserColumns[$column])) {
+        $selectColumns[] = $column;
+    }
+}
+
 $userStatement = $pdo->prepare(
-    'SELECT id, username, first_name, last_name, email, phone, country, city, address, created_at
+    'SELECT ' . implode(', ', $selectColumns) . '
      FROM users
      WHERE id = :id
      LIMIT 1'
@@ -25,7 +80,6 @@ $notificationPreferenceDefaults = [
     'catalogEmails' => true,
     'birthdayDiscountEmails' => true,
     'orderUpdates' => true,
-    'smsNotifications' => false,
     'twoFactorEnabled' => true,
 ];
 
@@ -34,18 +88,20 @@ $preferenceKeyMap = [
     'catalog_emails' => 'catalogEmails',
     'birthday_discount_emails' => 'birthdayDiscountEmails',
     'order_updates' => 'orderUpdates',
-    'sms_notifications' => 'smsNotifications',
     'two_factor_enabled' => 'twoFactorEnabled',
 ];
 
+$preferenceTable = girffonProfileTableExists($pdo, 'user_preferences')
+    ? 'user_preferences'
+    : 'customer_notification_preferences';
+
 $insertPreferenceStatement = $pdo->prepare(
-    'INSERT IGNORE INTO customer_notification_preferences (
+    'INSERT IGNORE INTO ' . $preferenceTable . ' (
         user_id,
         promotional_emails,
         catalog_emails,
         birthday_discount_emails,
         order_updates,
-        sms_notifications,
         two_factor_enabled
      ) VALUES (
         :user_id,
@@ -53,7 +109,6 @@ $insertPreferenceStatement = $pdo->prepare(
         :catalog_emails,
         :birthday_discount_emails,
         :order_updates,
-        :sms_notifications,
         :two_factor_enabled
      )'
 );
@@ -63,13 +118,12 @@ $insertPreferenceStatement->execute([
     ':catalog_emails' => $notificationPreferenceDefaults['catalogEmails'] ? 1 : 0,
     ':birthday_discount_emails' => $notificationPreferenceDefaults['birthdayDiscountEmails'] ? 1 : 0,
     ':order_updates' => $notificationPreferenceDefaults['orderUpdates'] ? 1 : 0,
-    ':sms_notifications' => $notificationPreferenceDefaults['smsNotifications'] ? 1 : 0,
     ':two_factor_enabled' => $notificationPreferenceDefaults['twoFactorEnabled'] ? 1 : 0,
 ]);
 
 $preferenceStatement = $pdo->prepare(
-    'SELECT promotional_emails, catalog_emails, birthday_discount_emails, order_updates, sms_notifications, two_factor_enabled
-     FROM customer_notification_preferences
+    'SELECT promotional_emails, catalog_emails, birthday_discount_emails, order_updates, two_factor_enabled
+    FROM ' . $preferenceTable . '
      WHERE user_id = :user_id
      LIMIT 1'
 );
@@ -95,14 +149,14 @@ $profilePageData = [
         'phone' => (string) ($user['phone'] ?? ''),
         'country' => (string) ($user['country'] ?? ''),
         'city' => (string) ($user['city'] ?? ''),
-        'postal_code' => '',
+        'postal_code' => (string) ($user['postal_code'] ?? ''),
         'address' => (string) ($user['address'] ?? ''),
-        'preferred_language' => '',
-        'date_of_birth' => '',
-        'gender' => '',
+        'preferred_language' => (string) ($user['preferred_language'] ?? ''),
+        'date_of_birth' => (string) ($user['date_of_birth'] ?? ''),
+        'gender' => (string) ($user['gender'] ?? ''),
         'created_at' => (string) ($user['created_at'] ?? ''),
-        'updated_at' => '',
-        'last_login_at' => '',
+        'updated_at' => (string) ($user['updated_at'] ?? ''),
+        'last_login_at' => (string) ($user['last_login_at'] ?? ''),
     ],
     'notificationPreferences' => $notificationPreferences,
     'orders' => $orders,
@@ -116,11 +170,9 @@ if ($template === false) {
 }
 
 $profileInjection = '  <script>window.GIRFFON_PROFILE_PAGE_DATA = ' . json_encode($profilePageData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';</script>' . PHP_EOL
-    . '  <script src="JS/profile-page-server.js"></script>';
+    . '  <script src="JS/profile-page-server.js?v=300"></script>';
 
-$template = str_replace('  <script src="JS/profile-page.js"></script>', $profileInjection, $template, $profileScriptReplaced);
-if (!$profileScriptReplaced) {
-    $template = str_replace('</body>', $profileInjection . PHP_EOL . '</body>', $template);
-}
+$template = str_replace('  <script src="JS/profile-page.js"></script>', '', $template);
+$template = str_replace('</body>', $profileInjection . PHP_EOL . '</body>', $template);
 
 echo $template;

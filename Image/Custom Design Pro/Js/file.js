@@ -5,6 +5,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Shared state used across builders
     let fileMenu = null;
+    let fileMenuOverlay = null;
+    let fileMenuShell = null;
     let saveAsModal = null;
     let openModal = null;
     let openContextMenu = null;
@@ -12,6 +14,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentProjectName = localStorage.getItem("cdpCurrentProject") || "Untitled";
     let currentFolder = localStorage.getItem("cdpCurrentFolder") || "";
     let currentOpenFolder = "";
+    const cdpRemoteStorageUrl = "/GirffoN/backend/custom-design/storage.php";
+    const cdpRemoteStorageSupported = window.location.protocol === "http:" || window.location.protocol === "https:";
     const pendingProjectPathKey = "cdpPendingProjectPath";
     const cleanupKeys = [
         "cdpCurrentProject",
@@ -406,12 +410,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 fileMenu.className = 'cdp-file-menu';
                 Object.assign(fileMenu.style, {
                     position: 'fixed',
-                    zIndex: '10000',
+                    zIndex: '13650',
                     display: 'none',
                     minWidth: '180px',
                     padding: '8px 0'
                 });
                 document.body.appendChild(fileMenu);
+            }
+            if (!fileMenuOverlay) {
+                fileMenuOverlay = document.createElement('button');
+                fileMenuOverlay.type = 'button';
+                fileMenuOverlay.className = 'cdp-file-menu-overlay';
+                fileMenuOverlay.setAttribute('aria-label', 'Close file menu');
+                fileMenuOverlay.style.display = 'none';
+                fileMenuOverlay.addEventListener('click', hideFileMenu);
+                document.body.appendChild(fileMenuOverlay);
+            }
+            if (!fileMenuShell) {
+                fileMenuShell = document.createElement('div');
+                fileMenuShell.className = 'cdp-file-menu-shell';
+                fileMenuShell.style.display = 'none';
+                fileMenuShell.appendChild(fileMenu);
+                document.body.appendChild(fileMenuShell);
             }
             // Always update content
             const menuItems = [
@@ -962,32 +982,230 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function positionFileMenu() {
         if (!fileMenu) return;
+        const isCompactViewport = window.matchMedia('(max-width: 1024px)').matches;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+
+        if (isCompactViewport) {
+            const menuWidth = Math.min(Math.max(viewportWidth - 24, 240), 340);
+
+            fileMenu.classList.add('cdp-file-menu--compact');
+            if (fileMenuShell && fileMenu.parentElement !== fileMenuShell) {
+                fileMenuShell.appendChild(fileMenu);
+            }
+            if (fileMenuShell) {
+                fileMenuShell.style.display = 'flex';
+            }
+            fileMenu.style.width = menuWidth + 'px';
+            fileMenu.style.maxWidth = 'calc(100vw - 24px)';
+            fileMenu.style.top = '0';
+            fileMenu.style.left = '0';
+            fileMenu.style.right = 'auto';
+            fileMenu.style.maxHeight = 'min(360px, calc(100vh - 120px))';
+            fileMenu.style.overflowY = 'auto';
+            fileMenu.style.borderRadius = '18px';
+            fileMenu.style.margin = '0 auto';
+            fileMenu.style.transform = 'none';
+            return;
+        }
+
         const rect = fileBtn.getBoundingClientRect();
-        fileMenu.style.top = (rect.bottom + 5) + "px";
-        fileMenu.style.left = (rect.left) + "px";
+        const top = rect.bottom + 5;
+        const menuWidth = Math.max(fileMenu.offsetWidth || 180, 180);
+        const left = Math.min(rect.left, Math.max(12, viewportWidth - menuWidth - 12));
+
+        fileMenu.classList.remove('cdp-file-menu--compact');
+        if (fileMenuShell) {
+            fileMenuShell.style.display = 'none';
+        }
+        if (fileMenu.parentElement !== document.body) {
+            document.body.appendChild(fileMenu);
+        }
+        fileMenu.style.width = '';
+        fileMenu.style.maxWidth = '';
+        fileMenu.style.top = top + "px";
+        fileMenu.style.left = left + "px";
+        fileMenu.style.right = 'auto';
+        fileMenu.style.maxHeight = '';
+        fileMenu.style.overflowY = '';
+        fileMenu.style.borderRadius = '';
+        fileMenu.style.margin = '';
+        fileMenu.style.transform = '';
     }
 
     function showFileMenu() {
         createFileMenu();
+        document.body.classList.add('cdp-file-menu-open');
+        if (window.matchMedia('(max-width: 1024px)').matches) {
+            document.body.classList.remove('cdp-mobile-menu-open');
+            if (fileMenuOverlay) {
+                fileMenuOverlay.style.display = 'block';
+            }
+        }
         positionFileMenu();
         fileMenu.style.display = "block";
     }
 
     function hideFileMenu() {
-        if (fileMenu) fileMenu.style.display = "none";
+        document.body.classList.remove('cdp-file-menu-open');
+        if (fileMenu) {
+            fileMenu.style.display = "none";
+            fileMenu.classList.remove('cdp-file-menu--compact');
+        }
+        if (fileMenuShell) {
+            fileMenuShell.style.display = 'none';
+        }
+        if (fileMenuOverlay) {
+            fileMenuOverlay.style.display = 'none';
+        }
     }
 
     // =========================
     // Folder Structure
     // =========================
 
+    function normalizeFolderStructureNode(node) {
+        const safeNode = node && typeof node === "object" ? node : {};
+        const rawFolders = safeNode.folders && typeof safeNode.folders === "object" ? safeNode.folders : {};
+        const normalizedFolders = {};
+
+        Object.keys(rawFolders).forEach(folderName => {
+            normalizedFolders[folderName] = normalizeFolderStructureNode(rawFolders[folderName]);
+        });
+
+        const rawFiles = Array.isArray(safeNode.files) ? safeNode.files : [];
+
+        return {
+            folders: normalizedFolders,
+            files: rawFiles
+                .map(entry => String(entry || "").trim())
+                .filter(Boolean)
+        };
+    }
+
     function getFolderStructure() {
         const structure = localStorage.getItem("cdpFolderStructure");
-        return structure ? JSON.parse(structure) : { folders: {}, files: [] };
+        if (!structure) {
+            return { folders: {}, files: [] };
+        }
+
+        try {
+            return normalizeFolderStructureNode(JSON.parse(structure));
+        } catch (_error) {
+            return { folders: {}, files: [] };
+        }
     }
 
     function saveFolderStructure(structure) {
-        localStorage.setItem("cdpFolderStructure", JSON.stringify(structure));
+        localStorage.setItem("cdpFolderStructure", JSON.stringify(normalizeFolderStructureNode(structure)));
+    }
+
+    async function cdpRemoteStorageRequest(action, payload = {}, method = "POST") {
+        if (!cdpRemoteStorageSupported) {
+            return { success: false, available: false, message: "Server storage is unavailable." };
+        }
+
+        const url = new URL(cdpRemoteStorageUrl, window.location.origin);
+        const requestInit = {
+            method,
+            credentials: "same-origin",
+            headers: {
+                Accept: "application/json"
+            }
+        };
+
+        if (method === "GET") {
+            url.searchParams.set("action", action);
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    url.searchParams.set(key, String(value));
+                }
+            });
+        } else {
+            const formData = new FormData();
+            formData.append("action", action);
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value === undefined || value === null) {
+                    return;
+                }
+
+                if (typeof value === "object") {
+                    formData.append(key, JSON.stringify(value));
+                    return;
+                }
+
+                formData.append(key, String(value));
+            });
+            requestInit.body = formData;
+        }
+
+        try {
+            const response = await fetch(url.toString(), requestInit);
+            const text = await response.text();
+            let parsed = {};
+
+            if (text) {
+                try {
+                    parsed = JSON.parse(text);
+                } catch (_error) {
+                    parsed = {};
+                }
+            }
+
+            return {
+                ...parsed,
+                success: Boolean(parsed.success),
+                available: parsed.available !== false && response.status !== 404,
+                status: response.status
+            };
+        } catch (_error) {
+            return { success: false, available: false, message: "Server storage request failed." };
+        }
+    }
+
+    function cdpApplyRemoteStructure(structure) {
+        if (structure && typeof structure === "object") {
+            saveFolderStructure(normalizeFolderStructureNode(structure));
+        }
+    }
+
+    async function cdpSyncFolderStructureFromServer() {
+        const response = await cdpRemoteStorageRequest("structure", {}, "GET");
+        if (response.success && response.structure) {
+            cdpApplyRemoteStructure(response.structure);
+            return true;
+        }
+        return false;
+    }
+
+    async function cdpSyncProjectFromServer(projectPath) {
+        const response = await cdpRemoteStorageRequest("load", { path: projectPath }, "GET");
+        if (!response.success || !response.data) {
+            return false;
+        }
+
+        localStorage.setItem(`cdpProject_${projectPath}`, JSON.stringify(response.data));
+        if (response.structure) {
+            cdpApplyRemoteStructure(response.structure);
+        }
+        ensureProjectInFolderStructure(projectPath);
+        return true;
+    }
+
+    async function cdpSaveProjectToServer(projectPath, data) {
+        return cdpRemoteStorageRequest("save", { path: projectPath, data });
+    }
+
+    async function cdpPersistFolderStructureToServer(structure) {
+        return cdpRemoteStorageRequest("save-structure", { structure });
+    }
+
+    async function cdpDeleteProjectFromServer(projectPath) {
+        return cdpRemoteStorageRequest("delete-project", { path: projectPath });
+    }
+
+    async function cdpDeleteFolderFromServer(folderPath) {
+        return cdpRemoteStorageRequest("delete-folder", { path: folderPath });
     }
 
     function ensureProjectInFolderStructure(projectPath) {
@@ -1085,10 +1303,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return results;
     }
 
-    function deleteProjectAtPath(projectPath) {
+    async function deleteProjectAtPath(projectPath) {
         const normalizedPath = String(projectPath || "").trim();
         if (!normalizedPath) {
             return false;
+        }
+
+        if (cdpRemoteStorageSupported) {
+            const response = await cdpDeleteProjectFromServer(normalizedPath);
+            if (response.success && response.structure) {
+                cdpApplyRemoteStructure(response.structure);
+            } else if (response.available !== false) {
+                showMessage(response.message || 'Unable to delete the file on the server.', 'error');
+                return false;
+            }
         }
 
         localStorage.removeItem(`cdpProject_${normalizedPath}`);
@@ -1096,10 +1324,20 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
 
-    function deleteFolderAtPath(folderPath) {
+    async function deleteFolderAtPath(folderPath) {
         const normalizedPath = String(folderPath || "").split('/').filter(Boolean);
         if (!normalizedPath.length) {
             return false;
+        }
+
+        if (cdpRemoteStorageSupported) {
+            const response = await cdpDeleteFolderFromServer(normalizedPath.join('/'));
+            if (response.success && response.structure) {
+                cdpApplyRemoteStructure(response.structure);
+            } else if (response.available !== false) {
+                showMessage(response.message || 'Unable to delete the folder on the server.', 'error');
+                return false;
+            }
         }
 
         const structure = getFolderStructure();
@@ -1181,7 +1419,7 @@ document.addEventListener('DOMContentLoaded', function() {
             deleteBtn.style.background = "transparent";
         });
 
-        deleteBtn.addEventListener("click", () => {
+        deleteBtn.addEventListener("click", async () => {
             const targetPath = openContextMenu.dataset.targetPath || "";
             const isFolder = openContextMenu.dataset.targetType === "folder";
             hideOpenContextMenu();
@@ -1192,7 +1430,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!confirmed) {
                 return;
             }
-            const deleted = isFolder ? deleteFolderAtPath(targetPath) : deleteProjectAtPath(targetPath);
+            const deleted = isFolder ? await deleteFolderAtPath(targetPath) : await deleteProjectAtPath(targetPath);
             if (!deleted) {
                 showMessage('Item not found.', 'error');
                 return;
@@ -1227,16 +1465,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function createFolderCard(name, isFolder = true, onClick = null, activationEvent = "dblclick", options = {}) {
         const card = document.createElement("div");
+        const safeName = String(name || "");
 
         
         card.classList.add("cdp-folder-card");
-card.innerHTML = `
+        card.innerHTML = `
             <div class="cdp-item-icon">
                 ${isFolder
-                    ? `<img src="Images/Icons/3d-render-icon-yellow-folder-illustration-free.png" alt="folder" style="width:48px;height:48px;object-fit:contain;">`
+                    ? `<svg viewBox="0 0 64 64" aria-hidden="true" style="width:48px;height:48px;display:block;">
+                        <path d="M8 18a6 6 0 0 1 6-6h12l6 6h18a6 6 0 0 1 6 6v4H8z" fill="#f4bf3a"></path>
+                        <path d="M8 24h48a4 4 0 0 1 3.89 4.95l-4.5 18A6 6 0 0 1 49.57 52H14.43a6 6 0 0 1-5.82-5.05l-4.5-18A4 4 0 0 1 8 24z" fill="#e0a21a"></path>
+                        <path d="M10 26h46" stroke="#ffd56a" stroke-width="2" stroke-linecap="round"></path>
+                        <path d="M17 17h10.5l4 4" stroke="#ffe6a3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>`
                     : `<i class="fa-solid fa-file"></i>`}
             </div>
-            <div class="cdp-item-name">${name}</div>
+            <div class="cdp-item-name"></div>
         `;
 
         // Make card a perfect square (3x3)
@@ -1263,6 +1507,9 @@ const icon = card.querySelector(".cdp-item-icon");
         });
 
         const nameEl = card.querySelector(".cdp-item-name");
+        if (nameEl) {
+            nameEl.textContent = safeName;
+        }
         Object.assign(nameEl.style, {
             fontSize: "13px", fontWeight: "600",
             color: cdpIsDarkMode() ? "#f9fafb" : "#222",
@@ -1664,7 +1911,11 @@ if (onClick) {
         clearPendingProjectPath();
     }
 
-    function loadProject(projectPath) {
+    async function loadProject(projectPath) {
+        if (cdpRemoteStorageSupported) {
+            await cdpSyncProjectFromServer(projectPath);
+        }
+
         const key = `cdpProject_${projectPath}`;
         const data = localStorage.getItem(key);
         
@@ -2033,7 +2284,11 @@ if (onClick) {
         displaySaveAsContents(currentFolder);
     }
 
-    function showSaveAsModal(onSaveCallback = null) {
+    async function showSaveAsModal(onSaveCallback = null) {
+        if (cdpRemoteStorageSupported) {
+            await cdpSyncFolderStructureFromServer();
+        }
+
         createSaveAsModal();
         currentFolder = localStorage.getItem("cdpCurrentFolder") || "";
         displaySaveAsContents(currentFolder);
@@ -2081,6 +2336,17 @@ if (onClick) {
             showMessage(tr('design_empty') || 'Add at least one layer before saving.', "error");
             return;
         }
+
+        if (cdpRemoteStorageSupported) {
+            const remoteResponse = await cdpSaveProjectToServer(fullPath, compactProjectDataForRemoteStorage(data));
+            if (remoteResponse.success && remoteResponse.structure) {
+                cdpApplyRemoteStructure(remoteResponse.structure);
+            } else if (remoteResponse.available !== false) {
+                showMessage(remoteResponse.message || 'Unable to save the project on the server. Try refresh and save again.', 'error');
+                return;
+            }
+        }
+
         if (!saveToLocalStorage(fullPath, data)) {
             return;
         }
@@ -2230,7 +2496,7 @@ if (onClick) {
         }
     }
 
-    function confirmCreateFolder() {
+    async function confirmCreateFolder() {
         const input = newFolderModal.querySelector("#cdpNewFolderInput");
         const folderName = input.value.trim();
 
@@ -2272,6 +2538,17 @@ if (onClick) {
 
         current.folders[folderName] = { folders: {}, files: [] };
         saveFolderStructure(structure);
+
+        if (cdpRemoteStorageSupported) {
+            const remoteResponse = await cdpPersistFolderStructureToServer(structure);
+            if (remoteResponse.success && remoteResponse.structure) {
+                cdpApplyRemoteStructure(remoteResponse.structure);
+            } else if (remoteResponse.available !== false) {
+                showMessage(remoteResponse.message || 'Unable to create the folder on the server.', 'error');
+                return;
+            }
+        }
+
         displaySaveAsContents(currentFolder);
         closeNewFolderModal();
         const folderCreated = tr('folder_created_named').replace('{name}', folderName);
@@ -2599,6 +2876,53 @@ if (onClick) {
         return compacted;
     }
 
+    function compactProjectDataForRemoteStorage(project) {
+        const compacted = compactProjectDataForStorage(project);
+        if (!compacted || typeof compacted !== "object") {
+            return compacted;
+        }
+
+        return {
+            ...compacted,
+            invoiceAttachments: [],
+            invoiceScanImage: "",
+            previewImage: "",
+            designPreview: "",
+            canvasPreview: "",
+            thumbnail: "",
+            layers: Array.isArray(compacted.layers)
+                ? compacted.layers.map((layer) => {
+                    if (!layer || typeof layer !== "object" || layer.type !== "upload" || !layer.upload) {
+                        return layer;
+                    }
+
+                    const upload = { ...layer.upload };
+                    if (upload.originalSrc === upload.optimizedSrc) {
+                        upload.originalSrc = "";
+                    }
+
+                    return {
+                        ...layer,
+                        upload,
+                    };
+                })
+                : compacted.layers,
+            layerMeta: Array.isArray(compacted.layerMeta)
+                ? compacted.layerMeta.map((layer) => {
+                    if (!layer || typeof layer !== "object" || layer.type !== "upload") {
+                        return layer;
+                    }
+
+                    const meta = { ...layer };
+                    if (meta.originalSrc === meta.optimizedSrc) {
+                        meta.originalSrc = "";
+                    }
+
+                    return meta;
+                })
+                : compacted.layerMeta,
+        };
+    }
     function compactExistingProjectsForQuota(skipKey = "") {
         Object.keys(localStorage)
             .filter((key) => key.startsWith("cdpProject_") && key !== skipKey)
@@ -2927,7 +3251,10 @@ if (onClick) {
         showMessage(tr('design_created'), "success");
     }
 
-    function handleOpen() {
+    async function handleOpen() {
+        if (cdpRemoteStorageSupported) {
+            await cdpSyncFolderStructureFromServer();
+        }
         showOpenModal();
     }
 
@@ -2944,6 +3271,17 @@ if (onClick) {
             showMessage(tr('design_empty') || 'Add at least one layer before saving.', "error");
             return;
         }
+
+        if (cdpRemoteStorageSupported) {
+            const remoteResponse = await cdpSaveProjectToServer(fullPath, compactProjectDataForRemoteStorage(data));
+            if (remoteResponse.success && remoteResponse.structure) {
+                cdpApplyRemoteStructure(remoteResponse.structure);
+            } else if (remoteResponse.available !== false) {
+                showMessage(remoteResponse.message || 'Unable to save the project on the server. Try refresh and save again.', 'error');
+                return;
+            }
+        }
+
         if (!saveToLocalStorage(fullPath, data)) {
             return;
         }
@@ -2952,7 +3290,7 @@ if (onClick) {
         showMessage(savedMessage, "success");
     }
 
-    function handleSaveAs() {
+    async function handleSaveAs() {
         showSaveAsModal();
     }
 
@@ -2972,6 +3310,12 @@ if (onClick) {
     document.addEventListener("click", (e) => {
         if (fileMenu && !fileMenu.contains(e.target) && e.target !== fileBtn) {
             hideFileMenu();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        if (fileMenu && fileMenu.style.display === 'block') {
+            positionFileMenu();
         }
     });
 

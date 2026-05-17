@@ -185,3 +185,36 @@ body.dark-mode .cdp-shape-tutorial-toast {
     background: rgba(15, 23, 42, 0.98);
     color: #fbbf24;
 }
+
+@media (max-width: 768px) {
+    .cdp-shape-controls {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .cdp-shape-control-row {
+        flex-wrap: wrap;
+    }
+
+    .cdp-shape-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .cdp-shape-item {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cdp-shape-control-row label {
+        min-width: auto;
+    }
+
+    #cdpShapeStroke {
+        max-width: none;
+        width: 100%;
+    }
+}

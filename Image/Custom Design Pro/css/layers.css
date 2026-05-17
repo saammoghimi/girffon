@@ -504,7 +504,7 @@ body.dark-mode .cdp-upload-modal button:disabled {
 
 /* Print box - مطمئن شو همه چیز داخلش محدود میشه */
 .cdp-print-box {
-  position: relative;
+  position: absolute;
   overflow: hidden; /* هر چیزی که از بیرون بره، مخفی میشه */
 }
 

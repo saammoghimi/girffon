@@ -37,7 +37,7 @@ function gf_get_pdo(): PDO
 
     $host = getenv('GIRFFON_DB_HOST') ?: '127.0.0.1';
     $port = getenv('GIRFFON_DB_PORT') ?: '3306';
-    $database = getenv('GIRFFON_DB_NAME') ?: 'girffon';
+    $database = getenv('GIRFFON_DB_NAME') ?: 'girffon_db';
     $username = getenv('GIRFFON_DB_USER') ?: 'root';
     $password = getenv('GIRFFON_DB_PASS') ?: '';
 

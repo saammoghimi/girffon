@@ -341,19 +341,63 @@ document.addEventListener('DOMContentLoaded', function() {
         return transformStr.replace(/translate\([^)]+\)\s*/g, '').trim();
     }
 
-    window.addEventListener('mousemove', function(e) {
+    function getEventPoint(event) {
+        const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+        return {
+            clientX: source.clientX,
+            clientY: source.clientY
+        };
+    }
+
+    function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+
+        element.addEventListener('touchend', function(e) {
+            if (isBlocked()) {
+                lastTapTime = 0;
+                return;
+            }
+
+            const touch = e.changedTouches?.[0];
+            if (!touch) return;
+
+            const now = Date.now();
+            const withinTime = now - lastTapTime <= 320;
+            const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
+
+            lastTapTime = now;
+            lastTapX = touch.clientX;
+            lastTapY = touch.clientY;
+
+            if (!withinTime || !withinDistance) return;
+
+            lastTapTime = 0;
+            e.preventDefault();
+            e.stopPropagation();
+            onActivate(e);
+        }, { passive: false });
+    }
+
+    function moveDraggedFlag(event) {
         if (isDragging && dragElement) {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+            if ((event.type === 'touchmove' || event.type === 'pointermove') && event.cancelable) {
+                event.preventDefault();
+            }
+
+            const point = getEventPoint(event);
+            const deltaX = point.clientX - startX;
+            const deltaY = point.clientY - startY;
             
             dragElement.style.left = (startLeft + deltaX) + 'px';
             dragElement.style.top = (startTop + deltaY) + 'px';
             const extras = dragTransformExtras || '';
             dragElement.style.transform = extras || 'none';
         }
-    });
+    }
 
-    window.addEventListener('mouseup', function() {
+    function stopDraggedFlag() {
         if (isDragging) {
             isDragging = false;
             if (dragElement) {
@@ -362,7 +406,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             dragTransformExtras = '';
         }
-    });
+    }
+
+    document.addEventListener('mousemove', moveDraggedFlag);
+    document.addEventListener('pointermove', moveDraggedFlag, { passive: false });
+    document.addEventListener('touchmove', moveDraggedFlag, { passive: false });
+
+    document.addEventListener('mouseup', stopDraggedFlag);
+    document.addEventListener('pointerup', stopDraggedFlag);
+    document.addEventListener('pointercancel', stopDraggedFlag);
+    document.addEventListener('touchend', stopDraggedFlag);
+    document.addEventListener('touchcancel', stopDraggedFlag);
 
 function attachFlagEvents(flagEl, layerData) {
     // Mark that events are attached to prevent multiple attachments
@@ -373,18 +427,20 @@ function attachFlagEvents(flagEl, layerData) {
     
     flagEl.dataset.eventsAttached = 'true';
     
-    flagEl.addEventListener('mousedown', function(e) {
+    const handleFlagDragStart = function(e) {
         if (layerData.locked) {
             console.log("🔒 Flag locked:", flagEl.id);
             return;
         }
+        if (e.type === 'mousedown' && e.button !== 0) return;
         
         console.log("✅ Dragging flag:", flagEl.id, "locked =", layerData.locked);
         
         isDragging = true;
         dragElement = flagEl;
-        startX = e.clientX;
-        startY = e.clientY;
+        const point = getEventPoint(e);
+        startX = point.clientX;
+        startY = point.clientY;
 
         const inlineTransform = flagEl.style.transform || '';
         dragTransformExtras = stripTranslate(inlineTransform);
@@ -397,7 +453,12 @@ function attachFlagEvents(flagEl, layerData) {
         flagEl.style.cursor = 'grabbing';
         e.preventDefault();
         e.stopPropagation();
-    });
+    };
+
+    flagEl.style.touchAction = 'none';
+    flagEl.addEventListener('mousedown', handleFlagDragStart);
+    flagEl.addEventListener('pointerdown', handleFlagDragStart);
+    flagEl.addEventListener('touchstart', handleFlagDragStart, { passive: false });
 
     flagEl.addEventListener('dblclick', function(e) {
         if (layerData.locked) return;
@@ -409,6 +470,13 @@ function attachFlagEvents(flagEl, layerData) {
         e.preventDefault();
         e.stopPropagation();
     });
+
+    attachDoubleTapHandler(flagEl, function(e) {
+        if (layerData.locked) return;
+        currentResizingFlag = flagEl;
+        currentResizingLayer = layerData;
+        showResizePanel();
+    }, () => isDragging || layerData.locked);
     
     console.log("✅ Attached events to", flagEl.id);
 }

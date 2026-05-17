@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     'use strict';
     console.log("🎨 adddesign.js loaded");
 
-    const BASE_PATH = 'Images/AddDesign/';
+    const BASE_PATH = 'images/AddDesign/';
     let currentPath = [];
     let designPanel = null;
     let resizePanel = null;
@@ -29,6 +29,45 @@ document.addEventListener('DOMContentLoaded', function() {
     let startY = 0;
     let startLeft = 0;
     let startTop = 0;
+
+    function getEventPoint(event) {
+        const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+        return {
+            clientX: source.clientX,
+            clientY: source.clientY
+        };
+    }
+
+    function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+
+        element.addEventListener('touchend', function(e) {
+            if (isBlocked()) {
+                lastTapTime = 0;
+                return;
+            }
+
+            const touch = e.changedTouches?.[0];
+            if (!touch) return;
+
+            const now = Date.now();
+            const withinTime = now - lastTapTime <= 320;
+            const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
+
+            lastTapTime = now;
+            lastTapX = touch.clientX;
+            lastTapY = touch.clientY;
+
+            if (!withinTime || !withinDistance) return;
+
+            lastTapTime = 0;
+            e.preventDefault();
+            e.stopPropagation();
+            onActivate(e);
+        }, { passive: false });
+    }
 
     if (!window.cdpState) {
         window.cdpState = { currentView: "front" };
@@ -261,18 +300,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Global Mouse Events
-    window.addEventListener('mousemove', function(e) {
+    function moveDraggedDesign(event) {
         if (isDragging && dragElement) {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+            if ((event.type === 'touchmove' || event.type === 'pointermove') && event.cancelable) {
+                event.preventDefault();
+            }
+
+            const point = getEventPoint(event);
+            const deltaX = point.clientX - startX;
+            const deltaY = point.clientY - startY;
             
             dragElement.style.left = (startLeft + deltaX) + 'px';
             dragElement.style.top = (startTop + deltaY) + 'px';
             dragElement.style.transform = 'none';
         }
-    });
+    }
 
-    window.addEventListener('mouseup', function() {
+    function stopDraggedDesign() {
         if (isDragging) {
             isDragging = false;
             if (dragElement) {
@@ -280,7 +324,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 dragElement = null;
             }
         }
-    });
+    }
+
+    document.addEventListener('mousemove', moveDraggedDesign);
+    document.addEventListener('pointermove', moveDraggedDesign, { passive: false });
+    document.addEventListener('touchmove', moveDraggedDesign, { passive: false });
+
+    document.addEventListener('mouseup', stopDraggedDesign);
+    document.addEventListener('pointerup', stopDraggedDesign);
+    document.addEventListener('pointercancel', stopDraggedDesign);
+    document.addEventListener('touchend', stopDraggedDesign);
+    document.addEventListener('touchcancel', stopDraggedDesign);
 
     function createPanel() {
         designPanel = document.getElementById('cdpAddDesignPanel');
@@ -628,16 +682,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function attachDesignEvents(designEl, layerData) {
         console.log("📎 Attaching design events:", designEl.id, "locked =", layerData.locked);
         
-        designEl.addEventListener('mousedown', function(e) {
+        const handleDesignDragStart = function(e) {
             if (layerData.locked) {
                 console.log("🔒 Design is locked!");
                 return;
             }
+            if (e.type === 'mousedown' && e.button !== 0) return;
             
             isDragging = true;
             dragElement = designEl;
-            startX = e.clientX;
-            startY = e.clientY;
+            const point = getEventPoint(e);
+            startX = point.clientX;
+            startY = point.clientY;
 
             const rect = designEl.getBoundingClientRect();
             const parent = designEl.parentElement.getBoundingClientRect();
@@ -647,7 +703,12 @@ document.addEventListener('DOMContentLoaded', function() {
             designEl.style.cursor = 'grabbing';
             e.preventDefault();
             e.stopPropagation();
-        }, false);
+        };
+
+        designEl.style.touchAction = 'none';
+        designEl.addEventListener('mousedown', handleDesignDragStart, false);
+        designEl.addEventListener('pointerdown', handleDesignDragStart, false);
+        designEl.addEventListener('touchstart', handleDesignDragStart, { passive: false });
 
         designEl.addEventListener('dblclick', function(e) {
             if (layerData.locked) return;
@@ -659,6 +720,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
         }, false);
+
+        attachDoubleTapHandler(designEl, function(e) {
+            if (layerData.locked) return;
+            currentResizingDesign = designEl;
+            currentResizingLayer = layerData;
+            showResizePanel();
+        }, () => isDragging || layerData.locked);
 
         console.log("✅ Design events attached!");
     }

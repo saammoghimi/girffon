@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../admin/order-updates-data.php';
 
 function girffonTrackOrderJson(int $statusCode, array $payload): void
 {
@@ -17,9 +18,14 @@ function girffonTrackOrderLookup(PDO $pdo, string $orderNumber): ?array
     }
 
     try {
+        girffonAdminEnsureOrderUpdateColumns($pdo);
         $orderStatement = $pdo->prepare(
             'SELECT orders.id, orders.user_id, orders.order_number, orders.customer_name, orders.customer_email, orders.total,
-                    orders.payment_status, orders.order_status, orders.tracking_code, orders.created_at,
+                    orders.payment_status, orders.order_status, orders.tracking_code,
+                    COALESCE(orders.courier_name, "") AS courier_name,
+                    orders.estimated_delivery_date,
+                    COALESCE(orders.admin_note, "") AS admin_note,
+                    orders.created_at,
                     invoices.id AS invoice_id, invoices.invoice_number,
                     COALESCE(invoices.total, invoices.invoice_total, 0) AS invoice_total,
                     COALESCE(invoices.status, invoices.invoice_status, "pending") AS invoice_status
@@ -54,13 +60,19 @@ function girffonTrackOrderLookup(PDO $pdo, string $orderNumber): ?array
                 'customer_email' => (string) ($order['customer_email'] ?? ''),
                 'total' => (float) ($order['total'] ?? 0),
                 'payment_status' => (string) ($order['payment_status'] ?? ''),
+                'payment_status_label' => girffonOrderUpdateStatusLabel((string) ($order['payment_status'] ?? 'pending')),
                 'order_status' => (string) ($order['order_status'] ?? ''),
+                'order_status_label' => girffonOrderUpdateStatusLabel((string) ($order['order_status'] ?? 'new')),
                 'tracking_code' => (string) ($order['tracking_code'] ?? ''),
+                'courier_name' => (string) ($order['courier_name'] ?? ''),
+                'estimated_delivery_date' => (string) ($order['estimated_delivery_date'] ?? ''),
+                'admin_note' => (string) ($order['admin_note'] ?? ''),
                 'created_at' => (string) ($order['created_at'] ?? ''),
                 'invoice_id' => isset($order['invoice_id']) ? (int) $order['invoice_id'] : 0,
                 'invoice_number' => (string) ($order['invoice_number'] ?? ''),
                 'invoice_total' => (float) ($order['invoice_total'] ?? 0),
                 'invoice_status' => (string) ($order['invoice_status'] ?? ''),
+                'timeline' => girffonOrderUpdateTimeline((string) ($order['order_status'] ?? ''), (string) ($order['payment_status'] ?? '')),
             ],
             'items' => array_map(static function (array $item): array {
                 return [

@@ -11,6 +11,7 @@ if (!$adminViewedUser) {
 
 $adminUserOrders = girffonAdminFetchRecentOrdersForUser($pdo, $adminUserId, 5);
 $adminUserInvoices = girffonAdminFetchRecentInvoicesForUser($pdo, $adminUserId, 5);
+$adminUserCommunication = girffonAdminFetchUserCommunicationSnapshot($pdo, $adminUserId);
 $adminUserStatusMessage = trim((string) ($_GET['status'] ?? ''));
 $adminUserErrorMessage = trim((string) ($_GET['error'] ?? ''));
 
@@ -41,7 +42,7 @@ if ($adminUserFullName === '') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin User View</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260510r13">
 </head>
 <body class="admin-page" data-admin-page="users" data-admin-users-source="database">
   <div class="admin-layout">
@@ -59,6 +60,7 @@ if ($adminUserFullName === '') {
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link is-active" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
       </nav>
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">
@@ -155,9 +157,38 @@ if ($adminUserFullName === '') {
             <?php endif; ?>
           </div>
         </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Communication Preferences</h2>
+              <p class="admin-panel-note">Saved email preferences, newsletter state, and latest test email result.</p>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <tbody>
+                <tr><th>Promotional Emails</th><td><?php echo $formatAdminUserViewLabel(!empty($adminUserCommunication['preferences']['promotional_emails']) ? 'enabled' : 'disabled'); ?></td></tr>
+                <tr><th>Catalog Emails</th><td><?php echo $formatAdminUserViewLabel(!empty($adminUserCommunication['preferences']['catalog_emails']) ? 'enabled' : 'disabled'); ?></td></tr>
+                <tr><th>Birthday Discount Emails</th><td><?php echo $formatAdminUserViewLabel(!empty($adminUserCommunication['preferences']['birthday_discount_emails']) ? 'enabled' : 'disabled'); ?></td></tr>
+                <tr><th>Order Updates</th><td><?php echo $formatAdminUserViewLabel(!empty($adminUserCommunication['preferences']['order_updates']) ? 'enabled' : 'disabled'); ?></td></tr>
+                <tr><th>SMS Notifications</th><td><?php echo $escapeAdminUserView(!empty($adminUserCommunication['preferences']['sms_notifications']) ? 'Requested - Available soon' : 'Available soon'); ?></td></tr>
+                <tr><th>Two-Factor</th><td><?php echo $formatAdminUserViewLabel(!empty($adminUserCommunication['preferences']['two_factor_enabled']) ? 'enabled' : 'disabled'); ?></td></tr>
+                <tr><th>Preferences Updated</th><td><?php echo $formatAdminUserViewDate($adminUserCommunication['preferences']['updated_at'] ?? ''); ?></td></tr>
+                <tr><th>Newsletter Subscription</th><td><?php echo $formatAdminUserViewLabel($adminUserCommunication['newsletter']['status'] ?? 'not subscribed'); ?></td></tr>
+                <tr><th>Newsletter Source</th><td><?php echo $escapeAdminUserView(($adminUserCommunication['newsletter']['source'] ?? '') !== '' ? $adminUserCommunication['newsletter']['source'] : '-'); ?></td></tr>
+                <tr><th>Subscribed At</th><td><?php echo $formatAdminUserViewDate($adminUserCommunication['newsletter']['subscribed_at'] ?? ''); ?></td></tr>
+                <tr><th>Latest Test Email</th><td><?php echo $formatAdminUserViewLabel($adminUserCommunication['latest_test_email']['status'] ?? 'none'); ?></td></tr>
+                <tr><th>Test Email Transport</th><td><?php echo $escapeAdminUserView(($adminUserCommunication['latest_test_email']['transport'] ?? '') !== '' ? $adminUserCommunication['latest_test_email']['transport'] : '-'); ?></td></tr>
+                <tr><th>Test Email Date</th><td><?php echo $formatAdminUserViewDate($adminUserCommunication['latest_test_email']['created_at'] ?? ''); ?></td></tr>
+                <tr><th>Test Email Error</th><td><?php echo $escapeAdminUserView(($adminUserCommunication['latest_test_email']['error_message'] ?? '') !== '' ? $adminUserCommunication['latest_test_email']['error_message'] : '-'); ?></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
       </section>
     </main>
   </div>
-  <script src="JS/admin-girffon.js"></script>
+  <script src="JS/admin-girffon.js?v=20260505r5"></script>
 </body>
 </html>

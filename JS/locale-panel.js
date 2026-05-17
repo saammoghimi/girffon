@@ -584,7 +584,7 @@
       passwordPlaceholder: "Enter your password",
       login: "Login",
       staySignedIn: "Stay signed in",
-      forgotUsername: "Forgot username?",
+      forgotUsername: "Forgot password?",
       createAccount: "Create an account",
       dividerOr: "or",
       signInGoogle: "Sign in with Google",

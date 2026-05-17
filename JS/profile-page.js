@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const isServerBackedProfilePage = Boolean(window.GIRFFON_PROFILE_PAGE_DATA);
+  const CATALOG_SUBSCRIPTION_URL = "/GirffoN/backend/profile/catalog-subscription.php";
   const center = document.querySelector(".gf-account-center");
   if (!center) return;
   const bridge = window.GIRFFON_BRIDGE || null;
@@ -177,8 +179,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Receive annual birthday perks, private codes, and celebratory member offers.": "Ricevi vantaggi annuali compleanno, codici privati e offerte dedicate.",
       "Order Updates": "Aggiornamenti Ordine",
       "Important order confirmations, payment checks, shipping milestones, and delivery events.": "Conferme ordine, controlli pagamento, tappe spedizione ed eventi di consegna.",
-      "SMS Notifications": "Notifiche SMS",
-      "Short mobile alerts for urgent delivery windows, courier changes, and service messages.": "Avvisi rapidi per finestre consegna urgenti, cambi corriere e messaggi di servizio.",
       "Protect your GirffoN account with trusted controls, clear session visibility, and careful account actions.": "Proteggi il tuo account GirffoN con controlli affidabili, visibilita sessioni e azioni sicure.",
       "Account Protection": "Protezione Account",
       "Change Password": "Cambia Password",
@@ -304,7 +304,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Catalog Emails": "Katalog-E-Mails",
       "Birthday Discount Emails": "Geburtstagsrabatt-E-Mails",
       "Order Updates": "Bestellupdates",
-      "SMS Notifications": "SMS-Benachrichtigungen",
       "Account Protection": "Kontoschutz",
       "Change Password": "Passwort Andern",
       "Two-Factor Authentication": "Zwei-Faktor-Authentifizierung",
@@ -417,7 +416,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Catalog Emails": "Emails Catalogue",
       "Birthday Discount Emails": "Emails Remise Anniversaire",
       "Order Updates": "Mises a Jour Commande",
-      "SMS Notifications": "Notifications SMS",
       "Account Protection": "Protection du Compte",
       "Change Password": "Changer le Mot de Passe",
       "Two-Factor Authentication": "Authentification a Deux Facteurs",
@@ -530,7 +528,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Catalog Emails": "Correos de Catalogo",
       "Birthday Discount Emails": "Correos de Descuento de Cumpleanos",
       "Order Updates": "Actualizaciones del Pedido",
-      "SMS Notifications": "Notificaciones SMS",
       "Account Protection": "Proteccion de la Cuenta",
       "Change Password": "Cambiar Contrasena",
       "Two-Factor Authentication": "Autenticacion de Dos Factores",
@@ -643,7 +640,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Catalog Emails": "Catalogus Emails",
       "Birthday Discount Emails": "Verjaardagskorting Emails",
       "Order Updates": "Bestelupdates",
-      "SMS Notifications": "SMS Meldingen",
       "Account Protection": "Accountbescherming",
       "Change Password": "Wachtwoord Wijzigen",
       "Two-Factor Authentication": "Tweefactorauthenticatie",
@@ -756,7 +752,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Catalog Emails": "Maile Katalogowe",
       "Birthday Discount Emails": "Maile ze Znizka Urodzinowa",
       "Order Updates": "Aktualizacje Zamowienia",
-      "SMS Notifications": "Powiadomienia SMS",
       "Account Protection": "Ochrona Konta",
       "Change Password": "Zmien Haslo",
       "Two-Factor Authentication": "Uwierzytelnianie Dwuskladnikowe",
@@ -869,7 +864,6 @@ document.addEventListener("DOMContentLoaded", function () {
       "Catalog Emails": "Katalogmejl",
       "Birthday Discount Emails": "Fodelsedagsrabattmejl",
       "Order Updates": "Orderuppdateringar",
-      "SMS Notifications": "SMS-notiser",
       "Account Protection": "Kontoskydd",
       "Change Password": "Byt Losenord",
       "Two-Factor Authentication": "Tvafaktorsautentisering",
@@ -1051,6 +1045,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
   const defaultProfileState = profileForm ? Object.fromEntries(new FormData(profileForm).entries()) : {};
   const EMPTY_AVATAR_DATA_URI = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='110' height='110'%3E%3C/svg%3E";
+  const PROFILE_AVATAR_UPLOAD_URL = "/GirffoN/backend/profile/upload-avatar.php";
   let profileSnapshot = "";
   let savedBirthdayValue = birthdayInput ? birthdayInput.value : "";
   let subscribedCatalogEmail = "";
@@ -1067,7 +1062,6 @@ document.addEventListener("DOMContentLoaded", function () {
         catalogEmails: true,
         birthdayDiscountEmails: true,
         orderUpdates: true,
-        smsNotifications: false,
         catalogSubscriptionEmail: email,
         testEmail: email
       },
@@ -3224,6 +3218,34 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 2200);
   }
 
+  async function uploadProfileAvatar(file) {
+    if (!file) return null;
+
+    const url = PROFILE_AVATAR_UPLOAD_URL;
+    console.log("AVATAR UPLOAD URL:", url);
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await fetch(url, {
+      method: "POST",
+      credentials: "same-origin",
+      body: formData
+    });
+
+    const payload = await response.json();
+    console.log("AVATAR RESPONSE:", payload);
+    if (!response.ok || !payload.success) {
+      throw new Error(payload.message || "Unable to upload profile photo.");
+    }
+
+    if (!String(payload.avatar_in_db || "").trim()) {
+      throw new Error("Avatar uploaded but database was not updated.");
+    }
+
+    return payload;
+  }
+
   if (fileInput) {
     fileInput.addEventListener("change", function () {
       const file = fileInput.files && fileInput.files[0];
@@ -3246,6 +3268,52 @@ document.addEventListener("DOMContentLoaded", function () {
         showToast(currentRuntimeTexts.photoUpdatedToast);
       };
       reader.readAsDataURL(file);
+    });
+  }
+
+  const applyPhotoButton = document.querySelector("#gfProfilePhoto [data-gf-save]");
+  const photoStatus = document.getElementById("gfProfilePhotoStatus");
+
+  if (!isServerBackedProfilePage && applyPhotoButton && fileInput) {
+    applyPhotoButton.addEventListener("click", async function (event) {
+      event.preventDefault();
+
+      const file = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+      if (!file) {
+        if (photoStatus) {
+          photoStatus.hidden = false;
+          photoStatus.textContent = "Choose a profile image first.";
+        }
+        return;
+      }
+
+      try {
+        const avatarUploadResponse = await uploadProfileAvatar(file);
+        const savedAvatar = String(
+          avatarUploadResponse.avatar_in_db
+            || avatarUploadResponse.saved_avatar
+            || avatarUploadResponse.avatar
+            || ""
+        ).trim();
+        writeAvatarState(savedAvatar);
+        avatarTargets.forEach(function (img) {
+          img.src = savedAvatar || EMPTY_AVATAR_DATA_URI;
+        });
+        if (typeof applyAvatarState === "function") {
+          applyAvatarState();
+        }
+        if (photoStatus) {
+          photoStatus.hidden = false;
+          photoStatus.textContent = "Profile photo uploaded successfully.";
+        }
+        fileInput.value = "";
+        showToast(currentRuntimeTexts.photoUpdatedToast);
+      } catch (error) {
+        if (photoStatus) {
+          photoStatus.hidden = false;
+          photoStatus.textContent = error && error.message ? error.message : "Unable to upload profile photo.";
+        }
+      }
     });
   }
 
@@ -3381,6 +3449,7 @@ document.addEventListener("DOMContentLoaded", function () {
   saveButtons.forEach(function (button) {
     button.addEventListener("click", function () {
       if (button.hasAttribute("data-gf-save-birthday")) return;
+      if (button.closest("#gfProfilePhoto")) return;
       if (button.type === "submit" && button.form && button.form.id === "gfAccountProfileForm") return;
       showToast(currentRuntimeTexts.draftSavedToast);
     });
@@ -3398,7 +3467,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (profileForm && profileSaveStatus) {
+  if (!isServerBackedProfilePage && profileForm && profileSaveStatus) {
     profileForm.addEventListener("submit", async function (event) {
       event.preventDefault();
 
@@ -3494,14 +3563,44 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      subscribedCatalogEmail = nextEmail;
-      persistAccountPreferenceValues({
-        catalogSubscriptionEmail: nextEmail,
-        catalogEmails: true
+      const submitButton = catalogForm.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+      }
+
+      fetch(CATALOG_SUBSCRIPTION_URL, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: nextEmail })
+      }).then(async function (response) {
+        const payload = await response.json().catch(function () {
+          return {};
+        });
+
+        if (!response.ok || !payload.success) {
+          throw new Error(payload.message || "Unable to save catalog subscription.");
+        }
+
+        subscribedCatalogEmail = String(payload.email || nextEmail).trim().toLowerCase();
+        persistAccountPreferenceValues({
+          catalogSubscriptionEmail: subscribedCatalogEmail,
+          catalogEmails: true
+        });
+        renderFeedback(catalogStatus, "success", currentRuntimeTexts.subscriptionSuccessTitle, currentRuntimeTexts.subscriptionSuccessMessage);
+        showToast(currentRuntimeTexts.subscriptionUpdatedToast);
+        applyPersistedAccountState();
+      }).catch(function (error) {
+        renderFeedback(catalogStatus, "error", currentRuntimeTexts.subscriptionErrorTitle, error && error.message ? error.message : currentRuntimeTexts.subscriptionErrorMessage);
+        showToast(error && error.message ? error.message : currentRuntimeTexts.invalidSubscriptionToast);
+      }).finally(function () {
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
       });
-      renderFeedback(catalogStatus, "success", currentRuntimeTexts.subscriptionSuccessTitle, currentRuntimeTexts.subscriptionSuccessMessage);
-      showToast(currentRuntimeTexts.subscriptionUpdatedToast);
-      applyPersistedAccountState();
     });
   }
 

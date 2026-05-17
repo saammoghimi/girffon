@@ -572,6 +572,7 @@
                 <label class="gf-account-btn gf-account-btn-primary" for="gfProfileAvatarInput"><i class="fa-solid fa-upload"></i> Upload Photo</label>
                 <button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-save><i class="fa-solid fa-check"></i> Apply Photo</button>
               </div>
+              <div id="gfProfilePhotoStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
             </div>
           </div>
         </section>
@@ -750,7 +751,7 @@
             <div class="gf-account-catalog-copy">
               <span class="gf-account-eyebrow gf-account-eyebrow-light">New Collection</span>
               <h4 id="gfCatalogSubscribeTitle">Collection and Catalog Subscription</h4>
-              <p>Receive our latest catalog, new arrivals, and exclusive offers by email.</p>
+              <p>Enter your email to subscribe to catalog releases, new arrivals, and premium collection updates. Your saved subscription will appear in the admin newsletter campaign page.</p>
             </div>
 
             <form id="gfCatalogSubscriptionForm" class="gf-account-catalog-form" novalidate>
@@ -763,29 +764,11 @@
             </form>
           </article>
 
-          <article class="gf-account-test-card" aria-labelledby="gfTestEmailTitle">
-            <div class="gf-account-catalog-copy">
-              <span class="gf-account-eyebrow">Preview Tool</span>
-              <h4 id="gfTestEmailTitle">Test Email</h4>
-              <p>Preview how GirffoN email messages can appear for the current account before delivery tools are added.</p>
-            </div>
-
-            <form id="gfTestEmailForm" class="gf-account-catalog-form" novalidate>
-              <label class="gf-account-catalog-label" for="gfTestEmailInput">Email Address</label>
-              <div class="gf-account-catalog-actions">
-                <input id="gfTestEmailInput" class="gf-account-catalog-input" name="testEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
-                <button type="submit" class="gf-account-btn gf-account-btn-primary"><i class="fa-solid fa-paper-plane"></i> Send Test Email</button>
-              </div>
-              <div id="gfTestEmailStatus" class="gf-account-feedback" role="status" aria-live="polite" hidden></div>
-            </form>
-          </article>
-
           <div class="gf-account-cards">
             <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Promotional Emails</strong><p class="gf-account-note">Exclusive campaigns, featured collections, and premium studio announcements.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle promotional emails" data-default-state="true" data-gf-pref-key="promotionalEmails"></button></div></article>
             <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Catalog Emails</strong><p class="gf-account-note">Seasonal lookbooks, new catalog releases, and curated product highlights.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle catalog emails" data-default-state="true" data-gf-pref-key="catalogEmails"></button></div></article>
             <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Birthday Discount Emails</strong><p class="gf-account-note">Receive annual birthday perks, private codes, and celebratory member offers.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle birthday discount emails" data-default-state="true" data-gf-pref-key="birthdayDiscountEmails"></button></div></article>
             <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>Order Updates</strong><p class="gf-account-note">Important order confirmations, payment checks, shipping milestones, and delivery events.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="true" aria-label="Toggle order updates" data-default-state="true" data-gf-pref-key="orderUpdates"></button></div></article>
-            <article class="gf-account-card gf-account-pref-card"><div class="gf-account-toggle-row"><div><strong>SMS Notifications</strong><p class="gf-account-note">Short mobile alerts for urgent delivery windows, courier changes, and service messages.</p></div><button type="button" class="gf-account-toggle" role="switch" aria-checked="false" aria-label="Toggle SMS notifications" data-default-state="false" data-gf-pref-key="smsNotifications"></button></div></article>
           </div>
         </section>
 
@@ -1113,7 +1096,7 @@
               <input type="checkbox" id="gfStaySignedIn" name="staySignedIn" checked>
               <span>Stay signed in</span>
             </label>
-            <button type="button" class="gf-account-link-btn" id="gfForgotAccountBtn">Forgot username?</button>
+            <button type="button" class="gf-account-link-btn" id="gfForgotAccountBtn">Forgot password?</button>
           </div>
           <div class="gf-account-input-group">
             <label class="gf-account-input-label" for="gfRegisterName">Register full name</label>
@@ -1411,7 +1394,7 @@
   <script src="JS/aufile.js"></script>
   <script src="JS/settings-panel.js"></script>
   <script src="JS/locale-panel.js"></script>
-  <script src="JS/account-panel.js"></script>
+  <script src="JS/account-panel.js?v=forgot-password-1"></script>
   <script src="JS/site-search.js"></script>
   <script src="JS/profile-page.js"></script>
 

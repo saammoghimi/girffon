@@ -26,7 +26,7 @@ $adminUserFilterOptions = girffonAdminFetchUserFilterOptions($pdo);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin User Edit</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260510r13">
 </head>
 <body class="admin-page" data-admin-page="users" data-admin-users-source="database">
   <div class="admin-layout">
@@ -44,6 +44,7 @@ $adminUserFilterOptions = girffonAdminFetchUserFilterOptions($pdo);
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link is-active" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
       </nav>
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">
@@ -144,6 +145,6 @@ $adminUserFilterOptions = girffonAdminFetchUserFilterOptions($pdo);
       </section>
     </main>
   </div>
-  <script src="JS/admin-girffon.js"></script>
+  <script src="JS/admin-girffon.js?v=20260505r5"></script>
 </body>
 </html>

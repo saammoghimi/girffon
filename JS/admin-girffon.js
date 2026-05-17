@@ -84,6 +84,7 @@
     bindLogout();
     bindSettings();
     bindTableActions();
+    bindMobileAdminMenus();
     setPageTitle(page);
 
     switch (page) {
@@ -110,6 +111,106 @@
         break;
       default:
         break;
+    }
+  }
+
+  function bindMobileAdminMenus() {
+    const body = document.body;
+    if (!body || !body.classList.contains("admin-page")) {
+      return;
+    }
+
+    const sidebar = document.querySelector(".admin-sidebar");
+
+    if (!sidebar) {
+      return;
+    }
+
+    const mobileQuery = window.matchMedia("(max-width: 1024px)");
+    let menuToggle = document.querySelector(".admin-mobile-sidebar-toggle");
+    let overlay = document.querySelector(".admin-mobile-overlay");
+
+    const ensureUi = function () {
+      if (!menuToggle) {
+        menuToggle = document.createElement("button");
+        menuToggle.type = "button";
+        menuToggle.className = "admin-mobile-sidebar-toggle";
+        menuToggle.setAttribute("aria-label", "Toggle admin sidebar");
+        menuToggle.setAttribute("aria-expanded", "false");
+        body.appendChild(menuToggle);
+      }
+
+      if (!overlay) {
+        overlay = document.createElement("button");
+        overlay.type = "button";
+        overlay.className = "admin-mobile-overlay";
+        overlay.setAttribute("aria-label", "Close admin sidebar");
+        body.appendChild(overlay);
+      }
+    };
+
+    const closeSidebar = function () {
+      body.classList.remove("sidebar-open");
+      if (menuToggle) {
+        menuToggle.setAttribute("aria-expanded", "false");
+      }
+    };
+
+    const toggleSidebar = function () {
+      body.classList.toggle("sidebar-open");
+      if (menuToggle) {
+        menuToggle.setAttribute("aria-expanded", String(body.classList.contains("sidebar-open")));
+      }
+    };
+
+    const bindUi = function () {
+      ensureUi();
+
+      if (menuToggle && !menuToggle.dataset.mobileBound) {
+        menuToggle.dataset.mobileBound = "true";
+        menuToggle.addEventListener("click", toggleSidebar);
+      }
+
+      if (overlay && !overlay.dataset.mobileBound) {
+        overlay.dataset.mobileBound = "true";
+        overlay.addEventListener("click", closeSidebar);
+      }
+
+      if (!sidebar.dataset.mobileBound) {
+        sidebar.dataset.mobileBound = "true";
+        sidebar.addEventListener("click", function (event) {
+          const target = event.target;
+          if (!(target instanceof Element) || !mobileQuery.matches) {
+            return;
+          }
+
+          if (target.closest(".admin-nav-link, .admin-logout-button")) {
+            closeSidebar();
+          }
+        });
+      }
+    };
+
+    const sync = function () {
+      bindUi();
+
+      if (!mobileQuery.matches) {
+        closeSidebar();
+      }
+    };
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeSidebar();
+      }
+    });
+
+    sync();
+
+    if (typeof mobileQuery.addEventListener === "function") {
+      mobileQuery.addEventListener("change", sync);
+    } else if (typeof mobileQuery.addListener === "function") {
+      mobileQuery.addListener(sync);
     }
   }
 
@@ -208,6 +309,11 @@
   }
 
   function initMessagesPage() {
+    document.body.dataset.adminMessagesReady = "initializing";
+    initMessageFilters();
+    initMessageModal();
+    document.body.dataset.adminMessagesReady = "true";
+
     if (document.body.dataset.adminMessagesSource === "database") {
       return;
     }
@@ -235,6 +341,209 @@
       form.reset();
       setStatus(status, "Message saved to localStorage.", true);
       renderMessagesTable();
+    });
+  }
+
+  function initMessageFilters() {
+    const form = document.getElementById("adminMessagesSearchForm");
+    const tableBody = document.getElementById("adminMessagesTableBody");
+    const searchInput = document.getElementById("adminMessageSearchInput");
+    const searchButton = document.getElementById("adminMessageSearchButton");
+    const resetButton = document.getElementById("adminMessageSearchReset");
+    const statusFilter = document.getElementById("adminMessageStatusFilter");
+    const emptyState = document.getElementById("adminMessagesFilterStatus");
+    const totalNode = document.getElementById("adminMessagesTotalCount");
+    const unreadNode = document.getElementById("adminMessagesUnreadCount");
+    const readNode = document.getElementById("adminMessagesReadCount");
+
+    if (!tableBody || !searchInput || !statusFilter) {
+      return;
+    }
+
+    const applyFilters = function () {
+      const query = String(searchInput.value || "").trim().toLowerCase();
+      const status = String(statusFilter.value || "all").trim().toLowerCase();
+      const rows = Array.from(tableBody.querySelectorAll("tr[data-message-search]"));
+
+      if (!rows.length) {
+        if (emptyState) {
+          emptyState.hidden = true;
+        }
+        return;
+      }
+
+      let visibleTotal = 0;
+      let visibleUnread = 0;
+      let visibleRead = 0;
+
+      rows.forEach(function (row) {
+        const rowSearch = String(row.dataset.messageSearch || "");
+        const rowStatus = String(row.dataset.messageStatus || "unread").toLowerCase();
+        const matchesQuery = !query || rowSearch.includes(query);
+        const matchesStatus = status === "all" || rowStatus === status;
+        const visible = matchesQuery && matchesStatus;
+
+        row.classList.toggle("admin-message-row-hidden", !visible);
+
+        if (!visible) {
+          return;
+        }
+
+        visibleTotal += 1;
+        if (rowStatus === "read") {
+          visibleRead += 1;
+        } else {
+          visibleUnread += 1;
+        }
+      });
+
+      if (totalNode) {
+        totalNode.textContent = String(visibleTotal);
+      }
+      if (unreadNode) {
+        unreadNode.textContent = String(visibleUnread);
+      }
+      if (readNode) {
+        readNode.textContent = String(visibleRead);
+      }
+      if (emptyState) {
+        const activeParts = [];
+        if (query) {
+          activeParts.push('search: "' + query + '"');
+        }
+        if (status !== "all") {
+          activeParts.push("status: " + status);
+        }
+
+        if (visibleTotal === 0) {
+          emptyState.textContent = activeParts.length
+            ? "No messages found for " + activeParts.join(" | ") + "."
+            : "No messages found.";
+        } else if (activeParts.length) {
+          emptyState.textContent = "Showing " + visibleTotal + " of " + rows.length + " messages for " + activeParts.join(" | ") + ".";
+        } else {
+          emptyState.textContent = "Showing all " + rows.length + " messages.";
+        }
+
+        emptyState.hidden = false;
+        emptyState.classList.toggle("is-empty", visibleTotal === 0);
+      }
+    };
+
+    if (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        applyFilters();
+      });
+    }
+
+    searchInput.addEventListener("input", applyFilters);
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        applyFilters();
+      }
+    });
+    if (searchButton) {
+      searchButton.addEventListener("click", applyFilters);
+    }
+    if (resetButton) {
+      resetButton.addEventListener("click", function () {
+        searchInput.value = "";
+        statusFilter.value = "all";
+        applyFilters();
+      });
+    }
+    statusFilter.addEventListener("change", applyFilters);
+    applyFilters();
+  }
+
+  function initMessageModal() {
+    const modal = document.getElementById("adminMessageModal");
+    const closeButton = document.getElementById("adminMessageModalClose");
+    const overlay = document.getElementById("adminMessageModalOverlay");
+    const titleNode = document.getElementById("adminMessageModalTitle");
+
+    if (!modal || !closeButton || !overlay) {
+      return;
+    }
+
+    const detailFields = {
+      name: document.getElementById("adminModalMessageName"),
+      email: document.getElementById("adminModalMessageEmail"),
+      phone: document.getElementById("adminModalMessagePhone"),
+      country: document.getElementById("adminModalMessageCountry"),
+      city: document.getElementById("adminModalMessageCity"),
+      address: document.getElementById("adminModalMessageAddress"),
+      subject: document.getElementById("adminModalMessageSubject"),
+      status: document.getElementById("adminModalMessageStatus"),
+      date: document.getElementById("adminModalMessageDate"),
+      body: document.getElementById("adminModalMessageBody"),
+      emailLink: document.getElementById("adminModalMessageEmailLink"),
+      phoneLink: document.getElementById("adminModalMessagePhoneLink")
+    };
+
+    const getValue = function (value) {
+      const text = String(value || "").trim();
+      return text || "-";
+    };
+
+    const closeModal = function () {
+      modal.hidden = true;
+    };
+
+    const openModal = function (row) {
+      detailFields.name.textContent = getValue(row.dataset.messageName);
+      detailFields.email.textContent = getValue(row.dataset.messageEmail);
+      detailFields.phone.textContent = getValue(row.dataset.messagePhone);
+      detailFields.country.textContent = getValue(row.dataset.messageCountry);
+      detailFields.city.textContent = getValue(row.dataset.messageCity);
+      detailFields.address.textContent = getValue(row.dataset.messageAddress);
+      detailFields.subject.textContent = getValue(row.dataset.messageSubject);
+      detailFields.status.textContent = getValue(row.dataset.messageStatus);
+      detailFields.date.textContent = getValue(row.dataset.messageDate);
+      detailFields.body.textContent = getValue(row.dataset.messageBody);
+      detailFields.body.scrollTop = 0;
+
+      if (titleNode) {
+        titleNode.textContent = detailFields.name.textContent === "-"
+          ? "Customer Message"
+          : detailFields.name.textContent + " Message";
+      }
+
+      const emailValue = String(row.dataset.messageEmail || "").trim();
+      detailFields.emailLink.href = emailValue ? "mailto:" + emailValue : "#";
+      detailFields.emailLink.setAttribute("aria-disabled", emailValue ? "false" : "true");
+      detailFields.emailLink.classList.toggle("admin-button-disabled", !emailValue);
+
+      const phoneValue = String(row.dataset.messagePhone || "").trim();
+      const normalizedPhone = phoneValue.replace(/\s+/g, "");
+      detailFields.phoneLink.href = normalizedPhone ? "tel:" + normalizedPhone : "#";
+      detailFields.phoneLink.setAttribute("aria-disabled", normalizedPhone ? "false" : "true");
+      detailFields.phoneLink.classList.toggle("admin-button-disabled", !normalizedPhone);
+
+      modal.hidden = false;
+    };
+
+    document.addEventListener("click", function (event) {
+      const viewButton = event.target.closest("[data-message-view]");
+      if (viewButton) {
+        const row = viewButton.closest("tr[data-message-search]");
+        if (row) {
+          openModal(row);
+        }
+        return;
+      }
+
+      if (event.target === overlay || event.target === closeButton) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !modal.hidden) {
+        closeModal();
+      }
     });
   }
 

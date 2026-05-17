@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../admin/order-updates-data.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -30,6 +31,7 @@ function girffonProfileFetchOrders(PDO $pdo, int $userId, string $email = ''): a
     }
 
     try {
+        girffonAdminEnsureOrderUpdateColumns($pdo);
         $params = [':user_id' => $userId];
         $where = 'orders.user_id = :user_id';
         $normalizedEmail = strtolower(trim($email));
@@ -40,7 +42,11 @@ function girffonProfileFetchOrders(PDO $pdo, int $userId, string $email = ''): a
         }
 
         $orderStatement = $pdo->prepare(
-            'SELECT orders.id, orders.order_number, orders.total, orders.payment_status, orders.order_status, orders.tracking_code, orders.created_at
+            'SELECT orders.id, orders.order_number, orders.total, orders.payment_status, orders.order_status, orders.tracking_code,
+                    COALESCE(orders.courier_name, "") AS courier_name,
+                    orders.estimated_delivery_date,
+                    COALESCE(orders.admin_note, "") AS admin_note,
+                    orders.created_at
              FROM orders
              WHERE ' . $where . '
              ORDER BY orders.created_at DESC, orders.id DESC'
@@ -89,11 +95,15 @@ function girffonProfileFetchOrders(PDO $pdo, int $userId, string $email = ''): a
                 'order_number' => (string) ($order['order_number'] ?? ''),
                 'total_amount' => girffonProfileOrderFormatCurrency($order['total'] ?? 0),
                 'payment_status' => (string) ($order['payment_status'] ?? ''),
-                'payment_status_label' => girffonProfileOrderFormatLabel($order['payment_status'] ?? 'pending'),
+                'payment_status_label' => girffonOrderUpdateStatusLabel((string) ($order['payment_status'] ?? 'pending')),
                 'order_status' => (string) ($order['order_status'] ?? ''),
-                'order_status_label' => girffonProfileOrderFormatLabel($order['order_status'] ?? 'new'),
+                'order_status_label' => girffonOrderUpdateStatusLabel((string) ($order['order_status'] ?? 'new')),
                 'tracking_code' => (string) ($order['tracking_code'] ?? ''),
+                'courier_name' => (string) ($order['courier_name'] ?? ''),
+                'estimated_delivery_date' => (string) ($order['estimated_delivery_date'] ?? ''),
+                'admin_note' => (string) ($order['admin_note'] ?? ''),
                 'created_at' => (string) ($order['created_at'] ?? ''),
+                'timeline' => girffonOrderUpdateTimeline((string) ($order['order_status'] ?? ''), (string) ($order['payment_status'] ?? '')),
                 'invoices' => $invoicesByOrder[$orderId] ?? [],
             ];
         }, $orders);

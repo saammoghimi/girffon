@@ -151,19 +151,63 @@ document.addEventListener('DOMContentLoaded', function() {
         return transformStr.replace(/translate\([^)]+\)\s*/g, '').trim();
     }
 
-    window.addEventListener('mousemove', function(e) {
+    function getEventPoint(event) {
+        const source = event.touches?.[0] || event.changedTouches?.[0] || event;
+        return {
+            clientX: source.clientX,
+            clientY: source.clientY
+        };
+    }
+
+    function attachDoubleTapHandler(element, onActivate, isBlocked = () => false) {
+        let lastTapTime = 0;
+        let lastTapX = 0;
+        let lastTapY = 0;
+
+        element.addEventListener('touchend', function(e) {
+            if (isBlocked()) {
+                lastTapTime = 0;
+                return;
+            }
+
+            const touch = e.changedTouches?.[0];
+            if (!touch) return;
+
+            const now = Date.now();
+            const withinTime = now - lastTapTime <= 320;
+            const withinDistance = Math.abs(touch.clientX - lastTapX) <= 24 && Math.abs(touch.clientY - lastTapY) <= 24;
+
+            lastTapTime = now;
+            lastTapX = touch.clientX;
+            lastTapY = touch.clientY;
+
+            if (!withinTime || !withinDistance) return;
+
+            lastTapTime = 0;
+            e.preventDefault();
+            e.stopPropagation();
+            onActivate(e);
+        }, { passive: false });
+    }
+
+    function moveDraggedShape(event) {
         if (isDragging && dragElement) {
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
+            if ((event.type === 'touchmove' || event.type === 'pointermove') && event.cancelable) {
+                event.preventDefault();
+            }
+
+            const point = getEventPoint(event);
+            const deltaX = point.clientX - startX;
+            const deltaY = point.clientY - startY;
 
             dragElement.style.left = (startLeft + deltaX) + 'px';
             dragElement.style.top = (startTop + deltaY) + 'px';
             const extras = dragTransformExtras || '';
             dragElement.style.transform = extras || 'none';
         }
-    });
+    }
 
-    window.addEventListener('mouseup', function() {
+    function stopDraggedShape() {
         if (isDragging) {
             isDragging = false;
             if (dragElement) {
@@ -172,7 +216,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             dragTransformExtras = '';
         }
-    });
+    }
+
+    document.addEventListener('mousemove', moveDraggedShape);
+    document.addEventListener('pointermove', moveDraggedShape, { passive: false });
+    document.addEventListener('touchmove', moveDraggedShape, { passive: false });
+
+    document.addEventListener('mouseup', stopDraggedShape);
+    document.addEventListener('pointerup', stopDraggedShape);
+    document.addEventListener('pointercancel', stopDraggedShape);
+    document.addEventListener('touchend', stopDraggedShape);
+    document.addEventListener('touchcancel', stopDraggedShape);
 
     function attachShapeEvents(shapeEl, layerData) {
         console.log("📎 Attaching events to", shapeEl.id, "locked =", layerData.locked);
@@ -180,17 +234,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!shapeEl.parentNode) {
             console.warn("⚠️ Element not in DOM yet, attaching directly");
             
-            shapeEl.addEventListener('mousedown', function(e) {
+            const handleDetachedShapeDragStart = function(e) {
                 console.log("👆 Mousedown on", shapeEl.id, "locked =", layerData.locked);
                 if (layerData.locked) {
                     console.log("🔒 Layer is locked, ignoring");
                     return;
                 }
+                if (e.type === 'mousedown' && e.button !== 0) return;
                 
                 isDragging = true;
                 dragElement = shapeEl;
-                startX = e.clientX;
-                startY = e.clientY;
+                const point = getEventPoint(e);
+                startX = point.clientX;
+                startY = point.clientY;
 
                 const inlineTransform = shapeEl.style.transform || '';
                 dragTransformExtras = stripTranslate(inlineTransform);
@@ -203,7 +259,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 shapeEl.style.cursor = 'grabbing';
                 e.preventDefault();
                 e.stopPropagation();
-            }, false);
+            };
+
+            shapeEl.style.touchAction = 'none';
+            shapeEl.addEventListener('mousedown', handleDetachedShapeDragStart, false);
+            shapeEl.addEventListener('pointerdown', handleDetachedShapeDragStart, false);
+            shapeEl.addEventListener('touchstart', handleDetachedShapeDragStart, { passive: false });
 
             shapeEl.addEventListener('dblclick', function(e) {
                 if (layerData.locked) return;
@@ -215,6 +276,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
                 e.stopPropagation();
             }, false);
+
+            attachDoubleTapHandler(shapeEl, function(e) {
+                if (layerData.locked) return;
+                currentResizingShape = shapeEl;
+                currentResizingLayer = layerData;
+                showResizePanel();
+            }, () => isDragging || layerData.locked);
             
             console.log("✅ Events attached successfully");
             return;
@@ -224,17 +292,19 @@ document.addEventListener('DOMContentLoaded', function() {
         shapeEl.parentNode.replaceChild(newShapeEl, shapeEl);
         layerData.element = newShapeEl;
         
-        newShapeEl.addEventListener('mousedown', function(e) {
+        const handleShapeDragStart = function(e) {
             console.log("👆 Mousedown on", newShapeEl.id, "locked =", layerData.locked);
             if (layerData.locked) {
                 console.log("🔒 Layer is locked, ignoring");
                 return;
             }
+            if (e.type === 'mousedown' && e.button !== 0) return;
             
             isDragging = true;
             dragElement = newShapeEl;
-            startX = e.clientX;
-            startY = e.clientY;
+            const point = getEventPoint(e);
+            startX = point.clientX;
+            startY = point.clientY;
 
             const inlineTransform = newShapeEl.style.transform || '';
             dragTransformExtras = stripTranslate(inlineTransform);
@@ -247,7 +317,12 @@ document.addEventListener('DOMContentLoaded', function() {
             newShapeEl.style.cursor = 'grabbing';
             e.preventDefault();
             e.stopPropagation();
-        }, false);
+        };
+
+        newShapeEl.style.touchAction = 'none';
+        newShapeEl.addEventListener('mousedown', handleShapeDragStart, false);
+        newShapeEl.addEventListener('pointerdown', handleShapeDragStart, false);
+        newShapeEl.addEventListener('touchstart', handleShapeDragStart, { passive: false });
 
         newShapeEl.addEventListener('dblclick', function(e) {
             if (layerData.locked) return;
@@ -259,6 +334,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
         }, false);
+
+        attachDoubleTapHandler(newShapeEl, function(e) {
+            if (layerData.locked) return;
+            currentResizingShape = newShapeEl;
+            currentResizingLayer = layerData;
+            showResizePanel();
+        }, () => isDragging || layerData.locked);
         
         console.log("✅ Events attached successfully");
     }
