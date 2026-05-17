@@ -32,13 +32,16 @@ $productColumns = girffonAdminGetProductsColumns($pdo);
 
 $productId = max(0, (int) ($_POST['id'] ?? 0));
 $name = trim((string) ($_POST['name'] ?? ''));
-$sku = trim((string) ($_POST['sku'] ?? ''));
+$sku = girffonAdminNormalizeProductSkuValue((string) ($_POST['sku'] ?? ''));
+$barcode = girffonAdminBuildProductBarcode($sku, (string) ($_POST['barcode'] ?? ''));
 $description = trim((string) ($_POST['description'] ?? ''));
 $price = (float) ($_POST['price'] ?? 0);
 $salePriceInput = trim((string) ($_POST['sale_price'] ?? ''));
 $salePrice = $salePriceInput === '' ? null : (float) $salePriceInput;
 $stock = max(0, (int) ($_POST['stock'] ?? 0));
 $category = trim((string) ($_POST['category'] ?? ''));
+$size = trim((string) ($_POST['size'] ?? ''));
+$color = trim((string) ($_POST['color'] ?? ''));
 $status = girffonAdminNormalizeUpdatedStatus((string) ($_POST['status'] ?? 'active'));
 $imagePath = trim((string) ($_POST['image'] ?? $_POST['imageUrl'] ?? ''));
 
@@ -46,7 +49,7 @@ if ($productId <= 0) {
     girffonAdminRedirectUpdatedProduct('error', 'Invalid product selected.');
 }
 
-if ($name === '' || $sku === '' || $price <= 0 || $category === '') {
+if ($name === '' || $sku === '' || $price <= 0 || $category === '' || $size === '' || $color === '') {
     girffonAdminRedirectUpdatedProduct('error', 'Please complete all product fields.', $productId);
 }
 
@@ -61,12 +64,15 @@ if (!girffonAdminFetchProductById($pdo, $productId)) {
 try {
     $assignments = [
         'sku = :sku',
+        'barcode = :barcode',
         'name = :name',
         'description = :description',
         'price = :price',
         'sale_price = :sale_price',
         'stock = :stock',
         'category = :category',
+        'size = :size',
+        'color = :color',
         'image = :image',
         'status = :status',
     ];
@@ -74,12 +80,15 @@ try {
     $params = [
         ':id' => $productId,
         ':sku' => $sku,
+        ':barcode' => $barcode !== '' ? $barcode : null,
         ':name' => $name,
         ':description' => $description !== '' ? $description : null,
         ':price' => $price,
         ':sale_price' => $salePrice,
         ':stock' => $stock,
         ':category' => $category,
+        ':size' => $size,
+        ':color' => $color,
         ':image' => $imagePath !== '' ? $imagePath : null,
         ':status' => $status,
     ];

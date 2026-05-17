@@ -43,6 +43,20 @@ $formatAdminDashboardCurrency = static function ($value) {
 $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard) {
   return $escapeAdminDashboard(ucwords(str_replace("_", " ", (string) $value)));
 };
+$formatAdminDashboardDate = static function ($value) {
+  $timestamp = strtotime((string) $value);
+  return $timestamp !== false ? date("Y-m-d", $timestamp) : "Unknown date";
+};
+$formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) {
+  $text = trim(preg_replace('/\s+/', ' ', (string) $value));
+  if ($text === '') {
+    $text = $fallback;
+  }
+  if (strlen($text) > $limit) {
+    $text = rtrim(substr($text, 0, $limit - 3)) . "...";
+  }
+  return $text;
+};
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -185,7 +199,19 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
           <div id="adminRecentMessages" class="admin-mini-list">
             <?php if ($adminRecentMessages): ?>
               <?php foreach ($adminRecentMessages as $message): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($message["customer_name"] ?? ""); ?></span><strong><?php echo $formatAdminDashboardLabel($message["status"] ?? "unread"); ?></strong></div>
+                <?php
+                $messageName = trim((string) ($message["name"] ?? $message["customer_name"] ?? ""));
+                $messageEmail = trim((string) ($message["email"] ?? ""));
+                $messageSubject = $formatAdminDashboardPreview($message["subject"] ?? "", "No subject", 46);
+                $messagePreview = $formatAdminDashboardPreview($message["message"] ?? "", "No message preview available.", 84);
+                $messageStatus = trim((string) ($message["status"] ?? "")) ?: "unread";
+                $messageDate = $formatAdminDashboardDate($message["created_at"] ?? "");
+                $messageDisplayName = $messageName !== '' ? $messageName : ($messageEmail !== '' ? $messageEmail : 'Unknown customer');
+                ?>
+                <div class="admin-mini-item">
+                  <span><?php echo $escapeAdminDashboard($messageDisplayName); ?><br><small><?php echo $escapeAdminDashboard($messageSubject); ?></small><br><small><?php echo $escapeAdminDashboard($messagePreview); ?></small></span>
+                  <strong><?php echo $formatAdminDashboardLabel($messageStatus); ?><br><small><?php echo $escapeAdminDashboard($messageDate); ?></small></strong>
+                </div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No messages yet.</p>

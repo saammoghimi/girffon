@@ -31,17 +31,20 @@ girffonAdminEnsureProductsTable($pdo);
 $productColumns = girffonAdminGetProductsColumns($pdo);
 
 $name = trim((string) ($_POST['name'] ?? ''));
-$sku = trim((string) ($_POST['sku'] ?? ''));
+$sku = girffonAdminNormalizeProductSkuValue((string) ($_POST['sku'] ?? ''));
+$barcode = girffonAdminBuildProductBarcode($sku, (string) ($_POST['barcode'] ?? ''));
 $description = trim((string) ($_POST['description'] ?? ''));
 $price = (float) ($_POST['price'] ?? 0);
 $salePriceInput = trim((string) ($_POST['sale_price'] ?? ''));
 $salePrice = $salePriceInput === '' ? null : (float) $salePriceInput;
 $stock = max(0, (int) ($_POST['stock'] ?? 0));
 $category = trim((string) ($_POST['category'] ?? ''));
+$size = trim((string) ($_POST['size'] ?? ''));
+$color = trim((string) ($_POST['color'] ?? ''));
 $status = girffonAdminNormalizeProductStatus((string) ($_POST['status'] ?? 'active'));
 $imagePath = trim((string) ($_POST['image'] ?? $_POST['imageUrl'] ?? ''));
 
-if ($name === '' || $sku === '' || $price <= 0 || $category === '') {
+if ($name === '' || $sku === '' || $price <= 0 || $category === '' || $size === '' || $color === '') {
     girffonAdminRedirectProduct('error', 'Please complete all product fields.');
 }
 
@@ -50,15 +53,18 @@ if ($salePrice !== null && $salePrice < 0) {
 }
 
 try {
-    $fields = ['sku', 'name', 'description', 'price', 'sale_price', 'stock', 'category', 'image', 'status'];
+    $fields = ['sku', 'barcode', 'name', 'description', 'price', 'sale_price', 'stock', 'category', 'size', 'color', 'image', 'status'];
     $params = [
         ':sku' => $sku,
+        ':barcode' => $barcode !== '' ? $barcode : null,
         ':name' => $name,
         ':description' => $description !== '' ? $description : null,
         ':price' => $price,
         ':sale_price' => $salePrice,
         ':stock' => $stock,
         ':category' => $category,
+        ':size' => $size,
+        ':color' => $color,
         ':image' => $imagePath !== '' ? $imagePath : null,
         ':status' => $status,
     ];

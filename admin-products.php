@@ -26,6 +26,20 @@ $formatAdminProductCurrency = static function ($value) {
 $formatAdminProductLabel = static function ($value) use ($escapeAdminProduct) {
   return $escapeAdminProduct(ucwords(str_replace("_", " ", (string) $value)));
 };
+$formatAdminProductVariant = static function ($size, $color) {
+  $sizeValue = trim((string) $size);
+  $colorValue = trim((string) $color);
+  if ($sizeValue === '' && $colorValue === '') {
+    return '- / -';
+  }
+  if ($sizeValue === '') {
+    $sizeValue = '-';
+  }
+  if ($colorValue === '') {
+    $colorValue = '-';
+  }
+  return $sizeValue . ' / ' . $colorValue;
+};
 $resolveAdminProductImage = static function ($path) use ($adminBuildPath) {
   $value = trim((string) $path);
   if ($value === "") {
@@ -50,11 +64,14 @@ $adminFormProduct = [
   'id' => $adminEditingProduct['id'] ?? 0,
   'name' => $adminEditingProduct['name'] ?? '',
   'sku' => $adminEditingProduct['sku'] ?? '',
+  'barcode' => $adminEditingProduct['barcode'] ?? girffonAdminBuildProductBarcode((string) ($adminEditingProduct['sku'] ?? '')),
   'description' => $adminEditingProduct['description'] ?? '',
   'price' => $adminEditingProduct['price'] ?? '',
   'sale_price' => $adminEditingProduct['sale_price'] ?? '',
   'stock' => $adminEditingProduct['stock'] ?? 0,
   'category' => $adminEditingProduct['category'] ?? '',
+  'size' => $adminEditingProduct['size'] ?? '',
+  'color' => $adminEditingProduct['color'] ?? '',
   'image' => $adminEditingProduct['image'] ?? '',
   'status' => $adminNormalizeProductStatus($adminEditingProduct['status'] ?? 'active'),
 ];
@@ -333,7 +350,7 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">
           <strong>Product Fields</strong>
-          <p class="admin-panel-note">Product name, SKU, price, image URL, and stock.</p>
+          <p class="admin-panel-note">Product name, SKU, barcode, price, stock, size, color, and status.</p>
         </section>
         <button class="admin-logout-button" type="button" data-admin-logout>Logout</button>
       </div>
@@ -377,6 +394,11 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
               <input class="admin-input" id="adminProductSku" name="sku" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['sku']); ?>" required>
             </div>
 
+            <div class="admin-field">
+              <label for="adminProductBarcode">Barcode</label>
+              <input class="admin-input" id="adminProductBarcode" name="barcode" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['barcode']); ?>" placeholder="Auto from SKU if empty">
+            </div>
+
             <div class="admin-field admin-field-wide">
               <label for="adminProductDescription">Description</label>
               <textarea class="admin-textarea" id="adminProductDescription" name="description"><?php echo $escapeAdminProduct($adminFormProduct['description']); ?></textarea>
@@ -400,6 +422,16 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
             <div class="admin-field">
               <label for="adminProductCategory">Category</label>
               <input class="admin-input" id="adminProductCategory" name="category" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['category']); ?>" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductSize">Size</label>
+              <input class="admin-input" id="adminProductSize" name="size" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['size']); ?>" placeholder="S, M, L or 42" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminProductColor">Color</label>
+              <input class="admin-input" id="adminProductColor" name="color" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['color']); ?>" placeholder="Black, Blue, White" required>
             </div>
 
             <div class="admin-field">
@@ -441,9 +473,11 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                   <th>Image</th>
                   <th>Product Name</th>
                   <th>SKU</th>
+                  <th>Barcode</th>
                   <th>Price</th>
                   <th>Sale Price</th>
                   <th>Category</th>
+                  <th>Size / Color</th>
                   <th>Status</th>
                   <th>Stock</th>
                   <th>Updated</th>
@@ -463,10 +497,12 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                         <?php endif; ?>
                       </td>
                       <td><strong><?php echo $escapeAdminProduct($product["name"] ?? ""); ?></strong></td>
-                      <td><?php echo $escapeAdminProduct($product["sku"] ?? ""); ?></td>
+                      <td><?php echo $escapeAdminProduct($product["sku"] ?? "-"); ?></td>
+                      <td><?php echo $escapeAdminProduct(($product["barcode"] ?? '') !== '' ? $product["barcode"] : girffonAdminBuildProductBarcode((string) ($product["sku"] ?? ''))); ?></td>
                       <td><?php echo $escapeAdminProduct($formatAdminProductCurrency($product["price"] ?? 0)); ?></td>
                       <td><?php echo $escapeAdminProduct(($product["sale_price"] ?? null) !== null && $product["sale_price"] !== '' ? $formatAdminProductCurrency($product["sale_price"]) : '-'); ?></td>
                       <td><?php echo $escapeAdminProduct($product["category"] ?? "-"); ?></td>
+                      <td><?php echo $escapeAdminProduct($formatAdminProductVariant($product["size"] ?? '', $product["color"] ?? '')); ?></td>
                       <td><?php echo $formatAdminProductLabel($product["status"] ?? "active"); ?></td>
                       <td><?php echo $escapeAdminProduct($product["stock"] ?? 0); ?></td>
                       <td><?php echo $escapeAdminProduct($product["updated_at"] ?? $product["created_at"] ?? '-'); ?></td>
@@ -495,7 +531,7 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="10" class="admin-empty">No products found in the database yet.</td>
+                    <td colspan="12" class="admin-empty">No products found in the database yet.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>

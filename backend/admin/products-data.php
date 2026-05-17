@@ -12,6 +12,30 @@ function girffonAdminGetProductsColumns(PDO $pdo): array
     return $columns;
 }
 
+function girffonAdminNormalizeProductSkuValue(string $value): string
+{
+    $normalized = strtoupper(trim($value));
+    $normalized = preg_replace('/\s+/', '-', $normalized);
+    $normalized = preg_replace('/[^A-Z0-9\-_]/', '', (string) $normalized);
+    return trim((string) $normalized, '-_');
+}
+
+function girffonAdminBuildProductBarcode(string $sku, string $barcode = ''): string
+{
+    $normalizedBarcode = strtoupper(trim($barcode));
+    $normalizedBarcode = preg_replace('/[^A-Z0-9\-]/', '', (string) $normalizedBarcode);
+    if ($normalizedBarcode !== '') {
+        return $normalizedBarcode;
+    }
+
+    $normalizedSku = girffonAdminNormalizeProductSkuValue($sku);
+    if ($normalizedSku === '') {
+        return '';
+    }
+
+    return 'GRF-' . str_replace('_', '-', $normalizedSku);
+}
+
 function girffonAdminEnsureProductsTable(PDO $pdo): array
 {
     static $cachedColumns = null;
@@ -24,12 +48,15 @@ function girffonAdminEnsureProductsTable(PDO $pdo): array
         "CREATE TABLE IF NOT EXISTS products (
             id INT AUTO_INCREMENT PRIMARY KEY,
             sku VARCHAR(100) NOT NULL UNIQUE,
+            barcode VARCHAR(120) NULL,
             name VARCHAR(255) NOT NULL,
             description TEXT NULL,
             price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             sale_price DECIMAL(10,2) NULL,
             stock INT NOT NULL DEFAULT 0,
             category VARCHAR(100) NOT NULL,
+            size VARCHAR(120) NULL,
+            color VARCHAR(120) NULL,
             image VARCHAR(255) NULL,
             status VARCHAR(40) NOT NULL DEFAULT 'active',
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -40,8 +67,11 @@ function girffonAdminEnsureProductsTable(PDO $pdo): array
     $columns = girffonAdminGetProductsColumns($pdo);
 
     $requiredColumns = [
+        'barcode' => "ALTER TABLE products ADD COLUMN barcode VARCHAR(120) NULL AFTER sku",
         'description' => "ALTER TABLE products ADD COLUMN description TEXT NULL AFTER name",
         'sale_price' => "ALTER TABLE products ADD COLUMN sale_price DECIMAL(10,2) NULL AFTER price",
+        'size' => "ALTER TABLE products ADD COLUMN size VARCHAR(120) NULL AFTER category",
+        'color' => "ALTER TABLE products ADD COLUMN color VARCHAR(120) NULL AFTER size",
         'image' => "ALTER TABLE products ADD COLUMN image VARCHAR(255) NULL AFTER category",
         'updated_at' => "ALTER TABLE products ADD COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at",
     ];
@@ -54,6 +84,14 @@ function girffonAdminEnsureProductsTable(PDO $pdo): array
 
     if (!isset($columns['image']) && isset($columns['image_path'])) {
         $pdo->exec("UPDATE products SET image = image_path WHERE (image IS NULL OR image = '') AND image_path IS NOT NULL AND image_path <> ''");
+    }
+
+    if (!isset($columns['barcode'])) {
+        $columns = girffonAdminGetProductsColumns($pdo);
+    }
+
+    if (isset($columns['barcode'])) {
+        $pdo->exec("UPDATE products SET barcode = CONCAT('GRF-', REPLACE(REPLACE(UPPER(TRIM(sku)), ' ', '-'), '_', '-')) WHERE (barcode IS NULL OR TRIM(barcode) = '') AND sku IS NOT NULL AND TRIM(sku) <> ''");
     }
 
     $cachedColumns = girffonAdminGetProductsColumns($pdo);
@@ -69,12 +107,15 @@ function girffonAdminBuildProductSelect(array $columns): string
     return "SELECT
                 id,
                 sku,
+                COALESCE(NULLIF(barcode, ''), CONCAT('GRF-', REPLACE(REPLACE(UPPER(TRIM(sku)), ' ', '-'), '_', '-'))) AS barcode,
                 name,
                 description,
                 price,
                 sale_price,
                 stock,
                 category,
+                COALESCE(NULLIF(size, ''), '') AS size,
+                COALESCE(NULLIF(color, ''), '') AS color,
                 " . $imageSelect . ",
                 status,
                 created_at,
