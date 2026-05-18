@@ -28,7 +28,7 @@ $formatDebugLabel = static function ($value) use ($escapeDebug): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Order Updates Debug</title>
-  <link rel="stylesheet" href="/GirffoN/CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="/GirffoN/CSS/admin-girffon.css?v=20260518r7">
   <style>
     .admin-debug-grid {
       display: grid;
@@ -120,6 +120,7 @@ $formatDebugLabel = static function ($value) use ($escapeDebug): string {
         <a class="admin-nav-link" href="/GirffoN/admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="/GirffoN/admin-users.php" aria-label="Users" title="Users">6. Users</a>
         <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
       </nav>
 
       <div class="admin-sidebar-footer">

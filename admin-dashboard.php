@@ -64,7 +64,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Dashboard</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r6">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r7">
 </head>
 <body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database" data-admin-weather-city="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" data-admin-weather-country="<?php echo $escapeAdminDashboard($adminWeatherCountry); ?>" data-admin-analytics="<?php echo $escapeAdminDashboardJson($adminAnalyticsExplorer); ?>">
   <div class="admin-layout">
@@ -84,6 +84,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
         <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
       </nav>
 
       <div class="admin-sidebar-footer">

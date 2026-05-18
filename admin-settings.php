@@ -25,6 +25,7 @@
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages"><span class="admin-nav-link-index">5. </span><span class="admin-nav-link-label">Messages</span></a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users"><span class="admin-nav-link-index">6. </span><span class="admin-nav-link-label">Users</span></a>
         <a class="admin-nav-link is-active" href="admin-settings.php" aria-label="Settings" title="Settings"><span class="admin-nav-link-index">7. </span><span class="admin-nav-link-label">Settings</span></a>
+        <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders"><span class="admin-nav-link-index">8. </span><span class="admin-nav-link-label">Custom Design Orders</span></a>
       </nav>
 
       <div class="admin-sidebar-footer">
