@@ -2,6 +2,14 @@
 require_once __DIR__ . "/backend/admin/session.php";
 require_once __DIR__ . "/backend/admin/users-data.php";
 
+$adminUserSettingsFile = __DIR__ . "/backend/admin/user-settings-data.php";
+if (is_file($adminUserSettingsFile)) {
+  require_once $adminUserSettingsFile;
+}
+
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+
 $buildAdminUsersRedirectUrl = static function (array $params = []): string {
   $baseUrl = '/GirffoN/admin-users.php';
   if (!$params) {
@@ -73,6 +81,62 @@ $adminAdminUsers = girffonAdminCountAdminUsers($pdo);
 $adminNewMembersThisMonth = girffonAdminCountNewMembersThisMonth($pdo);
 $adminUserStatusMessage = trim((string) ($_GET['notice'] ?? ''));
 $adminUserErrorMessage = trim((string) ($_GET['error'] ?? ''));
+$adminUserPreferences = [
+  'show_summary_cards' => true,
+  'show_filter_panel' => true,
+  'show_users_directory' => true,
+  'show_username_column' => true,
+  'show_email_column' => true,
+  'show_phone_column' => true,
+  'show_country_column' => true,
+  'show_city_column' => true,
+  'show_address_column' => true,
+  'show_role_column' => true,
+  'show_status_column' => true,
+  'show_created_at_column' => true,
+  'show_view_action' => true,
+  'show_edit_action' => true,
+  'show_orders_action' => true,
+  'show_invoices_action' => true,
+  'show_email_action' => true,
+  'show_sms_action' => true,
+  'show_delete_action' => true,
+];
+
+if (function_exists('girffonAdminFetchUserPreferences')) {
+  $adminUserPreferences = girffonAdminFetchUserPreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+
+$showAdminUserSummaryCards = !empty($adminUserPreferences['show_summary_cards']);
+$showAdminUserFilterPanel = !empty($adminUserPreferences['show_filter_panel']);
+$showAdminUsersDirectory = !empty($adminUserPreferences['show_users_directory']);
+$showAdminUserUsernameColumn = !empty($adminUserPreferences['show_username_column']);
+$showAdminUserEmailColumn = !empty($adminUserPreferences['show_email_column']);
+$showAdminUserPhoneColumn = !empty($adminUserPreferences['show_phone_column']);
+$showAdminUserCountryColumn = !empty($adminUserPreferences['show_country_column']);
+$showAdminUserCityColumn = !empty($adminUserPreferences['show_city_column']);
+$showAdminUserAddressColumn = !empty($adminUserPreferences['show_address_column']);
+$showAdminUserRoleColumn = !empty($adminUserPreferences['show_role_column']);
+$showAdminUserStatusColumn = !empty($adminUserPreferences['show_status_column']);
+$showAdminUserCreatedAtColumn = !empty($adminUserPreferences['show_created_at_column']);
+$showAdminUserViewAction = !empty($adminUserPreferences['show_view_action']);
+$showAdminUserEditAction = !empty($adminUserPreferences['show_edit_action']);
+$showAdminUserOrdersAction = !empty($adminUserPreferences['show_orders_action']);
+$showAdminUserInvoicesAction = !empty($adminUserPreferences['show_invoices_action']);
+$showAdminUserEmailAction = !empty($adminUserPreferences['show_email_action']);
+$showAdminUserSmsAction = !empty($adminUserPreferences['show_sms_action']);
+$showAdminUserDeleteAction = !empty($adminUserPreferences['show_delete_action']);
+$adminUserVisibleColumnCount = 3
+  + ($showAdminUserUsernameColumn ? 1 : 0)
+  + ($showAdminUserEmailColumn ? 1 : 0)
+  + ($showAdminUserPhoneColumn ? 1 : 0)
+  + ($showAdminUserCountryColumn ? 1 : 0)
+  + ($showAdminUserCityColumn ? 1 : 0)
+  + ($showAdminUserAddressColumn ? 1 : 0)
+  + ($showAdminUserRoleColumn ? 1 : 0)
+  + ($showAdminUserStatusColumn ? 1 : 0)
+  + ($showAdminUserCreatedAtColumn ? 1 : 0)
+  + 1;
 
 $escapeAdminUser = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
@@ -152,8 +216,48 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Users</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
   <style>
+    @media (max-width: 1280px) and (min-width: 721px) {
+      .admin-main,
+      .admin-page-section,
+      .admin-page-section > .admin-panel,
+      .admin-page-section > .admin-table-panel,
+      .admin-grid-form,
+      .admin-field,
+      .admin-field-wide,
+      .admin-card-grid,
+      .admin-table-wrap {
+        min-width: 0;
+      }
+
+      .admin-main {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .admin-topbar {
+        gap: 14px;
+      }
+
+      .admin-topbar > div:first-child {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .admin-topbar-actions {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        margin-left: auto;
+        max-width: none;
+      }
+
+      .admin-card-grid,
+      .admin-grid-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
     @media (max-width: 720px) {
       .admin-topbar {
         flex-direction: column !important;
@@ -336,8 +440,9 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link is-active" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -358,11 +463,12 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-users.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
 
+      <?php if ($showAdminUserSummaryCards): ?>
       <section class="admin-card-grid" aria-label="User summary cards">
         <article class="admin-stat-card">
           <span>Total Members</span>
@@ -385,6 +491,7 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
           <p class="admin-status">New customer registrations created this month.</p>
         </article>
       </section>
+      <?php endif; ?>
 
       <section class="admin-page-section">
         <?php if ($adminUserStatusMessage || $adminUserErrorMessage): ?>
@@ -393,6 +500,7 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
           </div>
         <?php endif; ?>
 
+        <?php if ($showAdminUserFilterPanel): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -443,6 +551,7 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
             </div>
           </form>
         </article>
+        <?php endif; ?>
 
         <p class="admin-inline-note">
           <?php echo $escapeAdminUser(count($adminUsers)); ?> user record<?php echo count($adminUsers) === 1 ? '' : 's'; ?> shown.
@@ -456,6 +565,7 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
         </p>
       </section>
 
+      <?php if ($showAdminUsersDirectory): ?>
       <section class="admin-page-section">
         <article class="admin-table-panel">
           <div class="admin-panel-head">
@@ -472,15 +582,15 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
                   <th>Avatar</th>
                   <th>ID</th>
                   <th>Full Name</th>
-                  <th>Username</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Country</th>
-                  <th>City</th>
-                  <th>Address</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Created Date</th>
+                  <?php if ($showAdminUserUsernameColumn): ?><th>Username</th><?php endif; ?>
+                  <?php if ($showAdminUserEmailColumn): ?><th>Email</th><?php endif; ?>
+                  <?php if ($showAdminUserPhoneColumn): ?><th>Phone</th><?php endif; ?>
+                  <?php if ($showAdminUserCountryColumn): ?><th>Country</th><?php endif; ?>
+                  <?php if ($showAdminUserCityColumn): ?><th>City</th><?php endif; ?>
+                  <?php if ($showAdminUserAddressColumn): ?><th>Address</th><?php endif; ?>
+                  <?php if ($showAdminUserRoleColumn): ?><th>Role</th><?php endif; ?>
+                  <?php if ($showAdminUserStatusColumn): ?><th>Status</th><?php endif; ?>
+                  <?php if ($showAdminUserCreatedAtColumn): ?><th>Created Date</th><?php endif; ?>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -506,16 +616,17 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
                       </td>
                       <td><strong><?php echo $escapeAdminUser($userId); ?></strong></td>
                       <td><strong><?php echo $escapeAdminUser($userFullName); ?></strong></td>
-                      <td><?php echo $escapeAdminUser($user['username'] ?? '-'); ?></td>
-                      <td><?php echo $escapeAdminUser($userEmail !== '' ? $userEmail : '-'); ?></td>
-                      <td><?php echo $escapeAdminUser($userPhone !== '' ? $userPhone : '-'); ?></td>
-                      <td><?php echo $escapeAdminUser(($user['country'] ?? '') !== '' ? $user['country'] : '-'); ?></td>
-                      <td><?php echo $escapeAdminUser(($user['city'] ?? '') !== '' ? $user['city'] : '-'); ?></td>
-                      <td><?php echo $escapeAdminUser(($user['address'] ?? '') !== '' ? $user['address'] : '-'); ?></td>
-                      <td><span class="admin-badge <?php echo $escapeAdminUser($resolveAdminUserBadgeClass($user['role'] ?? '', 'role')); ?>"><?php echo $formatAdminUserLabel($user['role'] ?? '-'); ?></span></td>
-                      <td><span class="admin-badge <?php echo $escapeAdminUser($resolveAdminUserBadgeClass($user['status'] ?? '', 'status')); ?>"><?php echo $formatAdminUserLabel($user['status'] ?? '-'); ?></span></td>
-                      <td><?php echo $formatAdminUserDate($user['created_at'] ?? ''); ?></td>
+                      <?php if ($showAdminUserUsernameColumn): ?><td><?php echo $escapeAdminUser($user['username'] ?? '-'); ?></td><?php endif; ?>
+                      <?php if ($showAdminUserEmailColumn): ?><td><?php echo $escapeAdminUser($userEmail !== '' ? $userEmail : '-'); ?></td><?php endif; ?>
+                      <?php if ($showAdminUserPhoneColumn): ?><td><?php echo $escapeAdminUser($userPhone !== '' ? $userPhone : '-'); ?></td><?php endif; ?>
+                      <?php if ($showAdminUserCountryColumn): ?><td><?php echo $escapeAdminUser(($user['country'] ?? '') !== '' ? $user['country'] : '-'); ?></td><?php endif; ?>
+                      <?php if ($showAdminUserCityColumn): ?><td><?php echo $escapeAdminUser(($user['city'] ?? '') !== '' ? $user['city'] : '-'); ?></td><?php endif; ?>
+                      <?php if ($showAdminUserAddressColumn): ?><td><?php echo $escapeAdminUser(($user['address'] ?? '') !== '' ? $user['address'] : '-'); ?></td><?php endif; ?>
+                      <?php if ($showAdminUserRoleColumn): ?><td><span class="admin-badge <?php echo $escapeAdminUser($resolveAdminUserBadgeClass($user['role'] ?? '', 'role')); ?>"><?php echo $formatAdminUserLabel($user['role'] ?? '-'); ?></span></td><?php endif; ?>
+                      <?php if ($showAdminUserStatusColumn): ?><td><span class="admin-badge <?php echo $escapeAdminUser($resolveAdminUserBadgeClass($user['status'] ?? '', 'status')); ?>"><?php echo $formatAdminUserLabel($user['status'] ?? '-'); ?></span></td><?php endif; ?>
+                      <?php if ($showAdminUserCreatedAtColumn): ?><td><?php echo $formatAdminUserDate($user['created_at'] ?? ''); ?></td><?php endif; ?>
                       <td>
+                        <?php if ($showAdminUserViewAction || $showAdminUserEditAction || $showAdminUserOrdersAction || $showAdminUserInvoicesAction || $showAdminUserEmailAction || $showAdminUserSmsAction || $showAdminUserDeleteAction): ?>
                         <div class="admin-table-actions admin-table-actions-menu" data-admin-user-menu>
                           <button class="admin-action-button admin-actions-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Open user actions" title="Actions">
                             <svg class="admin-actions-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -524,20 +635,33 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
                             </svg>
                           </button>
                           <div class="admin-actions-dropdown" hidden>
+                            <?php if ($showAdminUserViewAction): ?>
                             <a class="admin-actions-menu-link" href="<?php echo $escapeAdminUser($userViewUrl); ?>">View</a>
+                            <?php endif; ?>
+                            <?php if ($showAdminUserEditAction): ?>
                             <a class="admin-actions-menu-link" href="<?php echo $escapeAdminUser($userEditUrl); ?>">Edit</a>
+                            <?php endif; ?>
+                            <?php if ($showAdminUserOrdersAction): ?>
                             <a class="admin-actions-menu-link" href="<?php echo $escapeAdminUser($userOrdersUrl); ?>">Orders</a>
+                            <?php endif; ?>
+                            <?php if ($showAdminUserInvoicesAction): ?>
                             <a class="admin-actions-menu-link" href="<?php echo $escapeAdminUser($userInvoicesUrl); ?>">Invoices</a>
+                            <?php endif; ?>
+                            <?php if ($showAdminUserEmailAction): ?>
                             <?php if ($userHasEmail): ?>
                               <a class="admin-actions-menu-link" href="mailto:<?php echo $escapeAdminUser($userEmail); ?>">Send Email</a>
                             <?php else: ?>
                               <span class="admin-actions-menu-link is-disabled" aria-disabled="true" title="No email available">Send Email</span>
                             <?php endif; ?>
+                            <?php endif; ?>
+                            <?php if ($showAdminUserSmsAction): ?>
                             <?php if ($userHasPhone): ?>
                               <a class="admin-actions-menu-link" href="<?php echo $escapeAdminUser($userSmsUrl); ?>">Send SMS</a>
                             <?php else: ?>
                               <span class="admin-actions-menu-link is-disabled" aria-disabled="true" title="No phone number available">Send SMS</span>
                             <?php endif; ?>
+                            <?php endif; ?>
+                            <?php if ($showAdminUserDeleteAction): ?>
                             <form class="admin-actions-delete-form" method="POST" action="admin-users.php">
                               <input type="hidden" name="action" value="delete-user">
                               <input type="hidden" name="id" value="<?php echo $escapeAdminUser($userId); ?>">
@@ -547,14 +671,18 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
                               <input type="hidden" name="redirect_country" value="<?php echo $escapeAdminUser($adminUserFilters['country']); ?>">
                               <button class="admin-actions-menu-link is-danger" type="submit" data-admin-delete-user data-user-name="<?php echo $escapeAdminUser($userFullName); ?>">Delete</button>
                             </form>
+                            <?php endif; ?>
                           </div>
                         </div>
+                        <?php else: ?>
+                          <span class="admin-panel-note">Locked</span>
+                        <?php endif; ?>
                       </td>
                     </tr>
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="13" class="admin-empty">No users matched the current search and filters.</td>
+                    <td colspan="<?php echo $escapeAdminUser($adminUserVisibleColumnCount); ?>" class="admin-empty">No users matched the current search and filters.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
@@ -562,10 +690,11 @@ $activeFilterSummary = array_filter($adminUserFilters, static function ($value) 
           </div>
         </article>
       </section>
+      <?php endif; ?>
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-girffon.js?v=20260518r11"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const actionMenus = Array.from(document.querySelectorAll("[data-admin-user-menu]"));

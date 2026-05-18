@@ -65,8 +65,50 @@ if ($adminIdentity === '') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Promotional Debug</title>
-  <link rel="stylesheet" href="/GirffoN/CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="/GirffoN/CSS/admin-girffon.css?v=20260518r11">
   <style>
+    @media (max-width: 1280px) and (min-width: 721px) {
+      .admin-main,
+      .debug-main,
+      .debug-shell,
+      .debug-card,
+      .debug-grid,
+      .table-wrap {
+        min-width: 0;
+      }
+
+      .admin-main,
+      .debug-main {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .debug-shell {
+        max-width: 100%;
+      }
+
+      .admin-topbar {
+        gap: 14px;
+      }
+
+      .admin-topbar > div:first-child {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .admin-topbar-actions {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        margin-left: auto;
+        max-width: none;
+      }
+
+      .table-wrap {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+
     body {
       font-family: Georgia, serif;
       background: #f5f1ea;
@@ -188,6 +230,10 @@ if ($adminIdentity === '') {
       color: #6e5c4a;
       font-size: 0.88rem;
     }
+
+    .admin-nav .admin-nav-link:nth-child(9)::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3.2'/%3E%3Cpath d='M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 1 1-1.7 1.7l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9V19a1.2 1.2 0 1 1-2.4 0v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1 .2l-.2.1a1.2 1.2 0 1 1-1.7-1.7l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6H5a1.2 1.2 0 1 1 0-2.4h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1l-.1-.2a1.2 1.2 0 1 1 1.7-1.7l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9V5a1.2 1.2 0 1 1 2.4 0v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1-.2l.2-.1a1.2 1.2 0 1 1 1.7 1.7l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6H19a1.2 1.2 0 1 1 0 2.4h-.2a1 1 0 0 0-.9.7 1 1 0 0 0 .2 1Z'/%3E%3C/svg%3E");
+    }
   </style>
 </head>
 <body class="admin-page" data-admin-page="promotional-debug">
@@ -209,6 +255,7 @@ if ($adminIdentity === '') {
         <a class="admin-nav-link" href="/GirffoN/admin-users.php" aria-label="Users" title="Users"><span class="admin-nav-link-index">6. </span><span class="admin-nav-link-label">Users</span></a>
         <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter"><span class="admin-nav-link-index">7. </span><span class="admin-nav-link-label">Newsletter</span></a>
         <a class="admin-nav-link" href="/GirffoN/admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders"><span class="admin-nav-link-index">8. </span><span class="admin-nav-link-label">Custom Design Orders</span></a>
+        <a class="admin-nav-link" href="/GirffoN/admin-settings.php" aria-label="Settings" title="Settings"><span class="admin-nav-link-index">9. </span><span class="admin-nav-link-label">Settings</span></a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -363,6 +410,6 @@ if ($adminIdentity === '') {
       </div>
     </main>
   </div>
-  <script src="/GirffoN/JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="/GirffoN/JS/admin-girffon.js?v=20260518r11"></script>
 </body>
 </html>

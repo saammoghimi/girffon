@@ -4,6 +4,14 @@ require_once __DIR__ . "/backend/admin/orders-data.php";
 require_once __DIR__ . "/backend/admin/order-updates-data.php";
 require_once __DIR__ . "/backend/admin/users-data.php";
 
+$adminOrderSettingsFile = __DIR__ . "/backend/admin/order-settings-data.php";
+if (is_file($adminOrderSettingsFile)) {
+  require_once $adminOrderSettingsFile;
+}
+
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+
 $adminSelectedUserId = max(0, (int) ($_GET["user_id"] ?? 0));
 $adminSelectedUser = $adminSelectedUserId > 0 ? girffonAdminFetchUserById($pdo, $adminSelectedUserId) : null;
 $adminOrderFilters = [];
@@ -16,6 +24,52 @@ $adminOrderStatusMessage = trim((string) ($_GET["status"] ?? ""));
 $adminOrderErrorMessage = trim((string) ($_GET["error"] ?? ""));
 $adminOrderStatusOptions = girffonAdminOrderUpdateStatusOptions();
 $adminPaymentStatusOptions = girffonAdminOrderPaymentStatusOptions();
+$adminOrderPreferences = [
+  'show_orders_overview' => true,
+  'show_order_list' => true,
+  'show_customer_column' => true,
+  'show_payment_method_column' => true,
+  'show_payment_status_column' => true,
+  'show_order_status_column' => true,
+  'show_tracking_column' => true,
+  'show_courier_column' => true,
+  'show_eta_column' => true,
+  'show_admin_note_column' => true,
+  'show_created_at_column' => true,
+  'show_save_action' => true,
+  'show_track_action' => true,
+  'show_invoice_action' => true,
+];
+
+if (function_exists('girffonAdminFetchOrderPreferences')) {
+  $adminOrderPreferences = girffonAdminFetchOrderPreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+
+$showAdminOrdersOverview = !empty($adminOrderPreferences['show_orders_overview']);
+$showAdminOrderList = !empty($adminOrderPreferences['show_order_list']);
+$showAdminOrderCustomerColumn = !empty($adminOrderPreferences['show_customer_column']);
+$showAdminOrderPaymentMethodColumn = !empty($adminOrderPreferences['show_payment_method_column']);
+$showAdminOrderPaymentStatusColumn = !empty($adminOrderPreferences['show_payment_status_column']);
+$showAdminOrderStatusColumn = !empty($adminOrderPreferences['show_order_status_column']);
+$showAdminOrderTrackingColumn = !empty($adminOrderPreferences['show_tracking_column']);
+$showAdminOrderCourierColumn = !empty($adminOrderPreferences['show_courier_column']);
+$showAdminOrderEtaColumn = !empty($adminOrderPreferences['show_eta_column']);
+$showAdminOrderAdminNoteColumn = !empty($adminOrderPreferences['show_admin_note_column']);
+$showAdminOrderCreatedAtColumn = !empty($adminOrderPreferences['show_created_at_column']);
+$showAdminOrderSaveAction = !empty($adminOrderPreferences['show_save_action']);
+$showAdminOrderTrackAction = !empty($adminOrderPreferences['show_track_action']);
+$showAdminOrderInvoiceAction = !empty($adminOrderPreferences['show_invoice_action']);
+$adminOrderVisibleColumnCount = 6
+  + ($showAdminOrderCustomerColumn ? 1 : 0)
+  + ($showAdminOrderPaymentMethodColumn ? 1 : 0)
+  + ($showAdminOrderPaymentStatusColumn ? 1 : 0)
+  + ($showAdminOrderStatusColumn ? 1 : 0)
+  + ($showAdminOrderTrackingColumn ? 1 : 0)
+  + ($showAdminOrderCourierColumn ? 1 : 0)
+  + ($showAdminOrderEtaColumn ? 1 : 0)
+  + ($showAdminOrderAdminNoteColumn ? 1 : 0)
+  + ($showAdminOrderCreatedAtColumn ? 1 : 0)
+  + 1;
 $escapeAdminOrder = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 };
@@ -78,53 +132,10 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Orders</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
   <style>
     body.admin-page {
       overflow-x: hidden;
-    }
-
-    .admin-layout {
-      grid-template-columns: 118px minmax(0, 1fr);
-      overflow-x: hidden;
-    }
-
-    .admin-sidebar {
-      overflow: hidden !important;
-    }
-
-    @media (min-width: 1121px) {
-      .admin-layout {
-        display: block;
-      }
-
-      .admin-sidebar {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 118px;
-        height: 100vh;
-        z-index: 30;
-      }
-
-      .admin-main {
-        width: auto;
-        max-width: none;
-        margin-left: 118px;
-      }
-    }
-
-    @media (max-width: 1120px) {
-      .admin-sidebar {
-        overflow: hidden !important;
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .admin-sidebar {
-        overflow: hidden !important;
-      }
     }
 
     .admin-main,
@@ -250,7 +261,7 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
       }
 
       .admin-table {
-        min-width: 700px;
+        min-width: 640px;
       }
 
       .admin-table-wrap {
@@ -289,7 +300,7 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
       }
 
       .admin-table {
-        min-width: 660px;
+        min-width: 600px;
       }
 
       .admin-table-wrap {
@@ -397,8 +408,9 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -419,7 +431,7 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-orders.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
@@ -429,6 +441,7 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
           <p class="admin-inline-note">Showing orders for <?php echo $escapeAdminOrder(trim((string) (($adminSelectedUser["first_name"] ?? "") . " " . ($adminSelectedUser["last_name"] ?? ""))) ?: ($adminSelectedUser["email"] ?? "Selected user")); ?>.</p>
         <?php endif; ?>
 
+        <?php if ($showAdminOrdersOverview): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -441,7 +454,9 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
           </div>
           <div id="adminOrdersStatus" class="admin-feedback" role="status" aria-live="polite"<?php if ($adminOrderErrorMessage): ?> style="color:#9f2f2f;"<?php endif; ?>><?php echo $escapeAdminOrder($adminOrderErrorMessage ?: $adminOrderStatusMessage); ?></div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminOrderList): ?>
         <article class="admin-table-panel">
           <div class="admin-panel-head">
             <div>
@@ -456,19 +471,19 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
                 <tr>
                   <th>Image</th>
                   <th>Order Number</th>
-                  <th>Customer Name</th>
+                  <?php if ($showAdminOrderCustomerColumn): ?><th>Customer Name</th><?php endif; ?>
                   <th>Items</th>
                   <th>Subtotal</th>
                   <th>Shipping</th>
                   <th>Total</th>
-                  <th>Payment Method</th>
-                  <th>Payment Status</th>
-                  <th>Order Status</th>
-                  <th>Tracking Number</th>
-                  <th>Courier</th>
-                  <th>Estimated Delivery</th>
-                  <th>Admin Note</th>
-                  <th>Created At</th>
+                  <?php if ($showAdminOrderPaymentMethodColumn): ?><th>Payment Method</th><?php endif; ?>
+                  <?php if ($showAdminOrderPaymentStatusColumn): ?><th>Payment Status</th><?php endif; ?>
+                  <?php if ($showAdminOrderStatusColumn): ?><th>Order Status</th><?php endif; ?>
+                  <?php if ($showAdminOrderTrackingColumn): ?><th>Tracking Number</th><?php endif; ?>
+                  <?php if ($showAdminOrderCourierColumn): ?><th>Courier</th><?php endif; ?>
+                  <?php if ($showAdminOrderEtaColumn): ?><th>Estimated Delivery</th><?php endif; ?>
+                  <?php if ($showAdminOrderAdminNoteColumn): ?><th>Admin Note</th><?php endif; ?>
+                  <?php if ($showAdminOrderCreatedAtColumn): ?><th>Created At</th><?php endif; ?>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -489,6 +504,7 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
                         <?php endif; ?>
                       </td>
                       <td><strong><?php echo $escapeAdminOrder($order["order_number"] ?? ""); ?></strong></td>
+                      <?php if ($showAdminOrderCustomerColumn): ?>
                       <td>
                         <strong><?php echo $escapeAdminOrder($order["customer_name"] ?? ""); ?></strong>
                         <div><?php echo $escapeAdminOrder($order["customer_email"] ?? "-"); ?></div>
@@ -496,44 +512,78 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
                         <div><?php echo $escapeAdminOrder(trim((string) (($order['address'] ?? '') . ', ' . ($order['city'] ?? '') . ', ' . ($order['country'] ?? '') . ' ' . ($order['postcode'] ?? ''))) ?: '-'); ?></div>
                         <span class="admin-order-customer-note">Order update emails <?php echo $escapeAdminOrder($orderUpdateEmailEnabled ? 'enabled' : 'disabled'); ?></span>
                       </td>
+                      <?php endif; ?>
                       <td><?php echo $escapeAdminOrder((string) ((int) ($order["item_count"] ?? 0))); ?></td>
                       <td><?php echo $escapeAdminOrder($formatAdminOrderCurrency($order["subtotal"] ?? 0)); ?></td>
                       <td><?php echo $escapeAdminOrder($formatAdminOrderCurrency($order["shipping"] ?? 0)); ?></td>
                       <td><?php echo $escapeAdminOrder($formatAdminOrderCurrency($order["total"] ?? 0)); ?></td>
+                      <?php if ($showAdminOrderPaymentMethodColumn): ?>
                       <td><?php echo $formatAdminOrderLabel($order["payment_method"] ?? "bank_transfer"); ?></td>
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderPaymentStatusColumn): ?>
                       <td class="admin-order-update-cell admin-order-update-cell--status">
                         <select name="payment_status" form="<?php echo $escapeAdminOrder($formId); ?>">
                           <?php echo $renderAdminOrderOptionList($adminPaymentStatusOptions, $order["payment_status"] ?? "pending"); ?>
                         </select>
                       </td>
+                      <?php else: ?>
+                      <input type="hidden" name="payment_status" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder(strtolower(trim((string) ($order['payment_status'] ?? 'pending')))); ?>">
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderStatusColumn): ?>
                       <td class="admin-order-update-cell admin-order-update-cell--status">
                         <select name="order_status" form="<?php echo $escapeAdminOrder($formId); ?>">
                           <?php echo $renderAdminOrderOptionList($adminOrderStatusOptions, $order["order_status"] ?? "pending"); ?>
                         </select>
                         <span class="admin-order-update-note">Pending, Paid, Preparing, Printed, Shipped, Delivered, Cancelled.</span>
                       </td>
+                      <?php else: ?>
+                      <input type="hidden" name="order_status" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder(strtolower(trim((string) ($order['order_status'] ?? 'pending')))); ?>">
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderTrackingColumn): ?>
                       <td class="admin-order-update-cell admin-order-update-cell--tracking">
                         <input type="text" name="tracking_number" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($order["tracking_code"] ?? ""); ?>" placeholder="Tracking number">
                       </td>
+                      <?php else: ?>
+                      <input type="hidden" name="tracking_number" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($order['tracking_code'] ?? ''); ?>">
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderCourierColumn): ?>
                       <td class="admin-order-update-cell">
                         <input type="text" name="courier_name" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($order["courier_name"] ?? ""); ?>" placeholder="Courier name">
                       </td>
+                      <?php else: ?>
+                      <input type="hidden" name="courier_name" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($order['courier_name'] ?? ''); ?>">
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderEtaColumn): ?>
                       <td class="admin-order-update-cell">
                         <input type="date" name="estimated_delivery_date" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($formatAdminOrderInputDate($order["estimated_delivery_date"] ?? "")); ?>">
                       </td>
+                      <?php else: ?>
+                      <input type="hidden" name="estimated_delivery_date" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($formatAdminOrderInputDate($order['estimated_delivery_date'] ?? '')); ?>">
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderAdminNoteColumn): ?>
                       <td class="admin-order-update-cell admin-order-update-cell--note">
                         <textarea name="admin_note" form="<?php echo $escapeAdminOrder($formId); ?>" placeholder="Internal note or customer-facing update message"><?php echo $escapeAdminOrder($order["admin_note"] ?? ""); ?></textarea>
                       </td>
-                      <td><?php echo $formatAdminOrderDate($order["created_at"] ?? ""); ?></td>
+                      <?php else: ?>
+                      <input type="hidden" name="admin_note" form="<?php echo $escapeAdminOrder($formId); ?>" value="<?php echo $escapeAdminOrder($order['admin_note'] ?? ''); ?>">
+                      <?php endif; ?>
+                      <?php if ($showAdminOrderCreatedAtColumn): ?><td><?php echo $formatAdminOrderDate($order["created_at"] ?? ""); ?></td><?php endif; ?>
                       <td class="admin-order-update-actions">
                         <div class="admin-order-action-stack">
                           <form id="<?php echo $escapeAdminOrder($formId); ?>" method="post" action="/GirffoN/backend/admin/update-order-status.php">
                             <input type="hidden" name="order_id" value="<?php echo $escapeAdminOrder($order["id"] ?? 0); ?>">
                           </form>
+                          <?php if ($showAdminOrderSaveAction): ?>
                           <button class="admin-button" type="submit" form="<?php echo $escapeAdminOrder($formId); ?>">Save Update</button>
+                          <?php endif; ?>
+                          <?php if ($showAdminOrderTrackAction): ?>
                           <a class="admin-button admin-button-soft" href="<?php echo $escapeAdminOrder($trackOrderUrl); ?>" target="_blank" rel="noopener">Track Order</a>
-                          <?php if ($invoiceUrl !== ""): ?>
+                          <?php endif; ?>
+                          <?php if ($showAdminOrderInvoiceAction && $invoiceUrl !== ""): ?>
                             <a class="admin-button admin-button-soft" href="<?php echo $escapeAdminOrder($invoiceUrl); ?>" target="_blank" rel="noopener">View Invoice</a>
+                          <?php endif; ?>
+                          <?php if (!$showAdminOrderSaveAction && !$showAdminOrderTrackAction && !($showAdminOrderInvoiceAction && $invoiceUrl !== '')): ?>
+                            <span class="admin-panel-note">Locked</span>
                           <?php endif; ?>
                         </div>
                       </td>
@@ -541,17 +591,18 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="16" class="admin-empty">No orders found in the database yet.</td>
+                    <td colspan="<?php echo $escapeAdminOrder($adminOrderVisibleColumnCount); ?>" class="admin-empty">No orders found in the database yet.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
             </table>
           </div>
         </article>
+        <?php endif; ?>
       </section>
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-girffon.js?v=20260518r11"></script>
 </body>
 </html>

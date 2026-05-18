@@ -126,7 +126,9 @@
       return;
     }
 
-    const mobileQuery = window.matchMedia("(max-width: 1024px)");
+    const configuredBreakpoint = Number.parseInt(body.dataset.adminMenuBreakpoint || "1024", 10);
+    const mobileBreakpoint = Number.isFinite(configuredBreakpoint) && configuredBreakpoint > 0 ? configuredBreakpoint : 1024;
+    const mobileQuery = window.matchMedia(`(max-width: ${mobileBreakpoint}px)`);
     let menuToggle = document.querySelector(".admin-mobile-sidebar-toggle");
     let overlay = document.querySelector(".admin-mobile-overlay");
 
@@ -1296,7 +1298,8 @@
     const settingsButtons = document.querySelectorAll("[data-admin-settings]");
     settingsButtons.forEach(function (button) {
       button.addEventListener("click", function () {
-        window.location.href = "admin-settings.php";
+        const target = String(button.getAttribute("data-admin-settings-target") || "").trim();
+        window.location.href = target !== "" ? target : "admin-settings.php";
       });
     });
   }

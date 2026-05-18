@@ -3,12 +3,12 @@
   const DEFAULT_CART_COLOR = cartProductConfig.defaultColorName || "Sun Yellow";
   const DEFAULT_CART_PRODUCT = cartProductConfig.productName || "Custom Product";
   const FALLBACK_CART_TUTORIAL_URL = "https://www.youtube.com/watch?v=d6fYzNGZpFo&t=1s";
-  const SHARED_CART_KEY = "girffon_cart";
   const LAST_CUSTOM_INVOICE_KEY = "girffon_last_custom_invoice";
   const CURRENT_PROJECT_KEY = "cdpCurrentProject";
   const CURRENT_FOLDER_KEY = "cdpCurrentFolder";
   const PROJECT_STORAGE_PREFIX = "cdpProject_";
-  const CART_TEST_URL = "../../CartTest.html";
+  const CUSTOM_ORDER_SUBMIT_URL = "../../backend/custom-design/submit-order.php";
+  const PROFILE_PAGE_URL = "../../ProfilePage.php";
   const CART_STRINGS = {
     us: {
       orderSummary: "Order summary",
@@ -602,24 +602,6 @@
     const lang = resolveCartLang();
     const words = CART_LINE_WORDS[lang] || CART_LINE_WORDS.us;
     return `${count} ${count === 1 ? words.one : words.many}`;
-  }
-
-  function safeReadSharedCart() {
-    try {
-      const raw = localStorage.getItem(SHARED_CART_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (_err) {
-      return [];
-    }
-  }
-
-  function safeWriteSharedCart(value) {
-    try {
-      localStorage.setItem(SHARED_CART_KEY, JSON.stringify(value));
-    } catch (_err) {
-      // Ignore localStorage write failures.
-    }
   }
 
   function slugify(value) {
@@ -1430,45 +1412,6 @@
       elements.payload.value = JSON.stringify(payload, null, 2);
     }
 
-    function buildCartTestItem(snapshot) {
-      const quantity = snapshot.quantity ?? computeOrderQuantity(snapshot.sizeRequests);
-      const sizeSummary = (snapshot.sizeRequests && snapshot.sizeRequests.length)
-        ? snapshot.sizeRequests
-            .map((entry) => `${entry.size}x${entry.quantity}`)
-            .join(", ")
-        : (snapshot.size || "One Size");
-      const colorSummary = (snapshot.sizeRequests && snapshot.sizeRequests.length)
-        ? snapshot.sizeRequests[0].color
-        : (snapshot.color || DEFAULT_CART_COLOR);
-      const numericPrice = Number(snapshot.orderTotal ?? snapshot.total ?? 0) || 0;
-      const generatedCode = generateScanCode(snapshot);
-
-      return {
-        id: `${slugify(snapshot.productName)}-${generatedCode.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-        title: snapshot.productName,
-        name: snapshot.productName,
-        image: snapshot.image,
-        img: snapshot.image,
-        invoiceAttachments: cloneInvoiceAttachments(snapshot.invoiceAttachments),
-        price: numericPrice,
-        priceNumber: numericPrice,
-        color: colorSummary,
-        colorName: colorSummary,
-        size: sizeSummary,
-        qty: quantity,
-        code: generatedCode,
-        view: snapshot.view,
-        invoicePayload: elements.payload?.value || ""
-      };
-    }
-
-    function pushSnapshotToSharedCart(snapshot) {
-      const nextItem = buildCartTestItem(snapshot);
-      const cartItems = safeReadSharedCart();
-      cartItems.push(nextItem);
-      safeWriteSharedCart(cartItems);
-    }
-
     function generateScanCode(snapshot) {
       const stamp = snapshot.generatedAt.getTime().toString(16).toUpperCase();
       const quantity = snapshot.quantity ?? computeOrderQuantity(snapshot.sizeRequests);
@@ -1728,6 +1671,340 @@
       setSizeColorValue(value);
     }
 
+    function readTextResponse(response) {
+      return response.text().then((text) => {
+        let json = null;
+        try {
+          json = text ? JSON.parse(text) : null;
+        } catch (_error) {
+          json = null;
+        }
+
+        return {
+          ok: response.ok,
+          text,
+          json
+        };
+      });
+    }
+
+    function getStoredProjectRecord(projectPath) {
+      if (!projectPath) return null;
+      try {
+        const rawValue = localStorage.getItem(PROJECT_STORAGE_PREFIX + projectPath);
+        if (!rawValue) return null;
+        const parsed = JSON.parse(rawValue);
+        return parsed && typeof parsed === "object" ? parsed : null;
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function getElementStyleValue(element, propertyName) {
+      if (!(element instanceof Element)) return "";
+      const inlineValue = element.style && element.style[propertyName] ? element.style[propertyName] : "";
+      if (inlineValue) return inlineValue;
+      try {
+        return window.getComputedStyle(element)[propertyName] || "";
+      } catch (_error) {
+        return "";
+      }
+    }
+
+    function describeElementPosition(element, fallbackView) {
+      if (!(element instanceof Element)) {
+        return fallbackView ? getViewLabel(fallbackView) : "";
+      }
+      const left = element.style.left || getElementStyleValue(element, "left");
+      const top = element.style.top || getElementStyleValue(element, "top");
+      const view = fallbackView ? getViewLabel(fallbackView) : "";
+      const coords = [left, top].filter(Boolean).join(" / ");
+      return [view, coords].filter(Boolean).join(" - ");
+    }
+
+    function describeElementSize(element) {
+      if (!(element instanceof Element)) return "";
+      const width = element.style.width || getElementStyleValue(element, "width");
+      const height = element.style.height || getElementStyleValue(element, "height");
+      return [width, height].filter(Boolean).join(" x ");
+    }
+
+    function readProjectSelectionInfo(source) {
+      const normalized = String(source || "").trim();
+      if (!normalized) {
+        return { folderName: "", fileName: "", image: "" };
+      }
+
+      try {
+        const withoutQuery = normalized.split("?")[0].split("#")[0];
+        const parts = withoutQuery.split("/").filter(Boolean);
+        const fileName = parts.length ? decodeURIComponent(parts[parts.length - 1]) : "";
+        const folderName = parts.length > 1 ? decodeURIComponent(parts[parts.length - 2]) : "";
+        return {
+          folderName,
+          fileName,
+          image: normalized
+        };
+      } catch (_error) {
+        return { folderName: "", fileName: "", image: normalized };
+      }
+    }
+
+    function buildTextStyleLabel(element) {
+      const fontWeight = getElementStyleValue(element, "fontWeight");
+      const fontStyle = getElementStyleValue(element, "fontStyle");
+      const textDecoration = getElementStyleValue(element, "textDecorationLine") || getElementStyleValue(element, "textDecoration");
+      const parts = [];
+      if (fontWeight && Number(fontWeight) >= 600) parts.push("Bold");
+      if (fontStyle && fontStyle !== "normal") parts.push(capitalize(fontStyle));
+      if (textDecoration && textDecoration !== "none") parts.push(capitalize(textDecoration.replace(/\s+/g, " ")));
+      return parts.join(", ");
+    }
+
+    function serializeRuntimeLayersByView() {
+      const grouped = { front: [], back: [], right: [], left: [] };
+      if (!window.cdpLayers || typeof window.cdpLayers.getLayers !== "function") {
+        return grouped;
+      }
+
+      window.cdpLayers.getLayers().forEach((layer, index) => {
+        if (!layer) return;
+        const type = String(layer.type || "layer").toLowerCase();
+        const view = String(layer.view || "front").toLowerCase();
+        const element = layer.element instanceof Element ? layer.element : null;
+        const imageEl = element && (element.tagName === "IMG" ? element : element.querySelector("img"));
+        const svgEl = element ? element.querySelector("svg") : null;
+        const record = {
+          id: layer.id || `layer-${index + 1}`,
+          type,
+          name: String(layer.name || `${capitalize(type)} layer`),
+          view,
+          position: describeElementPosition(element, view),
+          size: describeElementSize(element),
+          transform: element ? (element.style.transform || "") : ""
+        };
+
+        if (type === "text") {
+          record.text = (layer.textValue || element?.textContent || "").trim();
+          record.fontName = String(layer.font || getElementStyleValue(element, "fontFamily") || "").replace(/['"]/g, "").split(",")[0].trim();
+          record.fontSize = String(layer.fontSize || getElementStyleValue(element, "fontSize") || "");
+          record.color = String(layer.color || getElementStyleValue(element, "color") || "");
+          record.styleLabel = buildTextStyleLabel(element);
+        } else if (type === "flag") {
+          record.flagName = String((imageEl && (imageEl.alt || "")) || layer.name || "").replace(/^Flag:\s*/i, "").trim();
+          record.flagCode = String(layer.code || "").trim().toLowerCase();
+          record.flagImage = imageEl ? (imageEl.currentSrc || imageEl.src || "") : "";
+        } else if (type === "shape") {
+          record.shapeName = String(layer.name || "").replace(/^Shape:\s*/i, "").trim();
+          record.color = String(getElementStyleValue(svgEl || element, "fill") || svgEl?.getAttribute("fill") || element?.dataset?.shapeColor || "");
+        } else if (type === "icon" || type === "emoji") {
+          record.iconName = (element?.textContent || layer.name || "").trim();
+          record.size = String(layer.size || getElementStyleValue(element, "fontSize") || record.size || "");
+        } else if (type === "fill") {
+          record.name = String(layer.name || "Fill");
+          record.value = String(layer.fillColor || element?.dataset?.layerColor || getElementStyleValue(element, "backgroundColor") || "");
+          record.style = "solid";
+        } else if (type === "design") {
+          const selection = readProjectSelectionInfo(imageEl ? (imageEl.currentSrc || imageEl.src || "") : "");
+          record.layerId = layer.id || record.id;
+          record.folderName = selection.folderName;
+          record.fileName = selection.fileName;
+          record.image = selection.image;
+        } else if (type === "upload") {
+          record.uploadName = String(element?.dataset?.uploadName || layer.name || "Uploaded image");
+          record.originalSrc = String(layer.originalSrc || element?.dataset?.originalSrc || imageEl?.dataset?.originalSrc || "");
+          record.optimizedSrc = String(element?.dataset?.optimizedSrc || imageEl?.currentSrc || imageEl?.src || "");
+          record.uploadType = String(element?.dataset?.uploadType || "image/png");
+        }
+
+        if (!grouped[view]) {
+          grouped[view] = [];
+        }
+        grouped[view].push(record);
+      });
+
+      return grouped;
+    }
+
+    function buildCustomOrderItems(layersByView, snapshot) {
+      const items = {
+        text: [],
+        flag: [],
+        shape: [],
+        icon: [],
+        fill: [],
+        size_line: [],
+        add_design: []
+      };
+
+      (Array.isArray(snapshot.sizeRequests) ? snapshot.sizeRequests : []).forEach((entry, index) => {
+        if (!entry || typeof entry !== "object") return;
+        items.size_line.push({
+          id: entry.id || `size-line-${index + 1}`,
+          fit: entry.fit || "",
+          fit_label: entry.fitLabel || entry.fit || "",
+          size: entry.size || "",
+          color: entry.color || snapshot.color || "",
+          quantity: Number(entry.quantity || 0) || 1
+        });
+      });
+
+      Object.values(layersByView || {}).forEach((layers) => {
+        (Array.isArray(layers) ? layers : []).forEach((layer) => {
+          if (!layer || typeof layer !== "object") return;
+          const type = String(layer.type || "").toLowerCase();
+          if (type === "text") {
+            items.text.push({
+              name: layer.name || "Text",
+              label: layer.text || layer.name || "Text",
+              content: layer.text || "",
+              font_name: layer.fontName || "",
+              font_size: layer.fontSize || "",
+              text_color: layer.color || "",
+              text_position: layer.position || layer.view || "",
+              text_style: layer.styleLabel || ""
+            });
+          } else if (type === "flag") {
+            items.flag.push({
+              name: layer.flagName || layer.name || "Flag",
+              code: layer.flagCode || "",
+              image: layer.flagImage || "",
+              position: layer.position || "",
+              size: layer.size || ""
+            });
+          } else if (type === "shape") {
+            items.shape.push({
+              name: layer.shapeName || layer.name || "Shape",
+              color: layer.color || "",
+              position: layer.position || "",
+              size: layer.size || ""
+            });
+          } else if (type === "icon" || type === "emoji") {
+            items.icon.push({
+              name: layer.iconName || layer.name || "Icon",
+              position: layer.position || "",
+              size: layer.size || ""
+            });
+          } else if (type === "fill") {
+            items.fill.push({
+              name: snapshot.color || layer.name || "Fill",
+              value: layer.value || snapshot.color || "",
+              style: layer.style || "solid"
+            });
+          } else if (type === "design") {
+            items.add_design.push({
+              id: layer.layerId || layer.id || "",
+              name: layer.name || "Design",
+              view: layer.view || "",
+              folder_name: layer.folderName || "",
+              file_name: layer.fileName || layer.name || "",
+              image: layer.image || "",
+              position: layer.position || ""
+            });
+          }
+        });
+      });
+
+      return items;
+    }
+
+    async function buildCustomOrderPayload(snapshot) {
+      const currentProjectPath = getCurrentProjectPath();
+      const currentProjectName = (localStorage.getItem(CURRENT_PROJECT_KEY) || "").trim();
+      const currentFolder = (localStorage.getItem(CURRENT_FOLDER_KEY) || "").trim();
+      const storedProject = getStoredProjectRecord(currentProjectPath);
+      const previews = window.cdpCart && typeof window.cdpCart.captureAllScans === "function"
+        ? await window.cdpCart.captureAllScans()
+        : {};
+      const layersByView = serializeRuntimeLayersByView();
+      const uploads = getRuntimeUploadAssets().map((asset) => ({
+        id: asset.id || "",
+        name: asset.name || "Uploaded image",
+        type: asset.type || "image/png",
+        originalSrc: asset.originalSrc || "",
+        optimizedSrc: asset.optimizedSrc || "",
+        view: asset.view || "front"
+      }));
+      const items = buildCustomOrderItems(layersByView, snapshot);
+      const firstDesign = items.add_design[0] || {};
+      const sizeRequests = Array.isArray(snapshot.sizeRequests)
+        ? snapshot.sizeRequests.map((entry, index) => ({
+            id: entry.id || `size-line-${index + 1}`,
+            fit: entry.fit || "",
+            fit_label: entry.fitLabel || entry.fit || "",
+            size: entry.size || "",
+            color: entry.color || snapshot.color || "",
+            quantity: Number(entry.quantity || 0) || 1
+          }))
+        : [];
+      const designSelections = Array.isArray(items.add_design)
+        ? items.add_design.map((entry, index) => ({
+            id: entry.id || `design-${index + 1}`,
+            name: entry.name || entry.file_name || "Design",
+            view: entry.view || "",
+            folder_name: entry.folder_name || "",
+            file_name: entry.file_name || "",
+            image: entry.image || "",
+            position: entry.position || ""
+          }))
+        : [];
+
+      return {
+        snapshot,
+        product_name: snapshot.productName,
+        customer_note: (localStorage.getItem("cdpNote") || "").trim(),
+        note: (localStorage.getItem("cdpNote") || "").trim(),
+        previews,
+        uploads,
+        items,
+        size_requests: sizeRequests,
+        fill: items.fill[0] || { name: snapshot.color || DEFAULT_CART_COLOR, value: snapshot.color || DEFAULT_CART_COLOR, style: "solid" },
+        project: {
+          path: currentProjectPath,
+          name: currentProjectName || storedProject?.projectName || snapshot.productName,
+          folder: currentFolder,
+          file: currentProjectName,
+          lastSaved: localStorage.getItem("cdpLastSaved") || "",
+          hasSavedProject: Boolean(storedProject)
+        },
+        designSelections,
+        designSelection: {
+          folder_name: firstDesign.folder_name || currentFolder,
+          file_name: firstDesign.file_name || currentProjectName,
+          image: firstDesign.image || ""
+        },
+        product: {
+          name: snapshot.productName,
+          size: snapshot.size,
+          color: snapshot.color,
+          view: snapshot.view,
+          quantity: snapshot.quantity,
+          unit_total: snapshot.unitTotal,
+          order_total: snapshot.orderTotal
+        },
+        layersByView
+      };
+    }
+
+    async function submitCustomOrder(payload) {
+      const response = await fetch(CUSTOM_ORDER_SUBMIT_URL, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json; charset=UTF-8"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await readTextResponse(response);
+      if (!result.ok || !result.json || !result.json.success) {
+        throw new Error((result.json && result.json.message) || result.text || "Unable to save custom design order.");
+      }
+
+      return result.json;
+    }
+
     function syncSizeColorInput(snapshot) {
       if (!snapshot) {
         setSizeColorValue(DEFAULT_CART_COLOR, { silent: true });
@@ -1760,15 +2037,33 @@
     }
 
     async function handleSend() {
-      await renderCart();
-      const snapshot = await buildSnapshot();
-      cartState.lastSnapshot = snapshot;
-      persistInvoiceAttachments(snapshot);
-      updateScanArea(snapshot);
-      cachePayload(snapshot);
-      pushSnapshotToSharedCart(snapshot);
-      console.info("cdpCart invoice payload", elements.payload?.value || "");
-      window.location.href = `${CART_TEST_URL}?source=custom-invoice`;
+      if (sendBtn?.disabled) {
+        return;
+      }
+
+      const previousLabel = sendBtn ? sendBtn.innerHTML : "";
+      if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Saving order...</span>';
+      }
+
+      try {
+        await renderCart();
+        const snapshot = await buildSnapshot();
+        const customOrderPayload = await buildCustomOrderPayload(snapshot);
+        cartState.lastSnapshot = snapshot;
+        updateScanArea(snapshot);
+        cachePayload(snapshot);
+        await submitCustomOrder(customOrderPayload);
+        window.location.href = PROFILE_PAGE_URL;
+      } catch (error) {
+        showToast(error && error.message ? error.message : "Unable to save custom design order.");
+      } finally {
+        if (sendBtn) {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML = previousLabel;
+        }
+      }
     }
 
     function cloneInvoiceAttachments(list) {

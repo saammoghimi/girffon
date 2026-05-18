@@ -6,6 +6,11 @@ require_once __DIR__ . "/backend/admin/products-data.php";
 require_once __DIR__ . "/backend/admin/messages-data.php";
 require_once __DIR__ . "/backend/admin/dashboard-data.php";
 
+$adminDashboardSettingsFile = __DIR__ . "/backend/admin/dashboard-settings-data.php";
+if (is_file($adminDashboardSettingsFile)) {
+  require_once $adminDashboardSettingsFile;
+}
+
 $adminProductCount = girffonAdminCountProducts($pdo);
 $adminMemberCount = girffonAdminCountMembers($pdo);
 $adminOrderCount = girffonAdminCountOrders($pdo);
@@ -31,6 +36,29 @@ $adminCurrentAdminProfile = girffonAdminFetchAdminProfile($pdo, $adminCurrentId)
 $adminWeatherCity = trim((string) ($adminCurrentAdminProfile['city'] ?? '')) ?: 'Milan';
 $adminWeatherCountry = trim((string) ($adminCurrentAdminProfile['country'] ?? '')) ?: 'Italy';
 $adminAnalyticsExplorer = girffonAdminFetchAnalyticsExplorer($pdo);
+$adminDashboardPreferences = [
+  'show_summary_cards' => true,
+  'show_recent_activity' => true,
+  'show_login_activity' => true,
+  'show_analytics_explorer' => true,
+  'show_weather_widget' => true,
+  'show_world_clock' => true,
+  'show_active_admins' => true,
+  'show_visitor_analytics' => true,
+];
+
+if (function_exists('girffonAdminFetchDashboardPreferences')) {
+  $adminDashboardPreferences = girffonAdminFetchDashboardPreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+$showAdminSummaryCards = !empty($adminDashboardPreferences['show_summary_cards']);
+$showAdminRecentActivity = !empty($adminDashboardPreferences['show_recent_activity']);
+$showAdminLoginActivity = !empty($adminDashboardPreferences['show_login_activity']);
+$showAdminAnalyticsExplorer = !empty($adminDashboardPreferences['show_analytics_explorer']);
+$showAdminWeatherWidget = !empty($adminDashboardPreferences['show_weather_widget']);
+$showAdminWorldClock = !empty($adminDashboardPreferences['show_world_clock']);
+$showAdminActiveAdmins = !empty($adminDashboardPreferences['show_active_admins']);
+$showAdminVisitorAnalytics = !empty($adminDashboardPreferences['show_visitor_analytics']);
+$showAdminExtrasSection = $showAdminLoginActivity || $showAdminAnalyticsExplorer || $showAdminWeatherWidget || $showAdminWorldClock || $showAdminActiveAdmins || $showAdminVisitorAnalytics;
 $escapeAdminDashboard = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 };
@@ -64,7 +92,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Dashboard</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r7">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
 </head>
 <body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database" data-admin-weather-city="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" data-admin-weather-country="<?php echo $escapeAdminDashboard($adminWeatherCountry); ?>" data-admin-analytics="<?php echo $escapeAdminDashboardJson($adminAnalyticsExplorer); ?>">
   <div class="admin-layout">
@@ -83,8 +111,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -105,11 +134,12 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
 
+      <?php if ($showAdminSummaryCards): ?>
       <section class="admin-card-grid" aria-label="Dashboard totals">
         <article class="admin-stat-card">
           <span>Total Products</span>
@@ -152,7 +182,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <p class="admin-status">Exact latest admin sign-in recorded for this account.</p>
         </article>
       </section>
+      <?php endif; ?>
 
+      <?php if ($showAdminRecentActivity): ?>
       <section class="admin-content-grid">
         <article class="admin-panel">
           <div class="admin-panel-head">
@@ -276,8 +308,11 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           </div>
         </article>
       </section>
+      <?php endif; ?>
 
+      <?php if ($showAdminExtrasSection): ?>
       <section class="admin-dashboard-extras" aria-label="Dashboard insights">
+        <?php if ($showAdminLoginActivity): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -295,7 +330,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             <?php endif; ?>
           </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminAnalyticsExplorer): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -331,7 +368,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             <div class="admin-analytics-chart" data-analytics-chart></div>
           </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminWeatherWidget): ?>
         <article class="admin-panel admin-weather-widget" data-admin-weather-widget>
           <div class="admin-panel-head">
             <div>
@@ -399,7 +438,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             </div>
           </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminWorldClock): ?>
         <article class="admin-panel admin-world-clock-widget" data-admin-world-clock-widget>
           <div class="admin-panel-head">
             <div>
@@ -439,7 +480,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             <div class="admin-world-clock-grid" data-admin-world-clock-grid></div>
           </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminActiveAdmins): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -457,7 +500,9 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             <?php endif; ?>
           </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminVisitorAnalytics): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -480,10 +525,12 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             <?php endif; ?>
           </div>
         </article>
+        <?php endif; ?>
       </section>
+      <?php endif; ?>
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260518r6"></script>
+  <script src="JS/admin-girffon.js?v=20260518r12"></script>
 </body>
 </html>

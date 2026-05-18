@@ -2,6 +2,11 @@
 require_once __DIR__ . "/backend/admin/session.php";
 require_once __DIR__ . "/backend/admin/products-data.php";
 
+$adminProductSettingsFile = __DIR__ . "/backend/admin/product-settings-data.php";
+if (is_file($adminProductSettingsFile)) {
+  require_once $adminProductSettingsFile;
+}
+
 girffonAdminEnsureProductsTable($pdo);
 $adminProducts = girffonAdminFetchProducts($pdo);
 $adminEditingProductId = max(0, (int) ($_GET["edit"] ?? 0));
@@ -79,6 +84,46 @@ $adminProductFormAction = $adminEditingProduct ? 'backend/admin/update-product.p
 $adminProductFormHeading = $adminEditingProduct ? 'Edit Product' : 'Add Product';
 $adminProductFormNote = $adminEditingProduct ? 'Update an existing product entry in MySQL.' : 'Save a new product entry to MySQL.';
 $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Product';
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+$adminProductPreferences = [
+  'show_product_form' => true,
+  'show_product_list' => true,
+  'show_barcode_input' => true,
+  'show_description_input' => true,
+  'show_sale_price_input' => true,
+  'show_image_input' => true,
+  'show_barcode_column' => true,
+  'show_sale_price_column' => true,
+  'show_variant_column' => true,
+  'show_status_column' => true,
+  'show_edit_action' => true,
+  'show_print_action' => true,
+  'show_delete_action' => true,
+];
+
+if (function_exists('girffonAdminFetchProductPreferences')) {
+  $adminProductPreferences = girffonAdminFetchProductPreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+
+$showAdminProductForm = !empty($adminProductPreferences['show_product_form']);
+$showAdminProductList = !empty($adminProductPreferences['show_product_list']);
+$showAdminProductBarcodeInput = !empty($adminProductPreferences['show_barcode_input']);
+$showAdminProductDescriptionInput = !empty($adminProductPreferences['show_description_input']);
+$showAdminProductSalePriceInput = !empty($adminProductPreferences['show_sale_price_input']);
+$showAdminProductImageInput = !empty($adminProductPreferences['show_image_input']);
+$showAdminProductBarcodeColumn = !empty($adminProductPreferences['show_barcode_column']);
+$showAdminProductSalePriceColumn = !empty($adminProductPreferences['show_sale_price_column']);
+$showAdminProductVariantColumn = !empty($adminProductPreferences['show_variant_column']);
+$showAdminProductStatusColumn = !empty($adminProductPreferences['show_status_column']);
+$showAdminProductEditAction = !empty($adminProductPreferences['show_edit_action']);
+$showAdminProductPrintAction = !empty($adminProductPreferences['show_print_action']);
+$showAdminProductDeleteAction = !empty($adminProductPreferences['show_delete_action']);
+$adminProductTableColumnCount = 8
+  + ($showAdminProductBarcodeColumn ? 1 : 0)
+  + ($showAdminProductSalePriceColumn ? 1 : 0)
+  + ($showAdminProductVariantColumn ? 1 : 0)
+  + ($showAdminProductStatusColumn ? 1 : 0);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -86,8 +131,51 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Products</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
   <style>
+    @media (max-width: 1280px) and (min-width: 721px) {
+      .admin-main,
+      .admin-page-section,
+      .admin-page-section > .admin-panel,
+      .admin-page-section > .admin-table-panel,
+      .admin-grid-form,
+      .admin-field,
+      .admin-field-wide,
+      .admin-table-wrap {
+        min-width: 0;
+      }
+
+      .admin-main {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .admin-topbar {
+        gap: 14px;
+      }
+
+      .admin-topbar > div:first-child {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .admin-topbar-actions {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        margin-left: auto;
+        max-width: none;
+      }
+
+      .admin-grid-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .admin-table-wrap {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+
     .admin-product-table-actions {
       display: flex;
       flex-wrap: nowrap;
@@ -388,8 +476,9 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices"><span class="admin-nav-link-index">4. </span><span class="admin-nav-link-label">Invoices</span></a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages"><span class="admin-nav-link-index">5. </span><span class="admin-nav-link-label">Messages</span></a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users"><span class="admin-nav-link-index">6. </span><span class="admin-nav-link-label">Users</span></a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders"><span class="admin-nav-link-index">8. </span><span class="admin-nav-link-label">Custom Design Orders</span></a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings"><span class="admin-nav-link-index">9. </span><span class="admin-nav-link-label">Settings</span></a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -410,12 +499,13 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-products.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
 
       <section class="admin-page-section">
+        <?php if ($showAdminProductForm): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -439,25 +529,31 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
               <input class="admin-input" id="adminProductSku" name="sku" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['sku']); ?>" required>
             </div>
 
+            <?php if ($showAdminProductBarcodeInput): ?>
             <div class="admin-field">
               <label for="adminProductBarcode">Barcode</label>
               <input class="admin-input" id="adminProductBarcode" name="barcode" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['barcode']); ?>" placeholder="Auto from SKU if empty">
             </div>
+            <?php endif; ?>
 
+            <?php if ($showAdminProductDescriptionInput): ?>
             <div class="admin-field admin-field-wide">
               <label for="adminProductDescription">Description</label>
               <textarea class="admin-textarea" id="adminProductDescription" name="description"><?php echo $escapeAdminProduct($adminFormProduct['description']); ?></textarea>
             </div>
+            <?php endif; ?>
 
             <div class="admin-field">
               <label for="adminProductPrice">Price</label>
               <input class="admin-input" id="adminProductPrice" name="price" type="number" step="0.01" min="0" value="<?php echo $escapeAdminProduct($adminFormProduct['price']); ?>" required>
             </div>
 
+            <?php if ($showAdminProductSalePriceInput): ?>
             <div class="admin-field">
               <label for="adminProductSalePrice">Sale Price</label>
               <input class="admin-input" id="adminProductSalePrice" name="sale_price" type="number" step="0.01" min="0" value="<?php echo $escapeAdminProduct($adminFormProduct['sale_price']); ?>">
             </div>
+            <?php endif; ?>
 
             <div class="admin-field">
               <label for="adminProductStock">Stock</label>
@@ -488,10 +584,12 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
               </select>
             </div>
 
+            <?php if ($showAdminProductImageInput): ?>
             <div class="admin-field admin-field-wide">
               <label for="adminProductImage">Image URL / Path</label>
               <input class="admin-input" id="adminProductImage" name="image" type="text" value="<?php echo $escapeAdminProduct($adminFormProduct['image']); ?>" placeholder="https://... or uploads/...">
             </div>
+            <?php endif; ?>
 
             <div class="admin-form-actions">
               <button class="admin-button admin-button-accent" type="submit"><?php echo $escapeAdminProduct($adminProductFormSubmit); ?></button>
@@ -502,7 +600,9 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
             <div id="adminProductsStatus" class="admin-feedback" role="status" aria-live="polite"<?php if ($adminProductErrorMessage): ?> style="color:#9f2f2f;"<?php endif; ?>><?php echo $escapeAdminProduct($adminProductErrorMessage ?: $adminProductStatusMessage); ?></div>
           </form>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminProductList): ?>
         <article class="admin-table-panel">
           <div class="admin-panel-head">
             <div>
@@ -518,12 +618,20 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                   <th>Image</th>
                   <th>Product Name</th>
                   <th>SKU</th>
+                  <?php if ($showAdminProductBarcodeColumn): ?>
                   <th>Barcode</th>
+                  <?php endif; ?>
                   <th>Price</th>
+                  <?php if ($showAdminProductSalePriceColumn): ?>
                   <th>Sale Price</th>
+                  <?php endif; ?>
                   <th>Category</th>
+                  <?php if ($showAdminProductVariantColumn): ?>
                   <th>Size / Color</th>
+                  <?php endif; ?>
+                  <?php if ($showAdminProductStatusColumn): ?>
                   <th>Status</th>
+                  <?php endif; ?>
                   <th>Stock</th>
                   <th>Updated</th>
                   <th>Actions</th>
@@ -545,27 +653,38 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                       <td><?php echo $escapeAdminProduct($product["sku"] ?? "-"); ?></td>
                       <?php $productBarcode = ($product["barcode"] ?? '') !== '' ? $product["barcode"] : girffonAdminBuildProductBarcode((string) ($product["sku"] ?? '')); ?>
                       <?php $productVariant = $formatAdminProductVariant($product["size"] ?? '', $product["color"] ?? ''); ?>
+                      <?php if ($showAdminProductBarcodeColumn): ?>
                       <td class="admin-product-barcode-cell">
                         <div class="admin-product-barcode-box">
                           <svg class="admin-product-barcode-svg" data-product-barcode value="<?php echo $escapeAdminProduct($productBarcode); ?>" aria-label="Barcode for <?php echo $escapeAdminProduct($product["name"] ?? "Product"); ?>"></svg>
                           <span class="admin-product-barcode-value"><?php echo $escapeAdminProduct($productBarcode); ?></span>
                         </div>
                       </td>
+                      <?php endif; ?>
                       <td><?php echo $escapeAdminProduct($formatAdminProductCurrency($product["price"] ?? 0)); ?></td>
+                      <?php if ($showAdminProductSalePriceColumn): ?>
                       <td><?php echo $escapeAdminProduct(($product["sale_price"] ?? null) !== null && $product["sale_price"] !== '' ? $formatAdminProductCurrency($product["sale_price"]) : '-'); ?></td>
+                      <?php endif; ?>
                       <td><?php echo $escapeAdminProduct($product["category"] ?? "-"); ?></td>
+                      <?php if ($showAdminProductVariantColumn): ?>
                       <td><?php echo $escapeAdminProduct($productVariant); ?></td>
+                      <?php endif; ?>
+                      <?php if ($showAdminProductStatusColumn): ?>
                       <td><?php echo $formatAdminProductLabel($product["status"] ?? "active"); ?></td>
+                      <?php endif; ?>
                       <td><?php echo $escapeAdminProduct($product["stock"] ?? 0); ?></td>
                       <td><?php echo $escapeAdminProduct($product["updated_at"] ?? $product["created_at"] ?? '-'); ?></td>
                       <td>
                         <div class="admin-product-table-actions">
+                          <?php if ($showAdminProductEditAction): ?>
                           <a class="admin-button admin-button-soft" href="admin-products.php?edit=<?php echo $escapeAdminProduct($product['id'] ?? 0); ?>" aria-label="Edit product" title="Edit product">
                             <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
                               <path d="M12 6l4 4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                           </a>
+                          <?php endif; ?>
+                          <?php if ($showAdminProductPrintAction): ?>
                           <button class="admin-button admin-button-soft" type="button" data-print-product-barcode data-product-name="<?php echo $escapeAdminProduct($product['name'] ?? 'Product'); ?>" data-product-sku="<?php echo $escapeAdminProduct($product['sku'] ?? '-'); ?>" data-product-barcode-value="<?php echo $escapeAdminProduct($productBarcode); ?>" data-product-price="<?php echo $escapeAdminProduct($formatAdminProductCurrency($product['price'] ?? 0)); ?>" data-product-variant="<?php echo $escapeAdminProduct($productVariant); ?>" aria-label="Print barcode" title="Print barcode">
                             <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M7 8V4h10v4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -574,6 +693,8 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                               <path d="M17 11h.01" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                           </button>
+                          <?php endif; ?>
+                          <?php if ($showAdminProductDeleteAction): ?>
                           <form action="backend/admin/delete-product.php" method="POST" onsubmit="return confirm('Delete this product?');">
                             <input type="hidden" name="id" value="<?php echo $escapeAdminProduct($product['id'] ?? 0); ?>">
                             <button class="admin-button admin-button-danger" type="submit" aria-label="Delete product" title="Delete product">
@@ -585,19 +706,24 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                               </svg>
                             </button>
                           </form>
+                          <?php endif; ?>
+                          <?php if (!$showAdminProductEditAction && !$showAdminProductPrintAction && !$showAdminProductDeleteAction): ?>
+                            <span class="admin-panel-note">Locked</span>
+                          <?php endif; ?>
                         </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="12" class="admin-empty">No products found in the database yet.</td>
+                    <td colspan="<?php echo $escapeAdminProduct($adminProductTableColumnCount); ?>" class="admin-empty">No products found in the database yet.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
             </table>
           </div>
         </article>
+        <?php endif; ?>
       </section>
     </main>
   </div>
@@ -726,6 +852,6 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
       }
     }());
   </script>
-  <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-girffon.js?v=20260518r11"></script>
 </body>
 </html>

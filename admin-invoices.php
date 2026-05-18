@@ -3,6 +3,14 @@ require_once __DIR__ . "/backend/admin/session.php";
 require_once __DIR__ . "/backend/admin/invoices-data.php";
 require_once __DIR__ . "/backend/admin/users-data.php";
 
+$adminInvoiceSettingsFile = __DIR__ . "/backend/admin/invoice-settings-data.php";
+if (is_file($adminInvoiceSettingsFile)) {
+  require_once $adminInvoiceSettingsFile;
+}
+
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+
 $adminSelectedUserId = max(0, (int) ($_GET["user_id"] ?? 0));
 $adminSelectedUser = $adminSelectedUserId > 0 ? girffonAdminFetchUserById($pdo, $adminSelectedUserId) : null;
 $adminInvoiceFilters = [
@@ -16,6 +24,42 @@ if ($adminSelectedUser && !empty($adminSelectedUser["email"])) {
 $adminInvoices = girffonAdminFetchInvoices($pdo, 0, $adminInvoiceFilters);
 $adminInvoiceStatusMessage = trim((string) ($_GET["status"] ?? ""));
 $adminInvoiceErrorMessage = trim((string) ($_GET["error"] ?? ""));
+$adminInvoicePreferences = [
+  'show_add_invoice_panel' => true,
+  'show_search_filters' => true,
+  'show_invoice_list' => true,
+  'show_customer_column' => true,
+  'show_tax_column' => true,
+  'show_shipping_column' => true,
+  'show_status_column' => true,
+  'show_created_at_column' => true,
+  'show_view_action' => true,
+  'show_pdf_action' => true,
+  'show_print_action' => true,
+];
+
+if (function_exists('girffonAdminFetchInvoicePreferences')) {
+  $adminInvoicePreferences = girffonAdminFetchInvoicePreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+
+$showAdminInvoiceAddPanel = !empty($adminInvoicePreferences['show_add_invoice_panel']);
+$showAdminInvoiceSearchFilters = !empty($adminInvoicePreferences['show_search_filters']);
+$showAdminInvoiceList = !empty($adminInvoicePreferences['show_invoice_list']);
+$showAdminInvoiceCustomerColumn = !empty($adminInvoicePreferences['show_customer_column']);
+$showAdminInvoiceTaxColumn = !empty($adminInvoicePreferences['show_tax_column']);
+$showAdminInvoiceShippingColumn = !empty($adminInvoicePreferences['show_shipping_column']);
+$showAdminInvoiceStatusColumn = !empty($adminInvoicePreferences['show_status_column']);
+$showAdminInvoiceCreatedAtColumn = !empty($adminInvoicePreferences['show_created_at_column']);
+$showAdminInvoiceViewAction = !empty($adminInvoicePreferences['show_view_action']);
+$showAdminInvoicePdfAction = !empty($adminInvoicePreferences['show_pdf_action']);
+$showAdminInvoicePrintAction = !empty($adminInvoicePreferences['show_print_action']);
+$adminInvoiceVisibleColumnCount = 5
+  + ($showAdminInvoiceCustomerColumn ? 1 : 0)
+  + ($showAdminInvoiceTaxColumn ? 1 : 0)
+  + ($showAdminInvoiceShippingColumn ? 1 : 0)
+  + ($showAdminInvoiceStatusColumn ? 1 : 0)
+  + ($showAdminInvoiceCreatedAtColumn ? 1 : 0)
+  + 1;
 $escapeAdminInvoice = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 };
@@ -49,8 +93,51 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Invoices</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
   <style>
+    @media (max-width: 1280px) and (min-width: 721px) {
+      .admin-main,
+      .admin-page-section,
+      .admin-page-section > .admin-panel,
+      .admin-page-section > .admin-table-panel,
+      .admin-grid-form,
+      .admin-field,
+      .admin-field-wide,
+      .admin-table-wrap {
+        min-width: 0;
+      }
+
+      .admin-main {
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .admin-topbar {
+        gap: 14px;
+      }
+
+      .admin-topbar > div:first-child {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .admin-topbar-actions {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        margin-left: auto;
+        max-width: none;
+      }
+
+      .admin-grid-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .admin-table-wrap {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+
     @media (max-width: 720px) {
       .admin-topbar {
         flex-direction: column !important;
@@ -222,8 +309,9 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
         <a class="admin-nav-link is-active" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -244,7 +332,7 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-invoices.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
@@ -254,6 +342,7 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
           <p class="admin-inline-note">Showing invoices for <?php echo $escapeAdminInvoice(trim((string) (($adminSelectedUser["first_name"] ?? "") . " " . ($adminSelectedUser["last_name"] ?? ""))) ?: ($adminSelectedUser["email"] ?? "Selected user")); ?>.</p>
         <?php endif; ?>
 
+        <?php if ($showAdminInvoiceAddPanel): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -300,7 +389,9 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
           </form>
           <div id="adminInvoicesStatus" class="admin-feedback" role="status" aria-live="polite"<?php if ($adminInvoiceErrorMessage): ?> style="color:#9f2f2f;"<?php endif; ?>><?php echo $escapeAdminInvoice($adminInvoiceErrorMessage ?: $adminInvoiceStatusMessage); ?></div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminInvoiceSearchFilters): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -331,7 +422,9 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
             </div>
           </form>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminInvoiceList): ?>
         <article class="admin-table-panel">
           <div class="admin-panel-head">
             <div>
@@ -346,13 +439,13 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
                 <tr>
                   <th>Invoice Number</th>
                   <th>Order Number</th>
-                  <th>Customer Name</th>
+                  <?php if ($showAdminInvoiceCustomerColumn): ?><th>Customer Name</th><?php endif; ?>
                   <th>Subtotal</th>
-                  <th>Tax</th>
-                  <th>Shipping</th>
+                  <?php if ($showAdminInvoiceTaxColumn): ?><th>Tax</th><?php endif; ?>
+                  <?php if ($showAdminInvoiceShippingColumn): ?><th>Shipping</th><?php endif; ?>
                   <th>Total</th>
-                  <th>Status</th>
-                  <th>Created At</th>
+                  <?php if ($showAdminInvoiceStatusColumn): ?><th>Status</th><?php endif; ?>
+                  <?php if ($showAdminInvoiceCreatedAtColumn): ?><th>Created At</th><?php endif; ?>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -362,38 +455,50 @@ $adminInvoiceActionStyle = 'display:inline-flex;align-items:center;justify-conte
                     <tr>
                       <td><strong><?php echo $escapeAdminInvoice($invoice["invoice_number"] ?? ""); ?></strong></td>
                       <td><?php echo $escapeAdminInvoice($invoice["order_number"] ?? "-"); ?></td>
+                      <?php if ($showAdminInvoiceCustomerColumn): ?>
                       <td>
                         <strong><?php echo $escapeAdminInvoice($invoice["customer_name"] ?? "-"); ?></strong>
                         <div><?php echo $escapeAdminInvoice($invoice["customer_email"] ?? "-"); ?></div>
                       </td>
+                      <?php endif; ?>
                       <td><?php echo $escapeAdminInvoice($formatAdminInvoiceCurrency($invoice["subtotal"] ?? 0)); ?></td>
-                      <td><?php echo $escapeAdminInvoice($formatAdminInvoiceCurrency($invoice["tax"] ?? 0)); ?></td>
-                      <td><?php echo $escapeAdminInvoice($formatAdminInvoiceCurrency($invoice["shipping"] ?? 0)); ?></td>
+                      <?php if ($showAdminInvoiceTaxColumn): ?><td><?php echo $escapeAdminInvoice($formatAdminInvoiceCurrency($invoice["tax"] ?? 0)); ?></td><?php endif; ?>
+                      <?php if ($showAdminInvoiceShippingColumn): ?><td><?php echo $escapeAdminInvoice($formatAdminInvoiceCurrency($invoice["shipping"] ?? 0)); ?></td><?php endif; ?>
                       <td><?php echo $escapeAdminInvoice($formatAdminInvoiceCurrency(($invoice["total"] ?? $invoice["invoice_total"] ?? 0))); ?></td>
-                      <td><?php echo $formatAdminInvoiceLabel($invoice["status"] ?? $invoice["invoice_status"] ?? "pending"); ?></td>
-                      <td><?php echo $formatAdminInvoiceDate($invoice["created_at"] ?? ""); ?></td>
+                      <?php if ($showAdminInvoiceStatusColumn): ?><td><?php echo $formatAdminInvoiceLabel($invoice["status"] ?? $invoice["invoice_status"] ?? "pending"); ?></td><?php endif; ?>
+                      <?php if ($showAdminInvoiceCreatedAtColumn): ?><td><?php echo $formatAdminInvoiceDate($invoice["created_at"] ?? ""); ?></td><?php endif; ?>
                       <td>
                         <div class="admin-table-actions" style="display:flex;flex-wrap:wrap;gap:8px;">
+                          <?php if ($showAdminInvoiceViewAction): ?>
                           <a class="admin-action-button" style="<?php echo $escapeAdminInvoice($adminInvoiceActionStyle); ?>" href="<?php echo $escapeAdminInvoice($adminInvoiceUrl('invoice-view.php?id=' . rawurlencode((string) ($invoice['id'] ?? '0')) . '&autoprint=0')); ?>" target="_blank" rel="noopener">View</a>
+                          <?php endif; ?>
+                          <?php if ($showAdminInvoicePdfAction): ?>
                           <a class="admin-action-button" style="<?php echo $escapeAdminInvoice($adminInvoiceActionStyle); ?>" href="<?php echo $escapeAdminInvoice($adminInvoiceUrl('invoice-pdf.php?id=' . rawurlencode((string) ($invoice['id'] ?? '0')))); ?>" target="_blank" rel="noopener">PDF</a>
+                          <?php endif; ?>
+                          <?php if ($showAdminInvoicePrintAction): ?>
                           <a class="admin-action-button" style="<?php echo $escapeAdminInvoice($adminInvoiceActionStyle); ?>" href="<?php echo $escapeAdminInvoice($adminInvoiceUrl('invoice-print.php?id=' . rawurlencode((string) ($invoice['id'] ?? '0')))); ?>" target="_blank" rel="noopener">Print</a>
+                          <?php endif; ?>
+                          <?php if (!$showAdminInvoiceViewAction && !$showAdminInvoicePdfAction && !$showAdminInvoicePrintAction): ?>
+                            <span class="admin-panel-note">Locked</span>
+                          <?php endif; ?>
                         </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="10" class="admin-empty">No invoices found in the database yet.</td>
+                    <td colspan="<?php echo $escapeAdminInvoice($adminInvoiceVisibleColumnCount); ?>" class="admin-empty">No invoices found in the database yet.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
             </table>
           </div>
         </article>
+        <?php endif; ?>
       </section>
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-girffon.js?v=20260518r11"></script>
 </body>
 </html>

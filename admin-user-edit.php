@@ -26,7 +26,7 @@ $adminUserFilterOptions = girffonAdminFetchUserFilterOptions($pdo);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin User Edit</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260510r13">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
 </head>
 <body class="admin-page" data-admin-page="users" data-admin-users-source="database">
   <div class="admin-layout">
@@ -46,6 +46,7 @@ $adminUserFilterOptions = girffonAdminFetchUserFilterOptions($pdo);
         <a class="admin-nav-link is-active" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
         <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
       </nav>
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">

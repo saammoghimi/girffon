@@ -1,11 +1,252 @@
-<?php require_once __DIR__ . "/backend/admin/session.php"; ?>
+<?php
+require_once __DIR__ . "/backend/admin/session.php";
+require_once __DIR__ . "/backend/admin/custom-design-orders-data.php";
+
+$customDesignOrders = girffonAdminFetchCustomDesignOrderSummaries($pdo, 120);
+$customDesignOrderStatusCounts = [
+  'new' => 0,
+  'reviewing' => 0,
+  'in_production' => 0,
+  'completed' => 0,
+];
+
+foreach ($customDesignOrders as $customDesignOrder) {
+  $statusKey = strtolower((string) ($customDesignOrder['status'] ?? 'new'));
+  if (isset($customDesignOrderStatusCounts[$statusKey])) {
+    $customDesignOrderStatusCounts[$statusKey]++;
+  }
+}
+
+$escapeCustomOrder = static function ($value) {
+  return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+};
+
+$formatCustomOrderStatus = static function ($value) {
+  return ucwords(str_replace('_', ' ', (string) $value));
+};
+
+$formatCustomOrderDate = static function ($value) {
+  $timestamp = strtotime((string) $value);
+  return $timestamp ? date('d M Y · H:i', $timestamp) : '-';
+};
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Custom Design Orders</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r7">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
+  <style>
+    body.admin-page {
+      overflow-x: hidden;
+    }
+
+    .admin-main,
+    .admin-page-section,
+    .admin-page-section > .admin-panel,
+    .admin-page-section > .admin-table-panel,
+    .admin-table-wrap {
+      min-width: 0;
+    }
+
+    .admin-main {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .admin-table-panel {
+      overflow: hidden;
+    }
+
+    .admin-table-wrap {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable both-edges;
+    }
+
+    .admin-table {
+      width: max-content;
+      min-width: 100%;
+    }
+
+    .admin-custom-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .admin-custom-summary-card {
+      padding: 18px;
+      border-radius: 22px;
+      border: 1px solid rgba(199, 165, 75, 0.15);
+      background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(251,247,239,0.88));
+    }
+
+    .admin-custom-summary-card span {
+      display: block;
+      color: #8a7753;
+      font-size: 0.82rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .admin-custom-summary-card strong {
+      display: block;
+      margin-top: 8px;
+      color: #2b241b;
+      font-size: 1.6rem;
+    }
+
+    .admin-custom-meta {
+      display: grid;
+      gap: 4px;
+    }
+
+    .admin-custom-meta small {
+      color: #7d715f;
+      font-size: 0.85rem;
+    }
+
+    .admin-custom-view-link {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 720px) {
+      .admin-custom-summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-topbar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px;
+      }
+
+      .admin-topbar-actions {
+        width: auto !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+        justify-content: flex-end !important;
+        align-self: flex-end !important;
+        margin-left: auto !important;
+      }
+
+      .admin-topbar-actions .admin-button {
+        position: relative;
+        flex: 0 0 48px;
+        width: 48px !important;
+        min-width: 48px !important;
+        height: 48px;
+        min-height: 48px;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        color: transparent !important;
+        font-size: 0 !important;
+        line-height: 0;
+        overflow: visible;
+        white-space: nowrap;
+      }
+
+      .admin-topbar-actions .admin-button::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 18px 18px;
+      }
+
+      .admin-view-shop-button::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 11.5 12 5l8.5 6.5'/%3E%3Cpath d='M6.5 10.5V19h11v-8.5'/%3E%3Cpath d='M10 19v-4.5h4V19'/%3E%3C/svg%3E");
+      }
+
+      .admin-refresh-button::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 2v6h-6'/%3E%3Cpath d='M3 22v-6h6'/%3E%3Cpath d='M20.49 9A9 9 0 0 0 5.64 5.64L3 8'/%3E%3Cpath d='M3.51 15A9 9 0 0 0 18.36 18.36L21 16'/%3E%3C/svg%3E");
+      }
+
+      .admin-settings-button::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3.1'/%3E%3Cpath d='M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1 1a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9v.3a1.2 1.2 0 0 1-1.2 1.2h-1.4a1.2 1.2 0 0 1-1.2-1.2v-.2a1 1 0 0 0-.7-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1-1a1.2 1.2 0 0 1 0-1.7l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6h-.3A1.2 1.2 0 0 1 3 13.4V12a1.2 1.2 0 0 1 1.2-1.2h.2a1 1 0 0 0 .9-.7 1 1 0 0 0-.2-1.1L5 8.9a1.2 1.2 0 0 1 0-1.7l1-1a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2h.1a1 1 0 0 0 .6-.9v-.3A1.2 1.2 0 0 1 10.8 4h1.4a1.2 1.2 0 0 1 1.2 1.2v.2a1 1 0 0 0 .7.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1 1a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1v.1a1 1 0 0 0 .9.6h.3A1.2 1.2 0 0 1 21 12v1.4a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.4Z'/%3E%3C/svg%3E");
+      }
+
+      .admin-topbar-logout-button::before {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b63a3a' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 6H7.5A1.5 1.5 0 0 0 6 7.5v9A1.5 1.5 0 0 0 7.5 18H10'/%3E%3Cpath d='M14 8l4 4-4 4'/%3E%3Cpath d='M18 12H10'/%3E%3C/svg%3E");
+      }
+    }
+
+    @media (max-width: 520px) {
+      .admin-main,
+      .admin-page-section,
+      .admin-page-section > .admin-panel,
+      .admin-page-section > .admin-table-panel {
+        min-width: 0;
+      }
+
+      .admin-main {
+        overflow-x: hidden;
+      }
+
+      .admin-panel-head h2 {
+        font-size: 1rem;
+      }
+
+      .admin-panel-note,
+      .admin-table td,
+      .admin-table td strong {
+        overflow-wrap: anywhere;
+      }
+
+      .admin-table {
+        min-width: 640px;
+      }
+
+      .admin-table-wrap {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .admin-main {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+      }
+
+      .admin-panel,
+      .admin-table-panel {
+        padding: 14px 12px !important;
+      }
+
+      .admin-topbar-actions {
+        gap: 8px !important;
+      }
+
+      .admin-topbar-actions .admin-button {
+        flex: 0 0 44px;
+        width: 44px !important;
+        min-width: 44px !important;
+        height: 44px;
+        min-height: 44px;
+      }
+
+      .admin-table {
+        min-width: 600px;
+      }
+
+      .admin-table-wrap {
+        border-radius: 16px;
+      }
+    }
+  </style>
 </head>
 <body class="admin-page" data-admin-page="custom-orders">
   <div class="admin-layout">
@@ -26,6 +267,7 @@
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users"><span class="admin-nav-link-index">6. </span><span class="admin-nav-link-label">Users</span></a>
         <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter"><span class="admin-nav-link-index">7. </span><span class="admin-nav-link-label">Newsletter</span></a>
         <a class="admin-nav-link is-active" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders"><span class="admin-nav-link-index">8. </span><span class="admin-nav-link-label">Custom Design Orders</span></a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings"><span class="admin-nav-link-index">9. </span><span class="admin-nav-link-label">Settings</span></a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -56,8 +298,14 @@
           <div class="admin-panel-head">
             <div>
               <h2>Custom Design Orders</h2>
-              <p class="admin-panel-note">Empty admin table ready for custom design orders. Cart and checkout connection are not enabled yet.</p>
+              <p class="admin-panel-note">Standalone intake for custom design review. CartTest and invoice flow are intentionally disconnected here.</p>
             </div>
+          </div>
+          <div class="admin-custom-summary-grid" aria-label="Custom design order summary">
+            <article class="admin-custom-summary-card"><span>Total Orders</span><strong><?php echo $escapeCustomOrder(count($customDesignOrders)); ?></strong></article>
+            <article class="admin-custom-summary-card"><span>New</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['new']); ?></strong></article>
+            <article class="admin-custom-summary-card"><span>Reviewing</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['reviewing']); ?></strong></article>
+            <article class="admin-custom-summary-card"><span>In Production / Completed</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['in_production'] + $customDesignOrderStatusCounts['completed']); ?></strong></article>
           </div>
         </article>
 
@@ -65,7 +313,7 @@
           <div class="admin-panel-head">
             <div>
               <h2>Order List</h2>
-              <p class="admin-panel-note">Incoming custom design orders will appear here after backend integration.</p>
+              <p class="admin-panel-note">Each row is a receiving record for one custom design order. Open View to inspect previews, uploads, text, flag, shapes, icons, fill, and selected design assets.</p>
             </div>
           </div>
 
@@ -76,17 +324,32 @@
                   <th>Order ID</th>
                   <th>Customer</th>
                   <th>Product</th>
-                  <th>Files</th>
-                  <th>Text</th>
+                  <th>Upload Count</th>
+                  <th>Text Count</th>
                   <th>Status</th>
                   <th>Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td colspan="8" class="admin-empty">No custom design orders yet.</td>
-                </tr>
+                <?php foreach ($customDesignOrders as $customDesignOrder): ?>
+                  <?php $viewHref = !empty($customDesignOrder['is_demo']) ? 'admin-custom-order-view.php?demo=1' : 'admin-custom-order-view.php?id=' . urlencode((string) ($customDesignOrder['id'] ?? 0)); ?>
+                  <tr>
+                    <td><strong><?php echo $escapeCustomOrder($customDesignOrder['order_code'] ?? '-'); ?></strong></td>
+                    <td>
+                      <div class="admin-custom-meta">
+                        <strong><?php echo $escapeCustomOrder($customDesignOrder['customer_name'] ?? '-'); ?></strong>
+                        <small><?php echo $escapeCustomOrder($customDesignOrder['customer_email'] ?? '-'); ?></small>
+                      </div>
+                    </td>
+                    <td><?php echo $escapeCustomOrder($customDesignOrder['product_name'] ?? '-'); ?></td>
+                    <td><?php echo $escapeCustomOrder($customDesignOrder['upload_count'] ?? 0); ?></td>
+                    <td><?php echo $escapeCustomOrder($customDesignOrder['text_count'] ?? 0); ?></td>
+                    <td><?php echo $escapeCustomOrder($formatCustomOrderStatus($customDesignOrder['status'] ?? 'new')); ?></td>
+                    <td><?php echo $escapeCustomOrder($formatCustomOrderDate($customDesignOrder['created_at'] ?? '')); ?></td>
+                    <td><a class="admin-button admin-button-soft admin-custom-view-link" href="<?php echo $escapeCustomOrder($viewHref); ?>">View</a></td>
+                  </tr>
+                <?php endforeach; ?>
               </tbody>
             </table>
           </div>
@@ -95,6 +358,6 @@
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260518r6"></script>
+  <script src="JS/admin-girffon.js?v=20260518r11"></script>
 </body>
 </html>

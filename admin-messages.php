@@ -2,6 +2,14 @@
 require_once __DIR__ . "/backend/admin/session.php";
 require_once __DIR__ . "/backend/admin/messages-data.php";
 
+$adminMessageSettingsFile = __DIR__ . "/backend/admin/message-settings-data.php";
+if (is_file($adminMessageSettingsFile)) {
+  require_once $adminMessageSettingsFile;
+}
+
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+
 function girffonAdminMessagesRedirect(string $type, string $message): void
 {
   header("Location: /GirffoN/admin-messages.php?" . $type . "=" . rawurlencode($message));
@@ -40,6 +48,43 @@ foreach ($adminMessages as $adminMessageRow) {
 $adminMessageRead = max(0, $adminMessageTotal - $adminMessageUnread);
 $adminMessageStatusMessage = trim((string) ($_GET["status"] ?? ""));
 $adminMessageErrorMessage = trim((string) ($_GET["error"] ?? ""));
+$adminMessagePreferences = [
+  'show_messages_overview' => true,
+  'show_summary_cards' => true,
+  'show_search_filters' => true,
+  'show_message_list' => true,
+  'show_subject_column' => true,
+  'show_preview_column' => true,
+  'show_status_column' => true,
+  'show_date_column' => true,
+  'show_view_action' => true,
+  'show_mark_read_action' => true,
+  'show_delete_action' => true,
+  'show_contact_tools' => true,
+];
+
+if (function_exists('girffonAdminFetchMessagePreferences')) {
+  $adminMessagePreferences = girffonAdminFetchMessagePreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+
+$showAdminMessagesOverview = !empty($adminMessagePreferences['show_messages_overview']);
+$showAdminMessagesSummaryCards = !empty($adminMessagePreferences['show_summary_cards']);
+$showAdminMessagesSearchFilters = !empty($adminMessagePreferences['show_search_filters']);
+$showAdminMessagesList = !empty($adminMessagePreferences['show_message_list']);
+$showAdminMessagesSubjectColumn = !empty($adminMessagePreferences['show_subject_column']);
+$showAdminMessagesPreviewColumn = !empty($adminMessagePreferences['show_preview_column']);
+$showAdminMessagesStatusColumn = !empty($adminMessagePreferences['show_status_column']);
+$showAdminMessagesDateColumn = !empty($adminMessagePreferences['show_date_column']);
+$showAdminMessagesViewAction = !empty($adminMessagePreferences['show_view_action']);
+$showAdminMessagesMarkReadAction = !empty($adminMessagePreferences['show_mark_read_action']);
+$showAdminMessagesDeleteAction = !empty($adminMessagePreferences['show_delete_action']);
+$showAdminMessagesContactTools = !empty($adminMessagePreferences['show_contact_tools']);
+$adminMessageVisibleColumnCount = 1
+  + ($showAdminMessagesSubjectColumn ? 1 : 0)
+  + ($showAdminMessagesPreviewColumn ? 1 : 0)
+  + ($showAdminMessagesStatusColumn ? 1 : 0)
+  + ($showAdminMessagesDateColumn ? 1 : 0)
+  + 1;
 $escapeAdminMessage = static function ($value) {
   return htmlspecialchars((string) $value, ENT_QUOTES, "UTF-8");
 };
@@ -76,7 +121,7 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Messages</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260511r15">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
   <style>
     .admin-message-summary {
       display: flex;
@@ -557,7 +602,7 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
     }
   </style>
 </head>
-<body class="admin-page" data-admin-page="messages" data-admin-messages-source="database">
+<body class="admin-page" data-admin-page="messages" data-admin-messages-source="database" data-admin-messages-contact-tools="<?php echo $showAdminMessagesContactTools ? 'true' : 'false'; ?>">
   <div class="admin-layout">
     <aside class="admin-sidebar" aria-label="Admin navigation">
       <div class="admin-sidebar-header">
@@ -574,8 +619,9 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
         <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
         <a class="admin-nav-link is-active" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
         <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
+        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
         <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
+        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
       </nav>
 
       <div class="admin-sidebar-footer">
@@ -596,12 +642,13 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-messages.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
 
       <section class="admin-page-section">
+        <?php if ($showAdminMessagesOverview): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -611,13 +658,16 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
           </div>
           <div id="adminMessagesStatus" class="admin-feedback" role="status" aria-live="polite"<?php if ($adminMessageErrorMessage): ?> style="color:#9f2f2f;"<?php endif; ?>><?php echo $escapeAdminMessage($adminMessageErrorMessage ?: $adminMessageStatusMessage); ?></div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showAdminMessagesList): ?>
         <article class="admin-table-panel">
           <div class="admin-panel-head">
             <div>
               <h2>Message List</h2>
               <p class="admin-panel-note">All customer message records in the admin database.</p>
             </div>
+            <?php if ($showAdminMessagesSummaryCards): ?>
             <div class="admin-message-summary" aria-label="Message summary">
               <div class="admin-message-summary-card">
                 <span>Total</span>
@@ -632,8 +682,10 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
                 <strong id="adminMessagesReadCount"><?php echo $escapeAdminMessage((string) $adminMessageRead); ?></strong>
               </div>
             </div>
+            <?php endif; ?>
           </div>
 
+          <?php if ($showAdminMessagesSearchFilters): ?>
           <form id="adminMessagesSearchForm" class="admin-grid-form admin-message-search-form" action="#" method="GET">
             <div class="admin-field admin-field-wide">
               <label for="adminMessageSearchInput">Search</label>
@@ -654,16 +706,17 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
           </form>
 
           <p id="adminMessagesFilterStatus" class="admin-inline-note admin-message-filter-feedback" role="status" aria-live="polite" data-total="<?php echo $escapeAdminMessage((string) $adminMessageTotal); ?>">Showing all <?php echo $escapeAdminMessage((string) $adminMessageTotal); ?> messages.</p>
+          <?php endif; ?>
 
           <div class="admin-table-wrap">
             <table class="admin-table">
               <thead>
                 <tr>
                   <th>Customer</th>
-                  <th>Subject</th>
-                  <th>Message</th>
-                  <th>Status</th>
-                  <th>Date</th>
+                  <?php if ($showAdminMessagesSubjectColumn): ?><th>Subject</th><?php endif; ?>
+                  <?php if ($showAdminMessagesPreviewColumn): ?><th>Message</th><?php endif; ?>
+                  <?php if ($showAdminMessagesStatusColumn): ?><th>Status</th><?php endif; ?>
+                  <?php if ($showAdminMessagesDateColumn): ?><th>Date</th><?php endif; ?>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -702,21 +755,26 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
                           <div class="admin-message-meta"><?php echo $escapeAdminMessage($messagePhone); ?></div>
                         <?php endif; ?>
                       </td>
-                      <td><?php echo $escapeAdminMessage($messageSubject); ?></td>
+                      <?php if ($showAdminMessagesSubjectColumn): ?><td><?php echo $escapeAdminMessage($messageSubject); ?></td><?php endif; ?>
+                      <?php if ($showAdminMessagesPreviewColumn): ?>
                       <td>
                         <div class="admin-message-preview"><?php echo nl2br($formatAdminMessagePreview($messageBody)); ?></div>
                       </td>
-                      <td><?php echo $formatAdminMessageLabel($messageStatus ?: "unread"); ?></td>
-                      <td><?php echo $formatAdminMessageDate($message["created_at"] ?? ""); ?></td>
+                      <?php endif; ?>
+                      <?php if ($showAdminMessagesStatusColumn): ?><td><?php echo $formatAdminMessageLabel($messageStatus ?: "unread"); ?></td><?php endif; ?>
+                      <?php if ($showAdminMessagesDateColumn): ?><td><?php echo $formatAdminMessageDate($message["created_at"] ?? ""); ?></td><?php endif; ?>
                       <td>
                         <div class="admin-table-actions">
                           <div class="admin-message-action-cluster" aria-label="Message actions">
+                            <?php if ($showAdminMessagesViewAction): ?>
                             <button class="admin-action-button admin-message-icon-button" type="button" data-message-view data-action="view-message" aria-label="View message" title="View message">
                               <svg class="admin-message-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
                                 <circle cx="12" cy="12" r="2.5" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></circle>
                               </svg>
                             </button>
+                            <?php endif; ?>
+                            <?php if ($showAdminMessagesMarkReadAction): ?>
                             <form method="POST" action="admin-messages.php" class="admin-message-action-form">
                               <input type="hidden" name="message_id" value="<?php echo $escapeAdminMessage((string) ($message['id'] ?? '0')); ?>">
                               <input type="hidden" name="action" value="mark-read">
@@ -726,6 +784,8 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
                                 </svg>
                               </button>
                             </form>
+                            <?php endif; ?>
+                            <?php if ($showAdminMessagesDeleteAction): ?>
                             <form method="POST" action="admin-messages.php" class="admin-message-action-form" onsubmit="return window.confirm('Delete this message?');">
                               <input type="hidden" name="message_id" value="<?php echo $escapeAdminMessage((string) ($message['id'] ?? '0')); ?>">
                               <input type="hidden" name="action" value="delete-message">
@@ -738,6 +798,10 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
                                 </svg>
                               </button>
                             </form>
+                            <?php endif; ?>
+                            <?php if (!$showAdminMessagesViewAction && !$showAdminMessagesMarkReadAction && !$showAdminMessagesDeleteAction): ?>
+                              <span class="admin-panel-note">Locked</span>
+                            <?php endif; ?>
                           </div>
                         </div>
                       </td>
@@ -745,17 +809,19 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
                   <?php endforeach; ?>
                 <?php else: ?>
                   <tr>
-                    <td colspan="6" class="admin-empty">No messages found in the database yet.</td>
+                    <td colspan="<?php echo $escapeAdminMessage($adminMessageVisibleColumnCount); ?>" class="admin-empty">No messages found in the database yet.</td>
                   </tr>
                 <?php endif; ?>
               </tbody>
             </table>
           </div>
         </article>
+        <?php endif; ?>
       </section>
     </main>
   </div>
 
+  <?php if ($showAdminMessagesViewAction): ?>
   <div id="adminMessageModal" class="admin-modal-shell" hidden>
     <div id="adminMessageModalOverlay" class="admin-modal-overlay"></div>
     <section class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="adminMessageModalTitle">
@@ -796,8 +862,9 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
       </div>
     </section>
   </div>
+  <?php endif; ?>
 
-  <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-girffon.js?v=20260518r11"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       if (document.body.dataset.adminMessagesReady === "true") {
@@ -836,11 +903,12 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
       let currentModalPhone = "";
       let currentModalSubject = "";
 
-      if (!tableBody || !searchInput || !statusFilter || !modal || !overlay || !closeButton) {
+      if (!tableBody || !modal || !overlay || !closeButton) {
         return;
       }
 
       const rows = Array.from(tableBody.querySelectorAll("tr[data-message-search]"));
+      const filtersEnabled = !!(form && searchInput && statusFilter && feedback && totalNode && unreadNode && readNode);
 
       const getValue = function (value) {
         const text = String(value || "").trim();
@@ -890,6 +958,9 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
       };
 
       const applyFilters = function () {
+        if (!filtersEnabled) {
+          return;
+        }
         const query = String(searchInput.value || "").trim().toLowerCase();
         const status = String(statusFilter.value || "all").trim().toLowerCase();
         let visibleTotal = 0;
@@ -957,50 +1028,59 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
             : getValue(row.dataset.messageName) + " Message";
         }
 
-        detailFields.emailLink.href = buildMailtoHref(currentModalEmail, currentModalSubject);
-        detailFields.emailLink.classList.toggle("admin-button-disabled", !currentModalEmail);
-        detailFields.emailLink.setAttribute("aria-disabled", currentModalEmail ? "false" : "true");
-        if (currentModalEmail) {
-          detailFields.emailLink.removeAttribute("tabindex");
-        } else {
-          detailFields.emailLink.setAttribute("tabindex", "-1");
-        }
+        if (detailFields.emailLink && detailFields.phoneLink) {
+          const contactToolsEnabled = document.body.dataset.adminMessagesContactTools !== "false";
 
-        detailFields.phoneLink.href = buildTelHref(currentModalPhone);
-        detailFields.phoneLink.classList.toggle("admin-button-disabled", !currentModalPhone);
-        detailFields.phoneLink.setAttribute("aria-disabled", currentModalPhone ? "false" : "true");
-        if (currentModalPhone) {
-          detailFields.phoneLink.removeAttribute("tabindex");
-        } else {
-          detailFields.phoneLink.setAttribute("tabindex", "-1");
+          detailFields.emailLink.hidden = !contactToolsEnabled;
+          detailFields.phoneLink.hidden = !contactToolsEnabled;
+
+          detailFields.emailLink.href = buildMailtoHref(currentModalEmail, currentModalSubject);
+          detailFields.emailLink.classList.toggle("admin-button-disabled", !currentModalEmail || !contactToolsEnabled);
+          detailFields.emailLink.setAttribute("aria-disabled", currentModalEmail && contactToolsEnabled ? "false" : "true");
+          if (currentModalEmail && contactToolsEnabled) {
+            detailFields.emailLink.removeAttribute("tabindex");
+          } else {
+            detailFields.emailLink.setAttribute("tabindex", "-1");
+          }
+
+          detailFields.phoneLink.href = buildTelHref(currentModalPhone);
+          detailFields.phoneLink.classList.toggle("admin-button-disabled", !currentModalPhone || !contactToolsEnabled);
+          detailFields.phoneLink.setAttribute("aria-disabled", currentModalPhone && contactToolsEnabled ? "false" : "true");
+          if (currentModalPhone && contactToolsEnabled) {
+            detailFields.phoneLink.removeAttribute("tabindex");
+          } else {
+            detailFields.phoneLink.setAttribute("tabindex", "-1");
+          }
         }
 
         modal.hidden = false;
       };
 
-      if (form) {
+      if (filtersEnabled && form) {
         form.addEventListener("submit", function (event) {
           event.preventDefault();
           applyFilters();
         });
       }
 
-      searchInput.addEventListener("input", applyFilters);
-      searchInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          applyFilters();
-        }
-      });
+      if (filtersEnabled && searchInput) {
+        searchInput.addEventListener("input", applyFilters);
+        searchInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            applyFilters();
+          }
+        });
+      }
 
-      if (searchButton) {
+      if (filtersEnabled && searchButton) {
         searchButton.addEventListener("click", function (event) {
           event.preventDefault();
           applyFilters();
         });
       }
 
-      if (resetButton) {
+      if (filtersEnabled && resetButton) {
         resetButton.addEventListener("click", function () {
           searchInput.value = "";
           statusFilter.value = "all";
@@ -1009,29 +1089,33 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
         });
       }
 
-      statusFilter.addEventListener("change", applyFilters);
+      if (filtersEnabled && statusFilter) {
+        statusFilter.addEventListener("change", applyFilters);
+      }
 
-      detailFields.emailLink.addEventListener("click", function (event) {
-        event.preventDefault();
-        if (!currentModalEmail) {
+      if (detailFields.emailLink) {
+        detailFields.emailLink.addEventListener("click", function (event) {
           event.preventDefault();
-          window.alert("Email not available");
-          return;
-        }
+          if (!currentModalEmail || document.body.dataset.adminMessagesContactTools === "false") {
+            window.alert("Email not available");
+            return;
+          }
 
-        window.location.href = buildMailtoHref(currentModalEmail, currentModalSubject);
-      });
+          window.location.href = buildMailtoHref(currentModalEmail, currentModalSubject);
+        });
+      }
 
-      detailFields.phoneLink.addEventListener("click", function (event) {
-        event.preventDefault();
-        if (!currentModalPhone) {
+      if (detailFields.phoneLink) {
+        detailFields.phoneLink.addEventListener("click", function (event) {
           event.preventDefault();
-          window.alert("Phone not available");
-          return;
-        }
+          if (!currentModalPhone || document.body.dataset.adminMessagesContactTools === "false") {
+            window.alert("Phone not available");
+            return;
+          }
 
-        window.location.href = buildTelHref(currentModalPhone);
-      });
+          window.location.href = buildTelHref(currentModalPhone);
+        });
+      }
 
       document.addEventListener("click", function (event) {
         const viewButton = event.target.closest("[data-message-view]");
@@ -1054,7 +1138,9 @@ $formatAdminMessageContactValue = static function ($value) use ($escapeAdminMess
         }
       });
 
-      applyFilters();
+      if (filtersEnabled) {
+        applyFilters();
+      }
     });
   </script>
 </body>
