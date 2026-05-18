@@ -135,6 +135,50 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
       color: #a63a31;
     }
 
+    .admin-product-barcode-cell {
+      min-width: 170px;
+    }
+
+    .admin-product-barcode-box {
+      display: grid;
+      gap: 6px;
+      justify-items: start;
+      min-width: 140px;
+    }
+
+    .admin-product-barcode-svg {
+      width: 148px;
+      height: 46px;
+      display: block;
+      background: #fff;
+    }
+
+    .admin-product-barcode-value {
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      color: #5b5142;
+      font-family: var(--admin-font-display);
+    }
+
+    .admin-product-print-label {
+      width: 360px;
+      padding: 18px 20px;
+      color: #1f1a14;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    .admin-product-print-label h1 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+    }
+
+    .admin-product-print-meta {
+      display: grid;
+      gap: 4px;
+      margin-top: 12px;
+      font-size: 0.92rem;
+    }
+
     @media (max-width: 768px) {
       .admin-product-table-actions {
         flex-wrap: wrap;
@@ -498,11 +542,18 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                       </td>
                       <td><strong><?php echo $escapeAdminProduct($product["name"] ?? ""); ?></strong></td>
                       <td><?php echo $escapeAdminProduct($product["sku"] ?? "-"); ?></td>
-                      <td><?php echo $escapeAdminProduct(($product["barcode"] ?? '') !== '' ? $product["barcode"] : girffonAdminBuildProductBarcode((string) ($product["sku"] ?? ''))); ?></td>
+                      <?php $productBarcode = ($product["barcode"] ?? '') !== '' ? $product["barcode"] : girffonAdminBuildProductBarcode((string) ($product["sku"] ?? '')); ?>
+                      <?php $productVariant = $formatAdminProductVariant($product["size"] ?? '', $product["color"] ?? ''); ?>
+                      <td class="admin-product-barcode-cell">
+                        <div class="admin-product-barcode-box">
+                          <svg class="admin-product-barcode-svg" data-product-barcode value="<?php echo $escapeAdminProduct($productBarcode); ?>" aria-label="Barcode for <?php echo $escapeAdminProduct($product["name"] ?? "Product"); ?>"></svg>
+                          <span class="admin-product-barcode-value"><?php echo $escapeAdminProduct($productBarcode); ?></span>
+                        </div>
+                      </td>
                       <td><?php echo $escapeAdminProduct($formatAdminProductCurrency($product["price"] ?? 0)); ?></td>
                       <td><?php echo $escapeAdminProduct(($product["sale_price"] ?? null) !== null && $product["sale_price"] !== '' ? $formatAdminProductCurrency($product["sale_price"]) : '-'); ?></td>
                       <td><?php echo $escapeAdminProduct($product["category"] ?? "-"); ?></td>
-                      <td><?php echo $escapeAdminProduct($formatAdminProductVariant($product["size"] ?? '', $product["color"] ?? '')); ?></td>
+                      <td><?php echo $escapeAdminProduct($productVariant); ?></td>
                       <td><?php echo $formatAdminProductLabel($product["status"] ?? "active"); ?></td>
                       <td><?php echo $escapeAdminProduct($product["stock"] ?? 0); ?></td>
                       <td><?php echo $escapeAdminProduct($product["updated_at"] ?? $product["created_at"] ?? '-'); ?></td>
@@ -514,6 +565,14 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
                               <path d="M12 6l4 4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
                           </a>
+                          <button class="admin-button admin-button-soft" type="button" data-print-product-barcode data-product-name="<?php echo $escapeAdminProduct($product['name'] ?? 'Product'); ?>" data-product-sku="<?php echo $escapeAdminProduct($product['sku'] ?? '-'); ?>" data-product-barcode-value="<?php echo $escapeAdminProduct($productBarcode); ?>" data-product-price="<?php echo $escapeAdminProduct($formatAdminProductCurrency($product['price'] ?? 0)); ?>" data-product-variant="<?php echo $escapeAdminProduct($productVariant); ?>" aria-label="Print barcode" title="Print barcode">
+                            <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M7 8V4h10v4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                              <path d="M6 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                              <path d="M7 14h10v6H7z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                              <path d="M17 11h.01" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                            </svg>
+                          </button>
                           <form action="backend/admin/delete-product.php" method="POST" onsubmit="return confirm('Delete this product?');">
                             <input type="hidden" name="id" value="<?php echo $escapeAdminProduct($product['id'] ?? 0); ?>">
                             <button class="admin-button admin-button-danger" type="submit" aria-label="Delete product" title="Delete product">
@@ -542,6 +601,130 @@ $adminProductFormSubmit = $adminEditingProduct ? 'Update Product' : 'Save Produc
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script>
+    (function () {
+      const code39Patterns = {
+        '0': 'nnnwwnwnn', '1': 'wnnwnnnnw', '2': 'nnwwnnnnw', '3': 'wnwwnnnnn', '4': 'nnnwwnnnw',
+        '5': 'wnnwwnnnn', '6': 'nnwwwnnnn', '7': 'nnnwnnwnw', '8': 'wnnwnnwnn', '9': 'nnwwnnwnn',
+        'A': 'wnnnnwnnw', 'B': 'nnwnnwnnw', 'C': 'wnwnnwnnn', 'D': 'nnnnwwnnw', 'E': 'wnnnwwnnn',
+        'F': 'nnwnwwnnn', 'G': 'nnnnnwwnw', 'H': 'wnnnnwwnn', 'I': 'nnwnnwwnn', 'J': 'nnnnwwwnn',
+        'K': 'wnnnnnnww', 'L': 'nnwnnnnww', 'M': 'wnwnnnnwn', 'N': 'nnnnwnnww', 'O': 'wnnnwnnwn',
+        'P': 'nnwnwnnwn', 'Q': 'nnnnnnwww', 'R': 'wnnnnnwwn', 'S': 'nnwnnnwwn', 'T': 'nnnnwnwwn',
+        'U': 'wwnnnnnnw', 'V': 'nwwnnnnnw', 'W': 'wwwnnnnnn', 'X': 'nwnnwnnnw', 'Y': 'wwnnwnnnn',
+        'Z': 'nwwnwnnnn', '-': 'nwnnnnwnw', '.': 'wwnnnnwnn', ' ': 'nwwnnnwnn', '$': 'nwnwnwnnn',
+        '/': 'nwnwnnnwn', '+': 'nwnnnwnwn', '%': 'nnnwnwnwn', '*': 'nwnnwnwnn'
+      };
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function normalizeBarcodeValue(value) {
+        return String(value || '').toUpperCase().replace(/[^0-9A-Z\-\.\ $\/\+%]/g, '');
+      }
+
+      function renderCode39Fallback(svg, rawValue) {
+        if (!svg) {
+          return;
+        }
+
+        const value = normalizeBarcodeValue(rawValue);
+        const encoded = '*' + value + '*';
+        const barHeight = 34;
+        const quietZone = 10;
+        const narrow = 2;
+        const wide = 4;
+        let x = quietZone;
+        let bars = '';
+
+        for (let index = 0; index < encoded.length; index += 1) {
+          const symbol = encoded.charAt(index);
+          const pattern = code39Patterns[symbol] || code39Patterns['*'];
+          for (let step = 0; step < pattern.length; step += 1) {
+            const width = pattern.charAt(step) === 'w' ? wide : narrow;
+            if (step % 2 === 0) {
+              bars += '<rect x="' + x + '" y="4" width="' + width + '" height="' + barHeight + '" fill="#1f1a14"></rect>';
+            }
+            x += width;
+          }
+          x += narrow;
+        }
+
+        const totalWidth = x + quietZone;
+        svg.setAttribute('viewBox', '0 0 ' + totalWidth + ' 46');
+        svg.innerHTML = bars + '<text x="' + (totalWidth / 2) + '" y="44" text-anchor="middle" font-size="7.5" letter-spacing="1.2" fill="#1f1a14">' + escapeHtml(value) + '</text>';
+      }
+
+      function renderProductBarcode(svg) {
+        const value = normalizeBarcodeValue(svg && svg.getAttribute('value'));
+        if (!value) {
+          return;
+        }
+
+        if (window.JsBarcode) {
+          window.JsBarcode(svg, value, {
+            format: 'CODE128',
+            displayValue: false,
+            margin: 0,
+            width: 1.5,
+            height: 38,
+            background: '#ffffff',
+            lineColor: '#1f1a14'
+          });
+          return;
+        }
+
+        renderCode39Fallback(svg, value);
+      }
+
+      function renderAllProductBarcodes(root) {
+        Array.from((root || document).querySelectorAll('[data-product-barcode]')).forEach(renderProductBarcode);
+      }
+
+      function openPrintLabel(button) {
+        const name = button.getAttribute('data-product-name') || 'Product';
+        const sku = button.getAttribute('data-product-sku') || '-';
+        const barcode = button.getAttribute('data-product-barcode-value') || sku;
+        const price = button.getAttribute('data-product-price') || '-';
+        const variant = button.getAttribute('data-product-variant') || '- / -';
+        const row = button.closest('tr');
+        const barcodeSvg = row ? row.querySelector('[data-product-barcode]') : null;
+        const barcodeMarkup = barcodeSvg ? barcodeSvg.outerHTML : '';
+        const printWindow = window.open('', '_blank', 'width=460,height=620');
+
+        if (!printWindow) {
+          return;
+        }
+
+        printWindow.document.open();
+        printWindow.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Print Barcode</title><style>body{margin:0;padding:24px;background:#fff;color:#1f1a14;font-family:Georgia,"Times New Roman",serif}.admin-product-print-label{width:360px;padding:18px 20px;border:1px solid #d8c7a1}.admin-product-print-label h1{margin:0 0 8px;font-size:1.1rem}.admin-product-print-barcode{margin:14px 0 8px}.admin-product-print-barcode svg{width:100%;height:86px;display:block}.admin-product-print-meta{display:grid;gap:4px;font-size:.92rem}.admin-product-print-meta strong{display:inline-block;min-width:56px}@media print{body{padding:0}.admin-product-print-label{border:0;width:auto}}</style></head><body><div class="admin-product-print-label"><h1>' + escapeHtml(name) + '</h1><div class="admin-product-print-barcode">' + barcodeMarkup + '</div><div class="admin-product-print-meta"><div><strong>SKU:</strong> ' + escapeHtml(sku) + '</div><div><strong>Barcode:</strong> ' + escapeHtml(barcode) + '</div><div><strong>Price:</strong> ' + escapeHtml(price) + '</div><div><strong>Variant:</strong> ' + escapeHtml(variant) + '</div></div></div><script>window.onload=function(){window.print();};<\/script></body></html>');
+        printWindow.document.close();
+      }
+
+      document.addEventListener('click', function (event) {
+        const button = event.target.closest('[data-print-product-barcode]');
+        if (!button) {
+          return;
+        }
+
+        openPrintLabel(button);
+      });
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function () {
+          renderAllProductBarcodes(document);
+        });
+      } else {
+        renderAllProductBarcodes(document);
+      }
+    }());
+  </script>
   <script src="JS/admin-girffon.js?v=20260505r5"></script>
 </body>
 </html>
