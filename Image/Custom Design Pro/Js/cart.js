@@ -1913,9 +1913,7 @@
       const currentProjectName = (localStorage.getItem(CURRENT_PROJECT_KEY) || "").trim();
       const currentFolder = (localStorage.getItem(CURRENT_FOLDER_KEY) || "").trim();
       const storedProject = getStoredProjectRecord(currentProjectPath);
-      const previews = window.cdpCart && typeof window.cdpCart.captureAllScans === "function"
-        ? await window.cdpCart.captureAllScans()
-        : {};
+      const previews = await captureAllViewPreviews();
       const layersByView = serializeRuntimeLayersByView();
       const uploads = getRuntimeUploadAssets().map((asset) => ({
         id: asset.id || "",
@@ -2142,6 +2140,41 @@
       return match ? match[1] : "image/png";
     }
 
+    function getCurrentVisibleView() {
+      return String(
+        document.getElementById("cdpShirtImage")?.dataset.view
+          || document.querySelector(".cdp-view-btn.cdp-view-btn--active")?.dataset.view
+          || window.cdpState?.currentView
+          || "front"
+      ).toLowerCase();
+    }
+
+    function waitForPreviewFrame() {
+      return new Promise((resolve) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(resolve);
+        });
+      });
+    }
+
+    async function switchPreviewView(view) {
+      const normalizedView = String(view || "").trim().toLowerCase();
+      if (!normalizedView) {
+        await waitForPreviewFrame();
+        return getCurrentVisibleView();
+      }
+
+      if (getCurrentVisibleView() !== normalizedView) {
+        const trigger = document.querySelector(`.cdp-view-btn[data-view="${normalizedView}"]`);
+        if (trigger instanceof HTMLElement) {
+          trigger.click();
+        }
+      }
+
+      await waitForPreviewFrame();
+      return getCurrentVisibleView();
+    }
+
     function captureScanBoxPreview(view = "") {
       return renderPrintBoxToDataUrl(getPreviewBox(view), {
         backgroundColor: "#ffffff",
@@ -2150,6 +2183,22 @@
         frameWidth: 2,
         frameDash: [8, 6]
       });
+    }
+
+    async function captureAllViewPreviews() {
+      const originalView = getCurrentVisibleView();
+      const previews = {};
+
+      try {
+        for (const view of VIEW_ORDER) {
+          await switchPreviewView(view);
+          previews[view] = await captureScanBoxPreview();
+        }
+      } finally {
+        await switchPreviewView(originalView);
+      }
+
+      return previews;
     }
 
     async function buildRuntimeInvoiceAttachments(snapshotMeta) {
@@ -2648,16 +2697,7 @@
       },
       capturePreview: () => captureComposedPreview(),
       captureScan: (view) => captureScanBoxPreview(view),
-      captureAllScans: async () => {
-        const scans = {};
-        for (const view of VIEW_ORDER) {
-          const dataUrl = await captureScanBoxPreview(view);
-          if (dataUrl) {
-            scans[view] = dataUrl;
-          }
-        }
-        return scans;
-      },
+      captureAllScans: () => captureAllViewPreviews(),
       getSnapshot: () => cartState.lastSnapshot,
       getInvoiceAttachments: () => cloneInvoiceAttachments(cartState.lastSnapshot?.invoiceAttachments || resolveStoredInvoiceAttachments()),
       send: () => handleSend()
