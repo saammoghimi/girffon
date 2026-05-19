@@ -5,6 +5,7 @@ require_once __DIR__ . "/backend/admin/invoices-data.php";
 require_once __DIR__ . "/backend/admin/products-data.php";
 require_once __DIR__ . "/backend/admin/messages-data.php";
 require_once __DIR__ . "/backend/admin/dashboard-data.php";
+require_once __DIR__ . "/backend/admin/custom-design-orders-data.php";
 
 $adminDashboardSettingsFile = __DIR__ . "/backend/admin/dashboard-settings-data.php";
 if (is_file($adminDashboardSettingsFile)) {
@@ -22,6 +23,18 @@ $adminRecentMessages = girffonAdminFetchMessages($pdo, 4);
 $adminRecentOrders = girffonAdminFetchOrders($pdo, 4);
 $adminTodayOrders = girffonAdminFetchTodayOrders($pdo, 4);
 $adminRecentInvoices = girffonAdminFetchInvoices($pdo, 4);
+$adminPaidCustomDesignCount = girffonAdminCountCustomDesignOrders($pdo, ['payment_status' => 'paid']);
+$adminPendingCustomDesignCount = girffonAdminCountCustomDesignOrders($pdo, ['statuses' => ['pending_payment']]);
+$adminCustomDesignRevenueThisMonth = girffonAdminSumCustomDesignRevenue($pdo, [
+  'payment_status' => 'paid',
+  'paid_after' => date('Y-m-01 00:00:00'),
+]);
+$adminRecentPaidCustomDesignOrders = array_values(array_filter(
+  girffonAdminFetchCustomDesignOrderSummaries($pdo, 4, ['payment_status' => 'paid']),
+  static function (array $row): bool {
+    return empty($row['is_demo']);
+  }
+));
 $adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
 $adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
 girffonAdminTrackDashboardVisit($adminCurrentId, $adminCurrentUsername);
@@ -177,6 +190,16 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <p class="admin-status">Gross order revenue booked this month.</p>
         </article>
         <article class="admin-stat-card">
+          <span>Custom Design Paid</span>
+          <strong id="adminPaidCustomDesignOrders"><?php echo $escapeAdminDashboard($adminPaidCustomDesignCount); ?></strong>
+          <p class="admin-status">Paid custom design orders now waiting in review.</p>
+        </article>
+        <article class="admin-stat-card">
+          <span>Custom Design Revenue</span>
+          <strong id="adminCustomDesignRevenueThisMonth"><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($adminCustomDesignRevenueThisMonth)); ?></strong>
+          <p class="admin-status">Paid custom design revenue booked this month.</p>
+        </article>
+        <article class="admin-stat-card">
           <span>Last Login Time</span>
           <strong id="adminLastLoginTime"><?php echo $escapeAdminDashboard($adminLastLoginTime !== '' ? date('Y-m-d H:i', strtotime($adminLastLoginTime)) : 'No data'); ?></strong>
           <p class="admin-status">Exact latest admin sign-in recorded for this account.</p>
@@ -304,6 +327,24 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No invoices yet.</p>
+            <?php endif; ?>
+          </div>
+        </article>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Paid Custom Design Orders</h2>
+              <p class="admin-panel-note">Custom design payments that were completed and moved into the paid review queue.</p>
+            </div>
+          </div>
+          <div class="admin-mini-list">
+            <?php if ($adminRecentPaidCustomDesignOrders): ?>
+              <?php foreach ($adminRecentPaidCustomDesignOrders as $customOrder): ?>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($customOrder['order_code'] ?? '') . ' - ' . ($customOrder['customer_name'] ?? '')); ?><br><small><?php echo $escapeAdminDashboard($customOrder['product_name'] ?? 'Custom Product'); ?></small></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($customOrder['order_total'] ?? 0)); ?><br><small><?php echo $formatAdminDashboardLabel($customOrder['status'] ?? 'paid_review'); ?></small></strong></div>
+              <?php endforeach; ?>
+            <?php else: ?>
+              <p class="admin-empty">No paid custom design orders yet.</p>
             <?php endif; ?>
           </div>
         </article>

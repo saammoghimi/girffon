@@ -3,7 +3,32 @@ require_once __DIR__ . '/../config/database.php';
 
 function girffonAdminCustomDesignOrderStatuses(): array
 {
-    return ['new', 'pending_payment', 'paid', 'paid_reviewing', 'reviewing', 'approved', 'rejected', 'in_production', 'completed'];
+    return ['new', 'pending_payment', 'paid', 'paid_review', 'paid_reviewing', 'reviewing', 'approved', 'rejected', 'in_production', 'completed'];
+}
+
+function girffonAdminCustomDesignTableColumns(PDO $pdo, string $table): array
+{
+    static $cache = [];
+
+    if (isset($cache[$table])) {
+        return $cache[$table];
+    }
+
+    $cache[$table] = [];
+
+    try {
+        $statement = $pdo->query('SHOW COLUMNS FROM `' . str_replace('`', '``', $table) . '`');
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $column) {
+            $name = (string) ($column['Field'] ?? '');
+            if ($name !== '') {
+                $cache[$table][$name] = true;
+            }
+        }
+    } catch (PDOException $exception) {
+        $cache[$table] = [];
+    }
+
+    return $cache[$table];
 }
 
 function girffonAdminCustomDesignOrderBaseUploadDirectory(): string
@@ -218,6 +243,7 @@ function girffonAdminCreateCustomDesignOrder(PDO $pdo, array $customer, array $p
     if (!in_array($initialStatus, girffonAdminCustomDesignOrderStatuses(), true)) {
         $initialStatus = 'new';
     }
+    $initialPaymentStatus = in_array($initialStatus, ['paid', 'paid_review', 'paid_reviewing'], true) ? 'paid' : 'pending';
 
     $designPayload = $payload;
     $designPayload['size_requests'] = $sizeLineItems;
@@ -239,11 +265,11 @@ function girffonAdminCreateCustomDesignOrder(PDO $pdo, array $customer, array $p
         $insertOrder = $pdo->prepare(
             'INSERT INTO custom_design_orders (
                 order_code, user_id, customer_name, customer_email, customer_phone, product_name, status, customer_note, admin_note,
-                preview_front, preview_back, preview_right, preview_left, flag_name, flag_code, flag_image, fill_name, fill_value,
+                payment_status, paid_at, preview_front, preview_back, preview_right, preview_left, flag_name, flag_code, flag_image, fill_name, fill_value,
                 design_folder_name, design_file_name, design_image_path, design_payload_json
             ) VALUES (
                 :order_code, :user_id, :customer_name, :customer_email, :customer_phone, :product_name, :status, :customer_note, :admin_note,
-                :preview_front, :preview_back, :preview_right, :preview_left, :flag_name, :flag_code, :flag_image, :fill_name, :fill_value,
+                :payment_status, :paid_at, :preview_front, :preview_back, :preview_right, :preview_left, :flag_name, :flag_code, :flag_image, :fill_name, :fill_value,
                 :design_folder_name, :design_file_name, :design_image_path, :design_payload_json
             )'
         );
@@ -258,6 +284,8 @@ function girffonAdminCreateCustomDesignOrder(PDO $pdo, array $customer, array $p
             ':status' => $initialStatus,
             ':customer_note' => $customerNote,
             ':admin_note' => '',
+            ':payment_status' => $initialPaymentStatus,
+            ':paid_at' => $initialPaymentStatus === 'paid' ? date('Y-m-d H:i:s') : null,
             ':preview_front' => '',
             ':preview_back' => '',
             ':preview_right' => '',
@@ -435,6 +463,8 @@ function girffonAdminEnsureCustomDesignOrderTables(PDO $pdo): bool
                 customer_phone VARCHAR(60) NOT NULL DEFAULT '',
                 product_name VARCHAR(190) NOT NULL DEFAULT '',
                 status VARCHAR(40) NOT NULL DEFAULT 'new',
+                payment_status VARCHAR(40) NOT NULL DEFAULT 'pending',
+                paid_at TIMESTAMP NULL DEFAULT NULL,
                 customer_note TEXT NULL,
                 admin_note TEXT NULL,
                 preview_front VARCHAR(255) NOT NULL DEFAULT '',
@@ -454,6 +484,14 @@ function girffonAdminEnsureCustomDesignOrderTables(PDO $pdo): bool
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         );
+
+        $columns = girffonAdminCustomDesignTableColumns($pdo, 'custom_design_orders');
+        if (!isset($columns['payment_status'])) {
+            $pdo->exec("ALTER TABLE custom_design_orders ADD COLUMN payment_status VARCHAR(40) NOT NULL DEFAULT 'pending' AFTER status");
+        }
+        if (!isset($columns['paid_at'])) {
+            $pdo->exec("ALTER TABLE custom_design_orders ADD COLUMN paid_at TIMESTAMP NULL DEFAULT NULL AFTER payment_status");
+        }
 
         $pdo->exec(
             "CREATE TABLE IF NOT EXISTS custom_design_uploads (
@@ -506,34 +544,73 @@ function girffonAdminCustomDesignDemoOrderSummary(): array
         'upload_count' => 4,
         'text_count' => 2,
         'status' => 'reviewing',
+        'payment_status' => 'paid',
+        'paid_at' => '2026-05-18 11:45:00',
+        'preview_front' => 'Image/Custom Design Pro/images/Products/Men/Basic Men\'s T-Shirt/arancione/1.png',
+        'order_total' => 48.00,
         'created_at' => '2026-05-18 11:30:00',
         'is_demo' => true,
     ];
 }
 
-function girffonAdminFetchCustomDesignOrderSummaries(PDO $pdo, int $limit = 100): array
+    function girffonAdminFetchCustomDesignOrderSummaries(PDO $pdo, int $limit = 100, array $filters = []): array
 {
     if (!girffonAdminEnsureCustomDesignOrderTables($pdo)) {
         return [girffonAdminCustomDesignDemoOrderSummary()];
     }
 
     try {
-        $sql = "SELECT orders.id, orders.order_code, orders.customer_name, orders.customer_email, orders.product_name, orders.status, orders.created_at,
+        $conditions = [];
+        $params = [];
+        $statuses = array_values(array_filter(array_map(static function ($value): string {
+            return strtolower(trim((string) $value));
+        }, is_array($filters['statuses'] ?? null) ? $filters['statuses'] : [])));
+        if ($statuses) {
+            $placeholders = [];
+            foreach ($statuses as $index => $status) {
+                $placeholder = ':status_' . $index;
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = $status;
+            }
+            $conditions[] = 'orders.status IN (' . implode(', ', $placeholders) . ')';
+        }
+
+        $paymentStatus = strtolower(trim((string) ($filters['payment_status'] ?? '')));
+        if ($paymentStatus !== '') {
+            $conditions[] = 'orders.payment_status = :payment_status';
+            $params[':payment_status'] = $paymentStatus;
+        }
+
+        $paidAfter = trim((string) ($filters['paid_after'] ?? ''));
+        if ($paidAfter !== '') {
+            $conditions[] = 'orders.paid_at >= :paid_after';
+            $params[':paid_after'] = $paidAfter;
+        }
+
+        $sql = "SELECT orders.id, orders.order_code, orders.customer_name, orders.customer_email, orders.product_name, orders.status,
+                       orders.payment_status, orders.paid_at, orders.preview_front, orders.design_payload_json, orders.created_at,
                        (SELECT COUNT(*) FROM custom_design_uploads uploads WHERE uploads.order_id = orders.id) AS upload_count,
                        (SELECT COUNT(*) FROM custom_design_items items WHERE items.order_id = orders.id AND items.item_type = 'text') AS text_count
-                FROM custom_design_orders orders
+                FROM custom_design_orders orders";
+        if ($conditions) {
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+        $sql .= "
                 ORDER BY orders.created_at DESC, orders.id DESC";
         if ($limit > 0) {
             $sql .= " LIMIT " . (int) $limit;
         }
 
-        $statement = $pdo->query($sql);
-        $rows = $statement ? ($statement->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
+        $statement = $pdo->prepare($sql);
+        $statement->execute($params);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
         if (!$rows) {
             return [girffonAdminCustomDesignDemoOrderSummary()];
         }
 
         return array_map(static function (array $row): array {
+            $payload = girffonAdminCustomDesignDecodeJson($row['design_payload_json'] ?? null);
+            $summaryTotal = (float) girffonAdminCustomDesignValueAt($payload, ['product.order_total', 'snapshot.orderTotal', 'order_total', 'snapshot.total'], 0);
             return [
                 'id' => (int) ($row['id'] ?? 0),
                 'order_code' => (string) ($row['order_code'] ?? ''),
@@ -543,6 +620,10 @@ function girffonAdminFetchCustomDesignOrderSummaries(PDO $pdo, int $limit = 100)
                 'upload_count' => (int) ($row['upload_count'] ?? 0),
                 'text_count' => (int) ($row['text_count'] ?? 0),
                 'status' => (string) ($row['status'] ?? 'new'),
+                'payment_status' => (string) ($row['payment_status'] ?? 'pending'),
+                'paid_at' => (string) ($row['paid_at'] ?? ''),
+                'preview_front' => girffonAdminCustomDesignNormalizePath((string) ($row['preview_front'] ?? '')),
+                'order_total' => $summaryTotal,
                 'created_at' => (string) ($row['created_at'] ?? ''),
                 'is_demo' => false,
             ];
@@ -882,6 +963,8 @@ function girffonAdminCustomDesignBuildDetail(array $orderRow, array $uploadRows,
         'customer_phone' => (string) ($orderRow['customer_phone'] ?? ''),
         'product_name' => (string) ($orderRow['product_name'] ?? ''),
         'status' => (string) ($orderRow['status'] ?? 'new'),
+        'payment_status' => (string) ($orderRow['payment_status'] ?? 'pending'),
+        'paid_at' => (string) ($orderRow['paid_at'] ?? ''),
         'customer_note' => (string) ($orderRow['customer_note'] ?? ''),
         'admin_note' => (string) ($orderRow['admin_note'] ?? ''),
         'created_at' => (string) ($orderRow['created_at'] ?? ''),
@@ -915,6 +998,8 @@ function girffonAdminCustomDesignDemoOrderDetail(): array
         'customer_phone' => '+39 300 000 0001',
         'product_name' => "Basic Men's T-Shirt",
         'status' => 'reviewing',
+        'payment_status' => 'paid',
+        'paid_at' => '2026-05-18 11:45:00',
         'customer_note' => 'Customer wants a premium vintage streetwear layout with a flag on the back and strong front typography.',
         'admin_note' => 'Demo placeholder order. Replace with real custom design ingestion later.',
         'created_at' => '2026-05-18 11:30:00',
@@ -966,7 +1051,7 @@ function girffonAdminFetchCustomDesignOrderDetail(PDO $pdo, int $orderId): ?arra
 
     try {
         $statement = $pdo->prepare(
-            "SELECT id, order_code, user_id, customer_name, customer_email, customer_phone, product_name, status, customer_note, admin_note,
+            "SELECT id, order_code, user_id, customer_name, customer_email, customer_phone, product_name, status, payment_status, paid_at, customer_note, admin_note,
                     preview_front, preview_back, preview_right, preview_left, flag_name, flag_code, flag_image, fill_name, fill_value,
                     design_folder_name, design_file_name, design_image_path, design_payload_json, created_at, updated_at
              FROM custom_design_orders
@@ -1040,24 +1125,26 @@ function girffonAdminUpdateCustomDesignOrderPayment(PDO $pdo, int $orderId, stri
 
     $status = strtolower(trim($status));
     if (!in_array($status, girffonAdminCustomDesignOrderStatuses(), true)) {
-        $status = 'paid_reviewing';
+        $status = 'paid_review';
     }
 
     try {
         $customerPayload = is_array($paymentData['customer'] ?? null) ? $paymentData['customer'] : [];
         $statement = $pdo->prepare(
-            'SELECT design_payload_json
+            'SELECT design_payload_json, customer_name, customer_email, customer_phone
              FROM custom_design_orders
              WHERE id = :id
              LIMIT 1'
         );
         $statement->execute([':id' => $orderId]);
-        $currentPayload = girffonAdminCustomDesignDecodeJson($statement->fetchColumn());
+        $paymentRow = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $currentPayload = girffonAdminCustomDesignDecodeJson($paymentRow['design_payload_json'] ?? null);
         $currentPayload['payment'] = array_merge(
             is_array($currentPayload['payment'] ?? null) ? $currentPayload['payment'] : [],
             $paymentData,
             [
                 'status' => $status,
+                'payment_status' => 'paid',
                 'paid_at' => date('c'),
             ]
         );
@@ -1065,6 +1152,8 @@ function girffonAdminUpdateCustomDesignOrderPayment(PDO $pdo, int $orderId, stri
         $update = $pdo->prepare(
             'UPDATE custom_design_orders
              SET status = :status,
+                 payment_status = :payment_status,
+                 paid_at = CURRENT_TIMESTAMP,
                  customer_name = :customer_name,
                  customer_email = :customer_email,
                  customer_phone = :customer_phone,
@@ -1075,13 +1164,33 @@ function girffonAdminUpdateCustomDesignOrderPayment(PDO $pdo, int $orderId, stri
 
         return $update->execute([
             ':status' => $status,
-            ':customer_name' => trim((string) ($customerPayload['name'] ?? '')),
-            ':customer_email' => trim((string) ($customerPayload['email'] ?? '')),
-            ':customer_phone' => trim((string) ($customerPayload['phone'] ?? '')),
+            ':payment_status' => 'paid',
+            ':customer_name' => trim((string) ($customerPayload['name'] ?? ($currentPayload['customer']['name'] ?? ($paymentRow['customer_name'] ?? '')))),
+            ':customer_email' => trim((string) ($customerPayload['email'] ?? ($currentPayload['customer']['email'] ?? ($paymentRow['customer_email'] ?? '')))),
+            ':customer_phone' => trim((string) ($customerPayload['phone'] ?? ($currentPayload['customer']['phone'] ?? ($paymentRow['customer_phone'] ?? '')))),
             ':design_payload_json' => json_encode($currentPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             ':id' => $orderId,
         ]);
     } catch (Throwable $exception) {
         return false;
     }
+}
+
+function girffonAdminCountCustomDesignOrders(PDO $pdo, array $filters = []): int
+{
+    $rows = girffonAdminFetchCustomDesignOrderSummaries($pdo, 0, $filters);
+    return count(array_filter($rows, static function (array $row): bool {
+        return empty($row['is_demo']);
+    }));
+}
+
+function girffonAdminSumCustomDesignRevenue(PDO $pdo, array $filters = []): float
+{
+    $rows = girffonAdminFetchCustomDesignOrderSummaries($pdo, 0, $filters);
+    return array_reduce($rows, static function (float $carry, array $row): float {
+        if (!empty($row['is_demo'])) {
+            return $carry;
+        }
+        return $carry + (float) ($row['order_total'] ?? 0);
+    }, 0.0);
 }

@@ -48,6 +48,25 @@ function girffonOrderEmailBuildAppUrl(array $mailConfig): string
     return $scheme . '://' . $host . '/' . $rootSegment;
 }
 
+function girffonOrderEmailPublicUrl(string $path, array $mailConfig): string
+{
+    $value = trim(str_replace('\\', '/', $path));
+    if ($value === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $value)) {
+        return $value;
+    }
+
+    $relative = ltrim($value, '/');
+    if (stripos($relative, 'GirffoN/') === 0) {
+        $relative = substr($relative, 8);
+    }
+
+    return girffonOrderEmailBuildAppUrl($mailConfig) . '/' . $relative;
+}
+
 function girffonOrderEmailRenderItemsHtml(array $items): string
 {
     $rows = array_map(static function (array $item): string {
@@ -345,6 +364,132 @@ function girffonSendOrderConfirmationEmail(array $mailData): bool
             return girffonSendMailWithPhpMailer($mailConfig, $message);
         } catch (Throwable $throwable) {
             girffonOrderMailDebugLog($mailConfig, 'PHPMailer SMTP failed: ' . $throwable->getMessage());
+            return girffonSendMailWithSocketSmtp($mailConfig, $message);
+        }
+    }
+
+    return girffonSendMailWithPhpMail($mailConfig, $message);
+}
+
+function girffonRenderCustomDesignPaymentEmail(array $mailData, array $mailConfig): array
+{
+    $customerName = (string) ($mailData['customer_name'] ?? 'GirffoN Customer');
+    $customerEmail = (string) ($mailData['customer_email'] ?? '');
+    $customerPhone = (string) ($mailData['customer_phone'] ?? '');
+    $orderNumber = (string) ($mailData['order_number'] ?? '');
+    $productName = (string) ($mailData['product_name'] ?? 'Custom Product');
+    $total = girffonOrderEmailFormatCurrency((float) ($mailData['total'] ?? 0));
+    $sizeLines = is_array($mailData['size_lines'] ?? null) ? $mailData['size_lines'] : [];
+    $uploads = is_array($mailData['uploads'] ?? null) ? $mailData['uploads'] : [];
+    $addDesign = is_array($mailData['add_design'] ?? null) ? $mailData['add_design'] : [];
+    $previewViews = is_array($mailData['preview_views'] ?? null) ? $mailData['preview_views'] : [];
+
+    $previewRows = [];
+    foreach (['front' => 'Front Preview', 'back' => 'Back Preview', 'right' => 'Right Sleeve Preview', 'left' => 'Left Sleeve Preview'] as $key => $label) {
+        $path = (string) (($previewViews[$key]['path'] ?? '') ?: ($mailData['preview_' . $key] ?? ''));
+        if ($path === '') {
+            continue;
+        }
+        $url = girffonOrderEmailPublicUrl($path, $mailConfig);
+        $previewRows[] = '<div style="margin:0 0 18px;">'
+            . '<div style="margin:0 0 8px;font-size:13px;font-weight:700;color:#7a6a58;letter-spacing:0.08em;text-transform:uppercase;">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '</div>'
+            . '<img src="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '" alt="' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . '" style="display:block;width:100%;max-width:280px;border-radius:16px;border:1px solid #e5ddd0;background:#fff;">'
+            . '</div>';
+    }
+
+    $sizeLinesHtml = '';
+    $sizeLinesText = '';
+    foreach ($sizeLines as $line) {
+        $lineSize = trim((string) ($line['size'] ?? 'Custom'));
+        $lineColor = trim((string) ($line['color'] ?? 'Custom'));
+        $lineQuantity = max(1, (int) ($line['quantity'] ?? 1));
+        $lineText = $lineSize . ' / ' . $lineColor . ' / Qty ' . $lineQuantity;
+        $sizeLinesHtml .= '<li style="margin:0 0 8px;">' . htmlspecialchars($lineText, ENT_QUOTES, 'UTF-8') . '</li>';
+        $sizeLinesText .= '- ' . $lineText . "\n";
+    }
+
+    $uploadsHtml = '';
+    $uploadsText = '';
+    foreach ($uploads as $upload) {
+        $name = trim((string) ($upload['name'] ?? $upload['original_name'] ?? 'Uploaded photo'));
+        $url = girffonOrderEmailPublicUrl((string) ($upload['path'] ?? $upload['file_path'] ?? ''), $mailConfig);
+        $uploadsHtml .= '<li style="margin:0 0 8px;">' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . ($url !== '' ? ' - <a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">Open file</a>' : '') . '</li>';
+        $uploadsText .= '- ' . $name . ($url !== '' ? ' - ' . $url : '') . "\n";
+    }
+
+    $addDesignHtml = '';
+    $addDesignText = '';
+    foreach ($addDesign as $design) {
+        $fileName = trim((string) ($design['file_name'] ?? $design['name'] ?? 'Design file'));
+        $folderName = trim((string) ($design['folder_name'] ?? ''));
+        $imageUrl = girffonOrderEmailPublicUrl((string) ($design['image'] ?? ''), $mailConfig);
+        $label = $folderName !== '' ? $folderName . ' / ' . $fileName : $fileName;
+        $addDesignHtml .= '<li style="margin:0 0 8px;">' . htmlspecialchars($label, ENT_QUOTES, 'UTF-8') . ($imageUrl !== '' ? ' - <a href="' . htmlspecialchars($imageUrl, ENT_QUOTES, 'UTF-8') . '">Open file</a>' : '') . '</li>';
+        $addDesignText .= '- ' . $label . ($imageUrl !== '' ? ' - ' . $imageUrl : '') . "\n";
+    }
+
+    $subject = 'GirffoN Custom Design Payment Received - ' . $orderNumber;
+    $html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>'
+        . htmlspecialchars($subject, ENT_QUOTES, 'UTF-8')
+        . '</title></head><body style="margin:0;padding:0;background:#f5f1ea;font-family:Georgia, Times New Roman, serif;color:#1f1812;">'
+        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f1ea;padding:24px 0;"><tr><td align="center">'
+        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:820px;background:#fffdf9;border:1px solid #e5ddd0;">'
+        . '<tr><td style="padding:32px 36px;background:#1f1812;color:#f4ebdf;"><div style="font-size:13px;letter-spacing:2px;text-transform:uppercase;">GirffoN</div><h1 style="margin:10px 0 0;font-size:28px;font-weight:600;">Custom Design Payment Received</h1></td></tr>'
+        . '<tr><td style="padding:32px 36px;">'
+        . '<p style="margin:0 0 18px;font-size:16px;line-height:1.7;">Your custom design payment has been received successfully. The order is now in the paid review queue.</p>'
+        . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border-collapse:collapse;">'
+        . '<tr><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;color:#7a6a58;width:35%;">Order Number</td><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;font-weight:600;">' . htmlspecialchars($orderNumber, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+        . '<tr><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;color:#7a6a58;">Customer</td><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;font-weight:600;">' . htmlspecialchars($customerName, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+        . '<tr><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;color:#7a6a58;">Email</td><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;font-weight:600;">' . htmlspecialchars($customerEmail, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+        . '<tr><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;color:#7a6a58;">Phone</td><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;font-weight:600;">' . htmlspecialchars($customerPhone !== '' ? $customerPhone : '-', ENT_QUOTES, 'UTF-8') . '</td></tr>'
+        . '<tr><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;color:#7a6a58;">Product</td><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;font-weight:600;">' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+        . '<tr><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;color:#7a6a58;">Total Price</td><td style="padding:10px 0;border-bottom:1px solid #e5ddd0;font-weight:600;">' . htmlspecialchars($total, ENT_QUOTES, 'UTF-8') . '</td></tr>'
+        . '</table>'
+        . '<h2 style="margin:0 0 12px;font-size:18px;">Size and Color Lines</h2>'
+        . '<ul style="margin:0 0 24px 20px;padding:0;line-height:1.7;">' . ($sizeLinesHtml !== '' ? $sizeLinesHtml : '<li>No saved size and color lines.</li>') . '</ul>'
+        . '<h2 style="margin:0 0 12px;font-size:18px;">Preview Images</h2>'
+        . ($previewRows ? implode('', $previewRows) : '<p style="margin:0 0 24px;color:#7a6a58;">No preview images were available.</p>')
+        . '<h2 style="margin:12px 0 12px;font-size:18px;">Uploaded Photos</h2>'
+        . '<ul style="margin:0 0 24px 20px;padding:0;line-height:1.7;">' . ($uploadsHtml !== '' ? $uploadsHtml : '<li>No uploaded photos were attached.</li>') . '</ul>'
+        . '<h2 style="margin:0 0 12px;font-size:18px;">Add Design Files</h2>'
+        . '<ul style="margin:0 0 12px 20px;padding:0;line-height:1.7;">' . ($addDesignHtml !== '' ? $addDesignHtml : '<li>No add design files were selected.</li>') . '</ul>'
+        . '</td></tr></table></td></tr></table></body></html>';
+
+    $text = "GirffoN Custom Design Payment Received\n"
+        . "Order Number: {$orderNumber}\n"
+        . "Customer: {$customerName}\n"
+        . "Email: {$customerEmail}\n"
+        . "Phone: " . ($customerPhone !== '' ? $customerPhone : '-') . "\n"
+        . "Product: {$productName}\n"
+        . "Total Price: {$total}\n\n"
+        . "Size and Color Lines:\n" . ($sizeLinesText !== '' ? $sizeLinesText : "- No saved size and color lines.\n") . "\n"
+        . "Uploaded Photos:\n" . ($uploadsText !== '' ? $uploadsText : "- No uploaded photos were attached.\n") . "\n"
+        . "Add Design Files:\n" . ($addDesignText !== '' ? $addDesignText : "- No add design files were selected.\n");
+
+    return [
+        'subject' => $subject,
+        'html' => $html,
+        'text' => $text,
+    ];
+}
+
+function girffonSendCustomDesignPaymentEmail(array $mailData): bool
+{
+    $mailConfig = girffonMailConfig();
+    $rendered = girffonRenderCustomDesignPaymentEmail($mailData, $mailConfig);
+    $message = [
+        'to_email' => (string) ($mailData['customer_email'] ?? ''),
+        'to_name' => (string) ($mailData['customer_name'] ?? 'GirffoN Customer'),
+        'subject' => $rendered['subject'],
+        'html' => $rendered['html'],
+        'text' => $rendered['text'],
+    ];
+
+    if (($mailConfig['transport'] ?? 'mail') === 'smtp') {
+        try {
+            return girffonSendMailWithPhpMailer($mailConfig, $message);
+        } catch (Throwable $throwable) {
+            girffonOrderMailDebugLog($mailConfig, 'Custom design payment PHPMailer SMTP failed: ' . $throwable->getMessage());
             return girffonSendMailWithSocketSmtp($mailConfig, $message);
         }
     }

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/backend/profile/common.php';
 require_once __DIR__ . '/backend/admin/custom-design-orders-data.php';
+require_once __DIR__ . '/backend/utils/order-confirmation-mailer.php';
 
 function girffonCustomDesignCheckoutEscape(string $value): string
 {
@@ -98,7 +99,7 @@ $formValues = [
 ];
 
 $currentStatus = strtolower(trim((string) ($order['status'] ?? 'new')));
-$alreadyPaid = in_array($currentStatus, ['paid', 'paid_reviewing', 'reviewing', 'approved', 'in_production', 'completed'], true);
+$alreadyPaid = in_array($currentStatus, ['paid', 'paid_review', 'paid_reviewing', 'reviewing', 'approved', 'in_production', 'completed'], true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyPaid) {
     foreach (['fullName', 'email', 'phone', 'address', 'city', 'postalCode', 'country', 'number', 'expiry', 'cvc'] as $field) {
@@ -126,7 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyPaid) {
     }
 
     if (!$errors) {
-        $paymentSaved = girffonAdminUpdateCustomDesignOrderPayment($pdo, (int) $order['id'], 'paid_reviewing', [
+        $paymentSaved = girffonAdminUpdateCustomDesignOrderPayment($pdo, (int) $order['id'], 'paid_review', [
             'method' => 'card',
             'transaction_reference' => girffonCustomDesignCheckoutReference(),
             'amount' => $summary['order_total'],
@@ -147,6 +148,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$alreadyPaid) {
         ]);
 
         if ($paymentSaved) {
+      $paidOrder = girffonAdminFetchCustomDesignOrderDetail($pdo, (int) $order['id']);
+      if ($paidOrder) {
+        try {
+          girffonSendCustomDesignPaymentEmail([
+            'customer_name' => (string) ($paidOrder['customer_name'] ?? $formValues['fullName']),
+            'customer_email' => (string) ($paidOrder['customer_email'] ?? $formValues['email']),
+            'customer_phone' => (string) ($paidOrder['customer_phone'] ?? $formValues['phone']),
+            'order_number' => (string) ($paidOrder['order_code'] ?? ''),
+            'product_name' => (string) ($paidOrder['product_name'] ?? ''),
+            'total' => (float) (($paidOrder['checkout_summary']['order_total'] ?? 0) ?: $summary['order_total']),
+            'size_lines' => $paidOrder['size_lines'] ?? [],
+            'preview_views' => $paidOrder['preview_views'] ?? [],
+            'uploads' => $paidOrder['uploads'] ?? [],
+            'add_design' => $paidOrder['add_design'] ?? [],
+          ]);
+        } catch (Throwable $throwable) {
+          $mailConfig = function_exists('girffonMailConfig') ? girffonMailConfig() : [];
+          if (function_exists('girffonOrderMailDebugLog')) {
+            girffonOrderMailDebugLog($mailConfig, 'Custom design payment email failed: ' . $throwable->getMessage());
+          }
+        }
+      }
             header('Location: /GirffoN/ProfilePage.php?customDesignPayment=success&order=' . (int) $order['id']);
             exit;
         }
@@ -159,7 +182,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $alreadyPaid) {
     $successMessage = 'This custom design order has already been paid.';
 }
 
-$frontPreview = trim((string) ($order['front_preview'] ?? ''));
+$previewViews = [];
+foreach ([
+  'front' => 'Front',
+  'back' => 'Back',
+  'right' => 'Right sleeve',
+  'left' => 'Left sleeve',
+] as $previewKey => $previewLabel) {
+  $previewPath = '';
+  if (is_array($order['preview_views'][$previewKey] ?? null)) {
+    $previewPath = trim((string) (($order['preview_views'][$previewKey]['path'] ?? '')));
+  }
+
+  $previewViews[$previewKey] = [
+    'label' => $previewLabel,
+    'path' => $previewPath,
+  ];
+}
 $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
 ?>
 <!DOCTYPE html>
@@ -272,6 +311,30 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       padding: 26px;
     }
 
+    .gf-custom-checkout-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .gf-custom-checkout-preview-tile {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .gf-custom-checkout-preview-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6f6246;
+      padding-left: 2px;
+    }
+
     .gf-custom-checkout-preview {
       aspect-ratio: 1 / 1;
       width: 100%;
@@ -282,7 +345,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      margin-bottom: 24px;
+      min-height: 148px;
     }
 
     .gf-custom-checkout-preview img {
@@ -292,7 +355,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
     }
 
     .gf-custom-checkout-preview-empty {
-      color: #777;
+      color: #8f8473;
       font-weight: 600;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -589,7 +652,8 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       }
 
       .gf-checkout-form-grid,
-      .gf-custom-checkout-meta {
+      .gf-custom-checkout-meta,
+      .gf-custom-checkout-preview-grid {
         grid-template-columns: 1fr;
       }
 
@@ -634,12 +698,19 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
 
     <section class="gf-custom-checkout-grid">
       <article class="gf-custom-checkout-card">
-        <div class="gf-custom-checkout-preview">
-          <?php if ($frontPreview !== ''): ?>
-            <img src="<?php echo girffonCustomDesignCheckoutEscape($frontPreview); ?>" alt="Front preview of the custom design order">
-          <?php else: ?>
-            <div class="gf-custom-checkout-preview-empty">Front preview unavailable</div>
-          <?php endif; ?>
+        <div class="gf-custom-checkout-preview-grid">
+          <?php foreach ($previewViews as $previewKey => $preview): ?>
+            <div class="gf-custom-checkout-preview-tile">
+              <span class="gf-custom-checkout-preview-label"><?php echo girffonCustomDesignCheckoutEscape($preview['label']); ?></span>
+              <div class="gf-custom-checkout-preview">
+                <?php if ($preview['path'] !== ''): ?>
+                  <img src="<?php echo girffonCustomDesignCheckoutEscape($preview['path']); ?>" alt="<?php echo girffonCustomDesignCheckoutEscape($preview['label']); ?> preview of the custom design order">
+                <?php else: ?>
+                  <div class="gf-custom-checkout-preview-empty">No preview</div>
+                <?php endif; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
         </div>
 
         <h2 class="gf-custom-checkout-product-title"><?php echo girffonCustomDesignCheckoutEscape((string) ($order['product_name'] ?? 'Custom Product')); ?></h2>

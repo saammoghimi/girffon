@@ -3,6 +3,7 @@ require_once __DIR__ . "/backend/admin/session.php";
 require_once __DIR__ . "/backend/admin/orders-data.php";
 require_once __DIR__ . "/backend/admin/order-updates-data.php";
 require_once __DIR__ . "/backend/admin/users-data.php";
+require_once __DIR__ . "/backend/admin/custom-design-orders-data.php";
 
 $adminOrderSettingsFile = __DIR__ . "/backend/admin/order-settings-data.php";
 if (is_file($adminOrderSettingsFile)) {
@@ -20,6 +21,12 @@ if ($adminSelectedUser && !empty($adminSelectedUser["email"])) {
 }
 
 $adminOrders = girffonAdminFetchOrders($pdo, 0, $adminOrderFilters);
+$adminPaidCustomDesignOrders = array_values(array_filter(
+  girffonAdminFetchCustomDesignOrderSummaries($pdo, 20, ['payment_status' => 'paid']),
+  static function (array $row): bool {
+    return empty($row['is_demo']);
+  }
+));
 $adminOrderStatusMessage = trim((string) ($_GET["status"] ?? ""));
 $adminOrderErrorMessage = trim((string) ($_GET["error"] ?? ""));
 $adminOrderStatusOptions = girffonAdminOrderUpdateStatusOptions();
@@ -457,6 +464,69 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
         <?php endif; ?>
 
         <?php if ($showAdminOrderList): ?>
+        <article class="admin-table-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Paid Custom Design Orders</h2>
+              <p class="admin-panel-note">Separate paid custom design orders section to keep the main live order workflow unchanged.</p>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Preview</th>
+                  <th>Order Number</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Payment Status</th>
+                  <th>Total</th>
+                  <th>Paid At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if ($adminPaidCustomDesignOrders): ?>
+                  <?php foreach ($adminPaidCustomDesignOrders as $customOrder): ?>
+                    <?php $customPreview = $resolveAdminOrderImage($customOrder['preview_front'] ?? ''); ?>
+                    <tr>
+                      <td>
+                        <?php if ($customPreview): ?>
+                          <img class="admin-order-thumb" src="<?php echo $escapeAdminOrder($customPreview); ?>" alt="<?php echo $escapeAdminOrder($customOrder['order_code'] ?? 'Custom design preview'); ?>">
+                        <?php else: ?>
+                          <div class="admin-order-thumb admin-order-thumb-placeholder">No image</div>
+                        <?php endif; ?>
+                      </td>
+                      <td><strong><?php echo $escapeAdminOrder($customOrder['order_code'] ?? ''); ?></strong></td>
+                      <td>
+                        <strong><?php echo $escapeAdminOrder($customOrder['customer_name'] ?? ''); ?></strong>
+                        <div><?php echo $escapeAdminOrder($customOrder['customer_email'] ?? '-'); ?></div>
+                      </td>
+                      <td><?php echo $escapeAdminOrder($customOrder['product_name'] ?? 'Custom Product'); ?></td>
+                      <td>
+                        <strong><?php echo $formatAdminOrderLabel($customOrder['payment_status'] ?? 'paid'); ?></strong>
+                        <div><?php echo $formatAdminOrderLabel($customOrder['status'] ?? 'paid_review'); ?></div>
+                      </td>
+                      <td><?php echo $escapeAdminOrder($formatAdminOrderCurrency($customOrder['order_total'] ?? 0)); ?></td>
+                      <td><?php echo $formatAdminOrderDate($customOrder['paid_at'] ?? ''); ?></td>
+                      <td class="admin-order-update-actions">
+                        <div class="admin-order-action-stack">
+                          <a class="admin-button admin-button-soft" href="/GirffoN/admin-custom-order-view.php?id=<?php echo $escapeAdminOrder($customOrder['id'] ?? 0); ?>">View Custom Order</a>
+                        </div>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <tr>
+                    <td colspan="8" class="admin-empty">No paid custom design orders yet.</td>
+                  </tr>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
         <article class="admin-table-panel">
           <div class="admin-panel-head">
             <div>

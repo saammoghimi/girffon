@@ -8,6 +8,7 @@ $customDesignOrderStatusCounts = [
   'pending_payment' => 0,
   'reviewing' => 0,
   'paid' => 0,
+  'paid_review' => 0,
   'paid_reviewing' => 0,
   'in_production' => 0,
   'completed' => 0,
@@ -307,7 +308,7 @@ $formatCustomOrderDate = static function ($value) {
           <div class="admin-custom-summary-grid" aria-label="Custom design order summary">
             <article class="admin-custom-summary-card"><span>Total Orders</span><strong><?php echo $escapeCustomOrder(count($customDesignOrders)); ?></strong></article>
             <article class="admin-custom-summary-card"><span>New / Pending Payment</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['new'] + $customDesignOrderStatusCounts['pending_payment']); ?></strong></article>
-            <article class="admin-custom-summary-card"><span>Paid / Reviewing</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['paid'] + $customDesignOrderStatusCounts['paid_reviewing'] + $customDesignOrderStatusCounts['reviewing']); ?></strong></article>
+            <article class="admin-custom-summary-card"><span>Paid / Reviewing</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['paid'] + $customDesignOrderStatusCounts['paid_review'] + $customDesignOrderStatusCounts['paid_reviewing'] + $customDesignOrderStatusCounts['reviewing']); ?></strong></article>
             <article class="admin-custom-summary-card"><span>In Production / Completed</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['in_production'] + $customDesignOrderStatusCounts['completed']); ?></strong></article>
           </div>
         </article>
