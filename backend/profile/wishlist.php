@@ -1,6 +1,44 @@
 <?php
 require_once __DIR__ . '/common.php';
 
+function girffonProfileWishlistNormalizePath(?string $path): string
+{
+    $path = trim((string) $path);
+    if ($path === '') {
+        return '';
+    }
+
+    $path = str_replace('\\', '/', $path);
+    if (preg_match('#^(https?:)?//#i', $path)) {
+        return $path;
+    }
+
+    $workspaceRoot = str_replace('\\', '/', dirname(__DIR__, 2));
+    $normalizedPath = ltrim($path, '/');
+    if (strpos($path, $workspaceRoot) === 0) {
+        $normalizedPath = ltrim(substr($path, strlen($workspaceRoot)), '/');
+    }
+
+    return $normalizedPath;
+}
+
+function girffonProfileWishlistBuildViewUrl(array $item, array $product = []): string
+{
+    foreach (['product_url', 'product_page', 'url', 'href'] as $field) {
+        $value = trim((string) ($item[$field] ?? $product[$field] ?? ''));
+        if ($value !== '') {
+            return girffonProfileWishlistNormalizePath($value);
+        }
+    }
+
+    $sku = trim((string) (($item['sku'] ?? '') !== '' ? $item['sku'] : ($product['sku'] ?? '')));
+    if ($sku !== '') {
+        return '/GirffoN/ProductDetails.html?sku=' . rawurlencode($sku);
+    }
+
+    return '/GirffoN/ProductDetails.html';
+}
+
 function girffonProfileWishlistEmpty(string $message = 'No saved items yet.'): void
 {
     girffonProfileJsonResponse(200, [
@@ -41,6 +79,10 @@ $selectColumns = array_intersect_key([
     'name' => true,
     'price' => true,
     'image_path' => true,
+    'product_url' => true,
+    'product_page' => true,
+    'url' => true,
+    'href' => true,
     'size' => true,
     'color' => true,
     'created_at' => true,
@@ -57,14 +99,31 @@ $wishlistItems = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
 $productsById = [];
 if ($productsAvailable) {
+    $productColumns = girffonProfileTableColumns($pdo, 'products');
     $productIds = array_values(array_filter(array_map(static function (array $item): int {
         return (int) ($item['product_id'] ?? 0);
     }, $wishlistItems)));
 
     if ($productIds) {
         $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $productSelectColumns = array_keys(array_intersect_key([
+            'id' => true,
+            'name' => true,
+            'sku' => true,
+            'price' => true,
+            'stock' => true,
+            'status' => true,
+            'image_path' => true,
+            'product_url' => true,
+            'product_page' => true,
+            'url' => true,
+            'href' => true,
+        ], $productColumns));
+        if (!$productSelectColumns) {
+            $productSelectColumns = ['id'];
+        }
         $productStatement = $pdo->prepare(
-            'SELECT id, name, sku, price, stock, status, image_path
+            'SELECT ' . implode(', ', $productSelectColumns) . '
              FROM products
              WHERE id IN (' . $placeholders . ')'
         );
@@ -80,9 +139,10 @@ $items = array_map(static function (array $item) use ($productsById): array {
     $name = (string) (($item['name'] ?? '') !== '' ? $item['name'] : ($product['name'] ?? 'Saved Product'));
     $sku = (string) (($item['sku'] ?? '') !== '' ? $item['sku'] : ($product['sku'] ?? ''));
     $price = (float) (($item['price'] ?? '') !== '' ? $item['price'] : ($product['price'] ?? 0));
-    $image = (string) (($item['image_path'] ?? '') !== '' ? $item['image_path'] : ($product['image_path'] ?? ''));
+    $image = girffonProfileWishlistNormalizePath((string) (($item['image_path'] ?? '') !== '' ? $item['image_path'] : ($product['image_path'] ?? '')));
     $stock = (int) ($product['stock'] ?? 0);
     $status = strtolower((string) ($product['status'] ?? 'active'));
+    $viewUrl = girffonProfileWishlistBuildViewUrl($item, $product);
 
     return [
         'id' => (int) ($item['id'] ?? 0),
@@ -94,9 +154,11 @@ $items = array_map(static function (array $item) use ($productsById): array {
         'image' => $image,
         'size' => (string) ($item['size'] ?? ''),
         'color' => (string) ($item['color'] ?? ''),
+        'view_url' => $viewUrl,
         'stock_label' => $stock > 5 ? 'In Stock' : ($stock > 0 ? 'Low Stock' : 'Out of Stock'),
         'stock_class' => $stock > 5 ? 'is-in-stock' : ($stock > 0 ? 'is-low-stock' : 'is-out-of-stock'),
         'can_add_to_cart' => $price > 0 && $status === 'active',
+        'source' => 'backend',
     ];
 }, $wishlistItems);
 

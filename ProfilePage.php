@@ -170,7 +170,7 @@ if ($template === false) {
 }
 
 $profileInjection = '  <script>window.GIRFFON_PROFILE_PAGE_DATA = ' . json_encode($profilePageData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ';</script>' . PHP_EOL
-    . '  <script src="JS/profile-page-server.js?v=20260519r1"></script>';
+    . '  <script src="JS/profile-page-server.js?v=20260519r2"></script>';
 
 $template = str_replace('  <script src="JS/profile-page.js"></script>', '', $template);
 $template = str_replace('</body>', $profileInjection . PHP_EOL . '</body>', $template);

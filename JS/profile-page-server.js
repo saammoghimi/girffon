@@ -12,8 +12,10 @@
   const DESIGNS_URL = '/GirffoN/backend/profile/designs.php';
   const DELETE_ACCOUNT_URL = '/GirffoN/backend/profile/delete-account.php';
   const CART_ADD_URL = '/GirffoN/backend/cart/add-to-cart.php';
+  const PRODUCT_DETAILS_URL = '/GirffoN/ProductDetails.html';
   const NOTIFICATION_PREFERENCES_URL = '/GirffoN/backend/auth/save-notification-preferences.php';
   const AVATAR_STORAGE_KEY = 'girffon_profile_avatar';
+  const WISHLIST_STORAGE_KEY = 'girffon_wishlist';
   const EMPTY_AVATAR_DATA_URI = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'110\' height=\'110\'%3E%3C/svg%3E';
   const NOTIFICATION_PREFERENCE_KEYS = [
     'promotionalEmails',
@@ -1216,12 +1218,113 @@
   }
 
   async function loadWishlist() {
-    const response = await fetch(WISHLIST_URL, { credentials: 'same-origin' });
-    const payload = await response.json();
-    if (!response.ok || !payload.success) {
-      throw new Error(payload.message || 'Unable to load wishlist.');
+    try {
+      const response = await fetch(WISHLIST_URL, { credentials: 'same-origin' });
+      const payload = await response.json();
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message || 'Unable to load wishlist.');
+      }
+
+      const backendItems = Array.isArray(payload.items) ? payload.items.map(function (item, index) {
+        return normalizeWishlistItem(item, index, item.source || 'backend');
+      }) : [];
+      if (backendItems.length) {
+        return {
+          success: true,
+          available: true,
+          source: 'backend',
+          items: backendItems
+        };
+      }
+    } catch (_error) {
+      // Fall back to the existing local wishlist when the backend is unavailable.
     }
-    return payload;
+
+    return {
+      success: true,
+      available: true,
+      source: 'local',
+      items: readLocalWishlist().map(function (item, index) {
+        return normalizeWishlistItem(item, index, 'local');
+      })
+    };
+  }
+
+  function parseWishlistPrice(value) {
+    if (typeof value === 'number') {
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    const normalized = String(value || '').trim();
+    if (!normalized) {
+      return 0;
+    }
+
+    const numeric = normalized
+      .replace(/[^\d.,-]/g, '')
+      .replace(/,(?=\d{1,2}$)/, '.')
+      .replace(/,/g, '');
+    const parsed = Number(numeric);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  function formatWishlistPriceLabel(value) {
+    return 'EUR' + parseWishlistPrice(value).toFixed(2);
+  }
+
+  function readLocalWishlist() {
+    try {
+      const raw = window.localStorage.getItem(WISHLIST_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  }
+
+  function writeLocalWishlist(items) {
+    try {
+      window.localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(Array.isArray(items) ? items : []));
+    } catch (_error) {
+      // Ignore local storage write failures.
+    }
+  }
+
+  function getLocalWishlistItemId(item, index) {
+    return String(item && (item.id || item.sku || item.code || item.title || item.name) || ('local-wishlist-' + index));
+  }
+
+  function buildWishlistViewUrl(item) {
+    const directUrl = String(item && (item.view_url || item.product_url || item.productUrl || item.url || item.href || '') || '').trim();
+    if (directUrl) {
+      return directUrl;
+    }
+
+    const sku = String(item && (item.sku || item.code || item.id || '') || '').trim();
+    return sku
+      ? PRODUCT_DETAILS_URL + '?sku=' + encodeURIComponent(sku)
+      : PRODUCT_DETAILS_URL;
+  }
+
+  function normalizeWishlistItem(item, index, source) {
+    const price = parseWishlistPrice(item && (item.price != null ? item.price : item.priceNumber));
+    return {
+      id: item && item.id != null ? item.id : getLocalWishlistItemId(item, index),
+      product_id: item && item.product_id != null ? item.product_id : 0,
+      source: source || 'local',
+      name: String(item && (item.name || item.title) || 'Saved Product'),
+      sku: String(item && (item.sku || item.code || item.id || '') || ''),
+      price: price,
+      price_label: String(item && item.price_label || '') || formatWishlistPriceLabel(price),
+      image: String(item && (item.image || item.img || '') || ''),
+      size: String(item && item.size || ''),
+      color: String(item && (item.color || item.colorName) || ''),
+      stock_label: String(item && item.stock_label || 'Saved Item'),
+      stock_class: String(item && item.stock_class || 'is-in-stock'),
+      can_add_to_cart: item && typeof item.can_add_to_cart === 'boolean' ? item.can_add_to_cart : true,
+      view_url: buildWishlistViewUrl(item || {}),
+      raw_id: getLocalWishlistItemId(item, index)
+    };
   }
 
   function renderWishlist(payload) {
@@ -1243,7 +1346,16 @@
 
     grid.innerHTML = items.map(function (item) {
       const image = item.image ? '<img class="gf-account-saved-image" src="' + escapeAttribute(item.image) + '" alt="' + escapeAttribute(item.name) + '">' : '<div class="gf-account-saved-image"></div>';
-      return '<article class="gf-account-saved-card">' + image + '<div class="gf-account-saved-body"><div class="gf-account-saved-top"><h4>' + escapeHtml(item.name) + '</h4><span class="gf-account-stock-badge ' + escapeAttribute(item.stock_class) + '">' + escapeHtml(item.stock_label) + '</span></div><p class="gf-account-saved-price">' + escapeHtml(item.price_label) + '</p><div class="gf-account-saved-actions"><button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-wishlist-action="cart" data-gf-wishlist-id="' + escapeAttribute(item.id) + '" data-gf-sku="' + escapeAttribute(item.sku) + '" data-gf-name="' + escapeAttribute(item.name) + '" data-gf-price="' + escapeAttribute(item.price) + '" data-gf-image="' + escapeAttribute(item.image) + '" data-gf-size="' + escapeAttribute(item.size) + '" data-gf-color="' + escapeAttribute(item.color) + '"' + (item.can_add_to_cart ? '' : ' disabled') + '>Add to Cart</button><button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-wishlist-action="remove" data-gf-wishlist-id="' + escapeAttribute(item.id) + '">Remove</button></div></div></article>';
+      const metaParts = [];
+      if (item.size) {
+        metaParts.push('Size: ' + escapeHtml(item.size));
+      }
+      if (item.color) {
+        metaParts.push('Color: ' + escapeHtml(item.color));
+      }
+      const meta = metaParts.length ? '<p class="gf-account-note">' + metaParts.join(' · ') + '</p>' : '';
+      const viewAction = '<a class="gf-account-btn gf-account-btn-secondary" href="' + escapeAttribute(item.view_url) + '">View Product</a>';
+      return '<article class="gf-account-saved-card">' + image + '<div class="gf-account-saved-body"><div class="gf-account-saved-top"><h4>' + escapeHtml(item.name) + '</h4><span class="gf-account-stock-badge ' + escapeAttribute(item.stock_class) + '">' + escapeHtml(item.stock_label) + '</span></div><p class="gf-account-saved-price">' + escapeHtml(item.price_label) + '</p>' + meta + '<div class="gf-account-saved-actions">' + viewAction + '<button type="button" class="gf-account-btn gf-account-btn-primary" data-gf-wishlist-action="cart" data-gf-wishlist-source="' + escapeAttribute(item.source) + '" data-gf-wishlist-id="' + escapeAttribute(item.id) + '" data-gf-wishlist-raw-id="' + escapeAttribute(item.raw_id || item.id) + '" data-gf-sku="' + escapeAttribute(item.sku) + '" data-gf-name="' + escapeAttribute(item.name) + '" data-gf-price="' + escapeAttribute(item.price) + '" data-gf-image="' + escapeAttribute(item.image) + '" data-gf-size="' + escapeAttribute(item.size) + '" data-gf-color="' + escapeAttribute(item.color) + '"' + (item.can_add_to_cart ? '' : ' disabled') + '>Add to Cart</button><button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-wishlist-action="remove" data-gf-wishlist-source="' + escapeAttribute(item.source) + '" data-gf-wishlist-id="' + escapeAttribute(item.id) + '" data-gf-wishlist-raw-id="' + escapeAttribute(item.raw_id || item.id) + '">Remove</button></div></div></article>';
     }).join('');
   }
 
@@ -1266,8 +1378,17 @@
       if (!button) return;
       const action = button.getAttribute('data-gf-wishlist-action');
       const id = Number(button.getAttribute('data-gf-wishlist-id') || '0');
+      const source = button.getAttribute('data-gf-wishlist-source') || 'backend';
+      const rawId = String(button.getAttribute('data-gf-wishlist-raw-id') || button.getAttribute('data-gf-wishlist-id') || '');
 
       if (action === 'remove') {
+        if (source === 'local') {
+          writeLocalWishlist(readLocalWishlist().filter(function (item, index) {
+            return getLocalWishlistItemId(item, index) !== rawId;
+          }));
+          refresh();
+          return;
+        }
         postJson(WISHLIST_URL, { action: 'remove', id: id }).then(refresh).catch(function () {});
         return;
       }
