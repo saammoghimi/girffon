@@ -15,6 +15,9 @@ $adminDashboardSettingError = trim((string) ($_GET['error'] ?? ''));
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
   $dashboardPreferences = [
     'show_summary_cards' => isset($_POST['show_summary_cards']),
+    'show_daily_stats' => isset($_POST['show_daily_stats']),
+    'show_monthly_stats' => isset($_POST['show_monthly_stats']),
+    'show_yearly_stats' => isset($_POST['show_yearly_stats']),
     'show_recent_activity' => isset($_POST['show_recent_activity']),
     'show_login_activity' => isset($_POST['show_login_activity']),
     'show_analytics_explorer' => isset($_POST['show_analytics_explorer']),
@@ -33,6 +36,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 
 $adminDashboardPreferences = [
   'show_summary_cards' => true,
+  'show_daily_stats' => true,
+  'show_monthly_stats' => true,
+  'show_yearly_stats' => true,
   'show_recent_activity' => true,
   'show_login_activity' => true,
   'show_analytics_explorer' => true,
@@ -50,6 +56,9 @@ $escapeDashboardSetting = static function ($value) {
 };
 $dashboardSettingToggles = [
   'show_summary_cards' => ['label' => 'Overview Cards', 'note' => 'Top KPI cards like products, members, orders, invoices, and revenue.'],
+  'show_daily_stats' => ['label' => 'Daily Stats', 'note' => 'Show the Today statistics panel on admin-dashboard.php.'],
+  'show_monthly_stats' => ['label' => 'Monthly Stats', 'note' => 'Show the This Month statistics panel on admin-dashboard.php.'],
+  'show_yearly_stats' => ['label' => 'Yearly Stats', 'note' => 'Show the This Year statistics panel on admin-dashboard.php.'],
   'show_recent_activity' => ['label' => 'Recent Activity Panels', 'note' => 'Recent orders, members, messages, low stock, today orders, and invoices.'],
   'show_login_activity' => ['label' => 'Login Activity', 'note' => 'Recent admin sign-in history on the dashboard.'],
   'show_analytics_explorer' => ['label' => 'Analytics Explorer', 'note' => 'Daily, monthly, yearly analytics and PDF export block.'],
@@ -162,7 +171,7 @@ $dashboardSettingToggles = [
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" aria-label="Dashboard Settings Workspace" aria-current="page" title="You are already in Dashboard Settings" disabled>Dashboard Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
@@ -179,16 +188,6 @@ $dashboardSettingToggles = [
             <?php echo $escapeDashboardSetting($adminDashboardSettingError ?: $adminDashboardSettingStatus); ?>
           </div>
         <?php endif; ?>
-
-        <article class="admin-panel">
-          <div class="admin-panel-head">
-            <div>
-              <h2>Connected To Admin Dashboard</h2>
-              <p class="admin-panel-note">These switches control what appears on your personal view of admin-dashboard.php. Save here, then return to the dashboard to see the result immediately.</p>
-            </div>
-            <a class="admin-button admin-button-soft" href="admin-dashboard.php">Open Admin Dashboard</a>
-          </div>
-        </article>
 
         <article class="admin-panel">
           <div class="admin-panel-head">

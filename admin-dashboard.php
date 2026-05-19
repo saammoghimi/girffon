@@ -54,6 +54,9 @@ $adminRomeCurrentYear = (int) girffonAdminDashboardRomeNow()->format('Y');
 $adminRomeCurrentMonth = (int) girffonAdminDashboardRomeNow()->format('n');
 $adminDashboardPreferences = [
   'show_summary_cards' => true,
+  'show_daily_stats' => true,
+  'show_monthly_stats' => true,
+  'show_yearly_stats' => true,
   'show_recent_activity' => true,
   'show_login_activity' => true,
   'show_analytics_explorer' => true,
@@ -67,6 +70,10 @@ if (function_exists('girffonAdminFetchDashboardPreferences')) {
   $adminDashboardPreferences = girffonAdminFetchDashboardPreferences($pdo, $adminCurrentId, $adminCurrentUsername);
 }
 $showAdminSummaryCards = !empty($adminDashboardPreferences['show_summary_cards']);
+$showAdminDailyStats = !empty($adminDashboardPreferences['show_daily_stats']);
+$showAdminMonthlyStats = !empty($adminDashboardPreferences['show_monthly_stats']);
+$showAdminYearlyStats = !empty($adminDashboardPreferences['show_yearly_stats']);
+$showAdminPeriodStats = $showAdminDailyStats || $showAdminMonthlyStats || $showAdminYearlyStats;
 $showAdminRecentActivity = !empty($adminDashboardPreferences['show_recent_activity']);
 $showAdminLoginActivity = !empty($adminDashboardPreferences['show_login_activity']);
 $showAdminAnalyticsExplorer = !empty($adminDashboardPreferences['show_analytics_explorer']);
@@ -155,22 +162,10 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Dashboard Settings" title="Open Dashboard Settings">Dashboard Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
-
-      <section class="admin-page-section">
-        <article class="admin-panel">
-          <div class="admin-panel-head">
-            <div>
-              <h2>Dashboard Settings Workspace</h2>
-              <p class="admin-panel-note">Open your personal dashboard controls to show or hide summary cards, activity panels, analytics blocks, and admin widgets.</p>
-            </div>
-            <a class="admin-button admin-button-soft" href="dashboard-setting.php">Open Dashboard Settings</a>
-          </div>
-        </article>
-      </section>
 
       <?php if ($showAdminSummaryCards): ?>
       <section class="admin-card-grid" aria-label="Dashboard totals">
@@ -232,9 +227,18 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
       </section>
       <?php endif; ?>
 
-      <?php if ($showAdminSummaryCards): ?>
+      <?php if ($showAdminPeriodStats): ?>
       <section class="admin-content-grid">
-        <?php foreach ($adminPeriodStats as $periodStat): ?>
+        <?php foreach ($adminPeriodStats as $periodKey => $periodStat): ?>
+        <?php
+        $isVisiblePeriod =
+          ($periodKey === 'daily' && $showAdminDailyStats) ||
+          ($periodKey === 'monthly' && $showAdminMonthlyStats) ||
+          ($periodKey === 'yearly' && $showAdminYearlyStats);
+        if (!$isVisiblePeriod) {
+          continue;
+        }
+        ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>

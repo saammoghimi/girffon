@@ -5,6 +5,9 @@ function girffonAdminDashboardSettingsDefault(): array
 {
     return [
         'show_summary_cards' => true,
+        'show_daily_stats' => true,
+        'show_monthly_stats' => true,
+        'show_yearly_stats' => true,
         'show_recent_activity' => true,
         'show_login_activity' => true,
         'show_analytics_explorer' => true,
@@ -48,6 +51,9 @@ function girffonAdminEnsureDashboardSettingsTable(PDO $pdo): bool
                 admin_id INT NOT NULL DEFAULT 0,
                 admin_username VARCHAR(191) NOT NULL DEFAULT '',
                 show_summary_cards TINYINT(1) NOT NULL DEFAULT 1,
+                show_daily_stats TINYINT(1) NOT NULL DEFAULT 1,
+                show_monthly_stats TINYINT(1) NOT NULL DEFAULT 1,
+                show_yearly_stats TINYINT(1) NOT NULL DEFAULT 1,
                 show_recent_activity TINYINT(1) NOT NULL DEFAULT 1,
                 show_login_activity TINYINT(1) NOT NULL DEFAULT 1,
                 show_analytics_explorer TINYINT(1) NOT NULL DEFAULT 1,
@@ -59,6 +65,25 @@ function girffonAdminEnsureDashboardSettingsTable(PDO $pdo): bool
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
         );
+
+        $existingColumns = [];
+        $columnStatement = $pdo->query("SHOW COLUMNS FROM admin_dashboard_settings");
+        foreach (($columnStatement ? $columnStatement->fetchAll(PDO::FETCH_ASSOC) : []) as $column) {
+            $name = strtolower(trim((string) ($column['Field'] ?? '')));
+            if ($name !== '') {
+                $existingColumns[$name] = true;
+            }
+        }
+
+        foreach ([
+            'show_daily_stats',
+            'show_monthly_stats',
+            'show_yearly_stats',
+        ] as $columnName) {
+            if (!isset($existingColumns[$columnName])) {
+                $pdo->exec("ALTER TABLE admin_dashboard_settings ADD COLUMN {$columnName} TINYINT(1) NOT NULL DEFAULT 1");
+            }
+        }
 
         return true;
     } catch (PDOException $exception) {
@@ -77,6 +102,9 @@ function girffonAdminFetchDashboardPreferences(PDO $pdo, int $adminId, string $u
         $statement = $pdo->prepare(
             "SELECT
                 show_summary_cards,
+                show_daily_stats,
+                show_monthly_stats,
+                show_yearly_stats,
                 show_recent_activity,
                 show_login_activity,
                 show_analytics_explorer,
@@ -118,6 +146,9 @@ function girffonAdminSaveDashboardPreferences(PDO $pdo, int $adminId, string $us
                 admin_id,
                 admin_username,
                 show_summary_cards,
+                show_daily_stats,
+                show_monthly_stats,
+                show_yearly_stats,
                 show_recent_activity,
                 show_login_activity,
                 show_analytics_explorer,
@@ -130,6 +161,9 @@ function girffonAdminSaveDashboardPreferences(PDO $pdo, int $adminId, string $us
                 :admin_id,
                 :admin_username,
                 :show_summary_cards,
+                :show_daily_stats,
+                :show_monthly_stats,
+                :show_yearly_stats,
                 :show_recent_activity,
                 :show_login_activity,
                 :show_analytics_explorer,
@@ -141,6 +175,9 @@ function girffonAdminSaveDashboardPreferences(PDO $pdo, int $adminId, string $us
                 admin_id = VALUES(admin_id),
                 admin_username = VALUES(admin_username),
                 show_summary_cards = VALUES(show_summary_cards),
+                show_daily_stats = VALUES(show_daily_stats),
+                show_monthly_stats = VALUES(show_monthly_stats),
+                show_yearly_stats = VALUES(show_yearly_stats),
                 show_recent_activity = VALUES(show_recent_activity),
                 show_login_activity = VALUES(show_login_activity),
                 show_analytics_explorer = VALUES(show_analytics_explorer),
@@ -155,6 +192,9 @@ function girffonAdminSaveDashboardPreferences(PDO $pdo, int $adminId, string $us
             'admin_id' => max(0, $adminId),
             'admin_username' => trim($username) !== '' ? trim($username) : 'GirffoN Admin',
             'show_summary_cards' => $normalizedPreferences['show_summary_cards'] ? 1 : 0,
+            'show_daily_stats' => $normalizedPreferences['show_daily_stats'] ? 1 : 0,
+            'show_monthly_stats' => $normalizedPreferences['show_monthly_stats'] ? 1 : 0,
+            'show_yearly_stats' => $normalizedPreferences['show_yearly_stats'] ? 1 : 0,
             'show_recent_activity' => $normalizedPreferences['show_recent_activity'] ? 1 : 0,
             'show_login_activity' => $normalizedPreferences['show_login_activity'] ? 1 : 0,
             'show_analytics_explorer' => $normalizedPreferences['show_analytics_explorer'] ? 1 : 0,
