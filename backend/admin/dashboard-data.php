@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . "/../config/database.php";
+require_once __DIR__ . "/custom-design-orders-data.php";
 
 function girffonAdminDashboardLogPath(string $fileName): string
 {
@@ -308,24 +309,45 @@ function girffonAdminFetchLastLoginTime(int $adminId = 0, string $username = '')
 
 function girffonAdminCountOrdersForDateRange(PDO $pdo, string $startExpression, string $endExpression): int
 {
+    $shopOrders = 0;
     try {
         $statement = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE created_at >= :start_at AND created_at < :end_at");
         $statement->execute([':start_at' => $startExpression, ':end_at' => $endExpression]);
-        return (int) $statement->fetchColumn();
+        $shopOrders = (int) $statement->fetchColumn();
     } catch (PDOException $exception) {
-        return 0;
     }
+
+    $customOrders = 0;
+    foreach (girffonAdminDashboardFetchCustomDesignRowsForRange($pdo, $startExpression, $endExpression) as $row) {
+        $createdAt = trim((string) ($row['created_at'] ?? ''));
+        if ($createdAt !== '' && $createdAt >= $startExpression && $createdAt < $endExpression) {
+            $customOrders++;
+        }
+    }
+
+    return $shopOrders + $customOrders;
 }
 
 function girffonAdminSumRevenueForDateRange(PDO $pdo, string $startExpression, string $endExpression): float
 {
+    $shopRevenue = 0.0;
     try {
         $statement = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM orders WHERE created_at >= :start_at AND created_at < :end_at");
         $statement->execute([':start_at' => $startExpression, ':end_at' => $endExpression]);
-        return (float) $statement->fetchColumn();
+        $shopRevenue = (float) $statement->fetchColumn();
     } catch (PDOException $exception) {
-        return 0.0;
     }
+
+    $customRevenue = 0.0;
+    foreach (girffonAdminDashboardFetchCustomDesignRowsForRange($pdo, $startExpression, $endExpression) as $row) {
+        $paidAt = trim((string) ($row['paid_at'] ?? ''));
+        $paymentStatus = strtolower(trim((string) ($row['payment_status'] ?? '')));
+        if ($paymentStatus === 'paid' && $paidAt !== '' && $paidAt >= $startExpression && $paidAt < $endExpression) {
+            $customRevenue += girffonAdminDashboardCustomDesignOrderTotal($row);
+        }
+    }
+
+    return $shopRevenue + $customRevenue;
 }
 
 function girffonAdminCountInvoicesForDateRange(PDO $pdo, string $startExpression, string $endExpression): int
@@ -375,7 +397,32 @@ function girffonAdminFetchPeriodStats(PDO $pdo): array
             'revenue' => girffonAdminSumRevenueForDateRange($pdo, $range['range']['start'], $range['range']['end']),
             'invoices' => girffonAdminCountInvoicesForDateRange($pdo, $range['range']['start'], $range['range']['end']),
             'members' => girffonAdminCountMembersForDateRange($pdo, $range['range']['start'], $range['range']['end']),
+            'shop_orders' => 0,
+            'custom_design_orders' => 0,
+            'shop_revenue' => 0.0,
+            'custom_design_revenue' => 0.0,
         ];
+
+        try {
+            $statement = $pdo->prepare("SELECT COUNT(*), COALESCE(SUM(total), 0) FROM orders WHERE created_at >= :start_at AND created_at < :end_at");
+            $statement->execute([':start_at' => $range['range']['start'], ':end_at' => $range['range']['end']]);
+            $shopRow = $statement->fetch(PDO::FETCH_NUM) ?: [0, 0];
+            $stats[$key]['shop_orders'] = (int) ($shopRow[0] ?? 0);
+            $stats[$key]['shop_revenue'] = (float) ($shopRow[1] ?? 0);
+        } catch (PDOException $exception) {
+        }
+
+        foreach (girffonAdminDashboardFetchCustomDesignRowsForRange($pdo, $range['range']['start'], $range['range']['end']) as $row) {
+            $createdAt = trim((string) ($row['created_at'] ?? ''));
+            $paidAt = trim((string) ($row['paid_at'] ?? ''));
+            $paymentStatus = strtolower(trim((string) ($row['payment_status'] ?? '')));
+            if ($createdAt !== '' && $createdAt >= $range['range']['start'] && $createdAt < $range['range']['end']) {
+                $stats[$key]['custom_design_orders']++;
+            }
+            if ($paymentStatus === 'paid' && $paidAt !== '' && $paidAt >= $range['range']['start'] && $paidAt < $range['range']['end']) {
+                $stats[$key]['custom_design_revenue'] += girffonAdminDashboardCustomDesignOrderTotal($row);
+            }
+        }
     }
 
     return $stats;
@@ -398,7 +445,7 @@ function girffonAdminFetchAvailableStatYears(PDO $pdo): array
             $statement = $pdo->query($sql);
             foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
                 $year = (int) ($row['year_value'] ?? 0);
-                if ($year > 0) {
+                if (girffonAdminDashboardIsSaneYear($year)) {
                     $years[] = $year;
                 }
             }
@@ -406,9 +453,24 @@ function girffonAdminFetchAvailableStatYears(PDO $pdo): array
         }
     }
 
+    if (girffonAdminEnsureCustomDesignOrderTables($pdo)) {
+        foreach (['created_at', 'paid_at'] as $column) {
+            try {
+                $statement = $pdo->query("SELECT DISTINCT YEAR({$column}) AS year_value FROM custom_design_orders WHERE {$column} IS NOT NULL");
+                foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+                    $year = (int) ($row['year_value'] ?? 0);
+                    if (girffonAdminDashboardIsSaneYear($year)) {
+                        $years[] = $year;
+                    }
+                }
+            } catch (PDOException $exception) {
+            }
+        }
+    }
+
     $years = array_values(array_unique(array_filter($years)));
     sort($years);
-    return $years ?: [(int) date('Y')];
+    return $years ?: [(int) girffonAdminDashboardRomeNow()->format('Y')];
 }
 
 function girffonAdminAnalyticsBuildBaseSeries(array $labels): array
@@ -454,7 +516,8 @@ function girffonAdminAnalyticsSeriesSummary(array $series): array
 
 function girffonAdminAnalyticsDailySeries(PDO $pdo, int $year, int $month): array
 {
-    $year = max(2024, min(2035, $year));
+    [$minimumYear, $maximumYear] = girffonAdminDashboardSaneYearRange();
+    $year = max($minimumYear, min($maximumYear, $year));
     $month = max(1, min(12, $month));
     $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
     $labels = [];
@@ -486,6 +549,21 @@ function girffonAdminAnalyticsDailySeries(PDO $pdo, int $year, int $month): arra
         }
     }
 
+    foreach (girffonAdminDashboardFetchCustomDesignRowsForRange($pdo, $range['start'], $range['end']) as $row) {
+        $createdAtKey = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'daily');
+        if (isset($series[$createdAtKey])) {
+            $series[$createdAtKey]['orders']++;
+        }
+
+        $paymentStatus = strtolower(trim((string) ($row['payment_status'] ?? '')));
+        if ($paymentStatus === 'paid') {
+            $paidAtKey = girffonAdminDashboardBucketKey((string) ($row['paid_at'] ?? ''), 'daily');
+            if (isset($series[$paidAtKey])) {
+                $series[$paidAtKey]['revenue'] += girffonAdminDashboardCustomDesignOrderTotal($row);
+            }
+        }
+    }
+
     return [
         'label' => (new DateTimeImmutable(sprintf('%04d-%02d-01 00:00:00', $year, $month), girffonAdminDashboardRomeTimezone()))->format('F Y'),
         'summary' => girffonAdminAnalyticsSeriesSummary($series),
@@ -495,7 +573,8 @@ function girffonAdminAnalyticsDailySeries(PDO $pdo, int $year, int $month): arra
 
 function girffonAdminAnalyticsMonthlySeries(PDO $pdo, int $year): array
 {
-    $year = max(2024, min(2035, $year));
+    [$minimumYear, $maximumYear] = girffonAdminDashboardSaneYearRange();
+    $year = max($minimumYear, min($maximumYear, $year));
     $labels = [
         '1' => 'Jan', '2' => 'Feb', '3' => 'Mar', '4' => 'Apr', '5' => 'May', '6' => 'Jun',
         '7' => 'Jul', '8' => 'Aug', '9' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec',
@@ -522,6 +601,21 @@ function girffonAdminAnalyticsMonthlySeries(PDO $pdo, int $year): array
         $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'monthly');
         if (isset($series[$key])) {
             $series[$key]['members']++;
+        }
+    }
+
+    foreach (girffonAdminDashboardFetchCustomDesignRowsForRange($pdo, $range['start'], $range['end']) as $row) {
+        $createdAtKey = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'monthly');
+        if (isset($series[$createdAtKey])) {
+            $series[$createdAtKey]['orders']++;
+        }
+
+        $paymentStatus = strtolower(trim((string) ($row['payment_status'] ?? '')));
+        if ($paymentStatus === 'paid') {
+            $paidAtKey = girffonAdminDashboardBucketKey((string) ($row['paid_at'] ?? ''), 'monthly');
+            if (isset($series[$paidAtKey])) {
+                $series[$paidAtKey]['revenue'] += girffonAdminDashboardCustomDesignOrderTotal($row);
+            }
         }
     }
 
@@ -569,6 +663,21 @@ function girffonAdminAnalyticsYearlySeries(PDO $pdo, array $years): array
         $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'yearly');
         if (isset($series[$key])) {
             $series[$key]['members']++;
+        }
+    }
+
+    foreach (girffonAdminDashboardFetchCustomDesignRowsForRange($pdo, $startRange['start'], $endRange['start']) as $row) {
+        $createdAtKey = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'yearly');
+        if (isset($series[$createdAtKey])) {
+            $series[$createdAtKey]['orders']++;
+        }
+
+        $paymentStatus = strtolower(trim((string) ($row['payment_status'] ?? '')));
+        if ($paymentStatus === 'paid') {
+            $paidAtKey = girffonAdminDashboardBucketKey((string) ($row['paid_at'] ?? ''), 'yearly');
+            if (isset($series[$paidAtKey])) {
+                $series[$paidAtKey]['revenue'] += girffonAdminDashboardCustomDesignOrderTotal($row);
+            }
         }
     }
 
@@ -703,4 +812,48 @@ function girffonAdminFetchRecentMembers(PDO $pdo, int $limit = 5): array
     } catch (PDOException $exception) {
         return [];
     }
+}
+
+function girffonAdminDashboardSaneYearRange(): array
+{
+    $currentYear = (int) girffonAdminDashboardRomeNow()->format('Y');
+    return [2024, $currentYear];
+}
+
+function girffonAdminDashboardIsSaneYear(int $year): bool
+{
+    [$minimumYear, $maximumYear] = girffonAdminDashboardSaneYearRange();
+    return $year >= $minimumYear && $year <= $maximumYear;
+}
+
+function girffonAdminDashboardFetchCustomDesignRowsForRange(PDO $pdo, string $startUtc, string $endUtc): array
+{
+    if (!girffonAdminEnsureCustomDesignOrderTables($pdo)) {
+        return [];
+    }
+
+    try {
+        $statement = $pdo->prepare(
+            "SELECT created_at, paid_at, payment_status, design_payload_json
+             FROM custom_design_orders
+             WHERE (
+                 created_at >= :start_at AND created_at < :end_at
+             ) OR (
+                 payment_status = 'paid' AND paid_at IS NOT NULL AND paid_at >= :start_at AND paid_at < :end_at
+             )"
+        );
+        $statement->execute([
+            ':start_at' => $startUtc,
+            ':end_at' => $endUtc,
+        ]);
+        return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $exception) {
+        return [];
+    }
+}
+
+function girffonAdminDashboardCustomDesignOrderTotal(array $row): float
+{
+    $payload = girffonAdminCustomDesignDecodeJson($row['design_payload_json'] ?? null);
+    return (float) girffonAdminCustomDesignValueAt($payload, ['product.order_total', 'snapshot.orderTotal', 'order_total', 'snapshot.total'], 0);
 }

@@ -190,12 +190,12 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <article class="admin-stat-card">
           <span>Orders Today</span>
           <strong id="adminOrdersTodayCount"><?php echo $escapeAdminDashboard($adminOrdersTodayCount); ?></strong>
-          <p class="admin-status">New orders created since midnight.</p>
+          <p class="admin-status">Combined new orders from shop and custom design since Rome midnight.</p>
         </article>
         <article class="admin-stat-card">
           <span>Revenue This Month</span>
           <strong id="adminRevenueThisMonth"><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($adminRevenueThisMonth)); ?></strong>
-          <p class="admin-status">Gross order revenue booked this month.</p>
+          <p class="admin-status">Combined paid revenue from shop and custom design this Rome month.</p>
         </article>
         <article class="admin-stat-card">
           <span>Custom Design Paid</span>
@@ -227,7 +227,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div class="admin-panel-head">
             <div>
               <h2><?php echo $escapeAdminDashboard($periodStat['label'] ?? 'Stats'); ?></h2>
-              <p class="admin-panel-note">Exact Rome-based totals for this period.</p>
+              <p class="admin-panel-note">Exact Rome-based totals with shop and custom design combined.</p>
             </div>
           </div>
           <div class="admin-analytics-summary-grid">
@@ -235,6 +235,10 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
             <div class="admin-analytics-summary-card"><span>Revenue</span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($periodStat['revenue'] ?? 0)); ?></strong></div>
             <div class="admin-analytics-summary-card"><span>Invoices</span><strong><?php echo $escapeAdminDashboard($periodStat['invoices'] ?? 0); ?></strong></div>
             <div class="admin-analytics-summary-card"><span>Members</span><strong><?php echo $escapeAdminDashboard($periodStat['members'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Shop Orders</span><strong><?php echo $escapeAdminDashboard($periodStat['shop_orders'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Custom Orders</span><strong><?php echo $escapeAdminDashboard($periodStat['custom_design_orders'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Shop Revenue</span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($periodStat['shop_revenue'] ?? 0)); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Custom Revenue</span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($periodStat['custom_design_revenue'] ?? 0)); ?></strong></div>
           </div>
         </article>
         <?php endforeach; ?>
