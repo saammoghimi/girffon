@@ -155,10 +155,22 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Dashboard Settings" title="Open Dashboard Settings">Dashboard Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
+
+      <section class="admin-page-section">
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Dashboard Settings Workspace</h2>
+              <p class="admin-panel-note">Open your personal dashboard controls to show or hide summary cards, activity panels, analytics blocks, and admin widgets.</p>
+            </div>
+            <a class="admin-button admin-button-soft" href="dashboard-setting.php">Open Dashboard Settings</a>
+          </div>
+        </article>
+      </section>
 
       <?php if ($showAdminSummaryCards): ?>
       <section class="admin-card-grid" aria-label="Dashboard totals">

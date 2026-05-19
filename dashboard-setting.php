@@ -162,7 +162,7 @@ $dashboardSettingToggles = [
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" aria-label="Dashboard Settings Workspace" aria-current="page" title="You are already in Dashboard Settings" disabled>Dashboard Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
@@ -179,6 +179,16 @@ $dashboardSettingToggles = [
             <?php echo $escapeDashboardSetting($adminDashboardSettingError ?: $adminDashboardSettingStatus); ?>
           </div>
         <?php endif; ?>
+
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>Connected To Admin Dashboard</h2>
+              <p class="admin-panel-note">These switches control what appears on your personal view of admin-dashboard.php. Save here, then return to the dashboard to see the result immediately.</p>
+            </div>
+            <a class="admin-button admin-button-soft" href="admin-dashboard.php">Open Admin Dashboard</a>
+          </div>
+        </article>
 
         <article class="admin-panel">
           <div class="admin-panel-head">
