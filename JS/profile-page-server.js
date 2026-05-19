@@ -1310,11 +1310,31 @@
     }
 
     grid.innerHTML = items.map(function (item) {
+      const orderNumber = item.order_number || ('Custom Order #' + String(item.id || ''));
+      const productName = item.product_name || 'Custom Product';
+      const statusLabel = item.status_label || item.status || 'New';
+      const previewAlt = orderNumber + ' front preview';
       const thumb = item.preview_image
-        ? '<div class="gf-account-design-thumb" aria-hidden="true"><img src="' + escapeAttribute(item.preview_image) + '" alt="' + escapeAttribute(item.title) + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div>'
+        ? '<div class="gf-account-design-thumb" aria-hidden="true"><img src="' + escapeAttribute(item.preview_image) + '" alt="' + escapeAttribute(previewAlt) + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"></div>'
         : '<div class="gf-account-design-thumb" aria-hidden="true"><span class="gf-account-design-shirt"></span><span class="gf-account-design-mark"></span></div>';
 
-      return '<article class="gf-account-design-card">' + thumb + '<div class="gf-account-design-body"><h4>' + escapeHtml(item.title) + '</h4><p class="gf-account-note">Saved on ' + escapeHtml(formatDate(item.created_at)) + '</p><div class="gf-account-design-actions"><a class="gf-account-btn gf-account-btn-secondary" href="' + escapeAttribute(item.project_url || 'Image/Custom Design Pro/CustomDesignPro.html') + '">Edit</a><button type="button" class="gf-account-btn gf-account-btn-secondary" data-gf-design-action="duplicate" data-gf-design-id="' + escapeAttribute(item.id) + '">Duplicate</button><button type="button" class="gf-account-btn gf-account-btn-danger" data-gf-design-action="delete" data-gf-design-id="' + escapeAttribute(item.id) + '">Delete</button></div></div></article>';
+      const viewAction = item.view_url
+        ? '<a class="gf-account-btn gf-account-btn-secondary" href="' + escapeAttribute(item.view_url) + '" target="_blank" rel="noopener">View Design</a>'
+        : '<span class="gf-account-btn gf-account-btn-secondary" aria-disabled="true">View Design</span>';
+      const downloadAction = item.download_url
+        ? '<a class="gf-account-btn gf-account-btn-secondary" href="' + escapeAttribute(item.download_url) + '" download="' + escapeAttribute(item.download_name || 'custom-order-preview.png') + '">Download Preview</a>'
+        : '<span class="gf-account-btn gf-account-btn-secondary" aria-disabled="true">Download Preview</span>';
+
+      return '<article class="gf-account-design-card">'
+        + thumb
+        + '<div class="gf-account-design-body">'
+        + '<h4>' + escapeHtml(orderNumber) + '</h4>'
+        + '<p class="gf-account-note">' + escapeHtml(productName) + '</p>'
+        + '<p class="gf-account-note">Status: ' + escapeHtml(statusLabel) + '</p>'
+        + '<p class="gf-account-note">Date: ' + escapeHtml(formatDate(item.created_at)) + '</p>'
+        + '<div class="gf-account-design-actions">' + viewAction + downloadAction + '</div>'
+        + '</div>'
+        + '</article>';
     }).join('');
   }
 
@@ -1331,14 +1351,6 @@
     };
 
     refresh();
-
-    section.addEventListener('click', function (event) {
-      const button = event.target.closest('[data-gf-design-action]');
-      if (!button) return;
-      const action = button.getAttribute('data-gf-design-action');
-      const id = Number(button.getAttribute('data-gf-design-id') || '0');
-      postJson(DESIGNS_URL, { action: action, id: id }).then(refresh).catch(function () {});
-    });
   }
 
   function bindBirthdaySave(userState, orders) {
