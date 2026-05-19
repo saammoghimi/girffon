@@ -27,7 +27,7 @@ $adminPaidCustomDesignCount = girffonAdminCountCustomDesignOrders($pdo, ['paymen
 $adminPendingCustomDesignCount = girffonAdminCountCustomDesignOrders($pdo, ['statuses' => ['pending_payment']]);
 $adminCustomDesignRevenueThisMonth = girffonAdminSumCustomDesignRevenue($pdo, [
   'payment_status' => 'paid',
-  'paid_after' => date('Y-m-01 00:00:00'),
+  'paid_after' => girffonAdminDashboardRomeNow()->modify('first day of this month')->setTime(0, 0, 0)->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s'),
 ]);
 $adminRecentPaidCustomDesignOrders = array_values(array_filter(
   girffonAdminFetchCustomDesignOrderSummaries($pdo, 4, ['payment_status' => 'paid']),
@@ -49,6 +49,9 @@ $adminCurrentAdminProfile = girffonAdminFetchAdminProfile($pdo, $adminCurrentId)
 $adminWeatherCity = trim((string) ($adminCurrentAdminProfile['city'] ?? '')) ?: 'Milan';
 $adminWeatherCountry = trim((string) ($adminCurrentAdminProfile['country'] ?? '')) ?: 'Italy';
 $adminAnalyticsExplorer = girffonAdminFetchAnalyticsExplorer($pdo);
+$adminRomeCurrentTime = girffonAdminDashboardRomeCurrent('d M Y · H:i');
+$adminRomeCurrentYear = (int) girffonAdminDashboardRomeNow()->format('Y');
+$adminRomeCurrentMonth = (int) girffonAdminDashboardRomeNow()->format('n');
 $adminDashboardPreferences = [
   'show_summary_cards' => true,
   'show_recent_activity' => true,
@@ -85,8 +88,13 @@ $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard
   return $escapeAdminDashboard(ucwords(str_replace("_", " ", (string) $value)));
 };
 $formatAdminDashboardDate = static function ($value) {
-  $timestamp = strtotime((string) $value);
-  return $timestamp !== false ? date("Y-m-d", $timestamp) : "Unknown date";
+  return girffonAdminDashboardFormatRome((string) $value, 'Y-m-d');
+};
+$formatAdminDashboardDateTime = static function ($value) {
+  return girffonAdminDashboardFormatRome((string) $value, 'd M Y · H:i');
+};
+$formatAdminDashboardCustomDesignDate = static function ($value) use ($escapeAdminDashboard) {
+  return $escapeAdminDashboard(girffonAdminCustomDesignFormatRomeDate((string) $value));
 };
 $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) {
   $text = trim(preg_replace('/\s+/', ' ', (string) $value));
@@ -201,9 +209,35 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         </article>
         <article class="admin-stat-card">
           <span>Last Login Time</span>
-          <strong id="adminLastLoginTime"><?php echo $escapeAdminDashboard($adminLastLoginTime !== '' ? date('Y-m-d H:i', strtotime($adminLastLoginTime)) : 'No data'); ?></strong>
+          <strong id="adminLastLoginTime"><?php echo $escapeAdminDashboard($adminLastLoginTime !== '' ? $formatAdminDashboardDateTime($adminLastLoginTime) : 'No data'); ?></strong>
           <p class="admin-status">Exact latest admin sign-in recorded for this account.</p>
         </article>
+        <article class="admin-stat-card">
+          <span>Rome Time</span>
+          <strong id="adminRomeCurrentTime"><?php echo $escapeAdminDashboard($adminRomeCurrentTime); ?></strong>
+          <p class="admin-status">Current dashboard reference time in Europe/Rome.</p>
+        </article>
+      </section>
+      <?php endif; ?>
+
+      <?php if ($showAdminSummaryCards): ?>
+      <section class="admin-content-grid">
+        <?php foreach ($adminPeriodStats as $periodStat): ?>
+        <article class="admin-panel">
+          <div class="admin-panel-head">
+            <div>
+              <h2><?php echo $escapeAdminDashboard($periodStat['label'] ?? 'Stats'); ?></h2>
+              <p class="admin-panel-note">Exact Rome-based totals for this period.</p>
+            </div>
+          </div>
+          <div class="admin-analytics-summary-grid">
+            <div class="admin-analytics-summary-card"><span>Orders</span><strong><?php echo $escapeAdminDashboard($periodStat['orders'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Revenue</span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($periodStat['revenue'] ?? 0)); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Invoices</span><strong><?php echo $escapeAdminDashboard($periodStat['invoices'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-summary-card"><span>Members</span><strong><?php echo $escapeAdminDashboard($periodStat['members'] ?? 0); ?></strong></div>
+          </div>
+        </article>
+        <?php endforeach; ?>
       </section>
       <?php endif; ?>
 
@@ -219,7 +253,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div id="adminRecentOrders" class="admin-mini-list">
             <?php if ($adminRecentOrders): ?>
               <?php foreach ($adminRecentOrders as $order): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($order["order_number"] ?? "") . " - " . ($order["customer_name"] ?? "")); ?></span><strong><?php echo $formatAdminDashboardLabel($order["order_status"] ?? "new"); ?></strong></div>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($order["order_number"] ?? "") . " - " . ($order["customer_name"] ?? "")); ?><br><small><?php echo $escapeAdminDashboard($formatAdminDashboardDateTime($order["created_at"] ?? "")); ?></small></span><strong><?php echo $formatAdminDashboardLabel($order["order_status"] ?? "new"); ?></strong></div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No orders yet.</p>
@@ -237,7 +271,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div id="adminRecentMembers" class="admin-mini-list">
             <?php if ($adminRecentMembers): ?>
               <?php foreach ($adminRecentMembers as $member): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(trim((string) (($member["first_name"] ?? "") . " " . ($member["last_name"] ?? ""))) ?: ($member["email"] ?? "")); ?><br><small><?php echo $escapeAdminDashboard($member["email"] ?? ""); ?></small></span><strong><?php echo $escapeAdminDashboard($member["created_at"] ?? ""); ?></strong></div>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(trim((string) (($member["first_name"] ?? "") . " " . ($member["last_name"] ?? ""))) ?: ($member["email"] ?? "")); ?><br><small><?php echo $escapeAdminDashboard($member["email"] ?? ""); ?></small></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardDateTime($member["created_at"] ?? "")); ?></strong></div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No members yet.</p>
@@ -305,7 +339,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div id="adminTodayOrders" class="admin-mini-list">
             <?php if ($adminTodayOrders): ?>
               <?php foreach ($adminTodayOrders as $order): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($order["customer_name"] ?? ""); ?></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($order["total"] ?? 0)); ?></strong></div>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($order["customer_name"] ?? ""); ?><br><small><?php echo $escapeAdminDashboard($formatAdminDashboardDateTime($order["created_at"] ?? "")); ?></small></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($order["total"] ?? 0)); ?></strong></div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No orders were created today.</p>
@@ -323,7 +357,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div id="adminRecentInvoices" class="admin-mini-list">
             <?php if ($adminRecentInvoices): ?>
               <?php foreach ($adminRecentInvoices as $invoice): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($invoice["invoice_number"] ?? "") . " - " . ($invoice["order_number"] ?? "")); ?></span><strong><?php echo $formatAdminDashboardLabel($invoice["invoice_status"] ?? "pending"); ?></strong></div>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($invoice["invoice_number"] ?? "") . " - " . ($invoice["order_number"] ?? "")); ?><br><small><?php echo $escapeAdminDashboard($formatAdminDashboardDateTime($invoice["created_at"] ?? "")); ?></small></span><strong><?php echo $formatAdminDashboardLabel($invoice["invoice_status"] ?? "pending"); ?></strong></div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No invoices yet.</p>
@@ -341,7 +375,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div class="admin-mini-list">
             <?php if ($adminRecentPaidCustomDesignOrders): ?>
               <?php foreach ($adminRecentPaidCustomDesignOrders as $customOrder): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($customOrder['order_code'] ?? '') . ' - ' . ($customOrder['customer_name'] ?? '')); ?><br><small><?php echo $escapeAdminDashboard($customOrder['product_name'] ?? 'Custom Product'); ?></small></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($customOrder['order_total'] ?? 0)); ?><br><small><?php echo $formatAdminDashboardLabel($customOrder['status'] ?? 'paid_review'); ?></small></strong></div>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard(($customOrder['order_code'] ?? '') . ' - ' . ($customOrder['customer_name'] ?? '')); ?><br><small><?php echo $escapeAdminDashboard($customOrder['product_name'] ?? 'Custom Product'); ?></small><br><small><?php echo $formatAdminDashboardCustomDesignDate($customOrder['paid_at'] ?? ($customOrder['created_at'] ?? '')); ?></small></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardCurrency($customOrder['order_total'] ?? 0)); ?><br><small><?php echo $formatAdminDashboardLabel($customOrder['status'] ?? 'paid_review'); ?></small></strong></div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No paid custom design orders yet.</p>
@@ -364,7 +398,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <div class="admin-mini-list">
             <?php if ($adminLoginActivity): ?>
               <?php foreach ($adminLoginActivity as $activity): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($activity['username'] ?? 'GirffoN Admin'); ?><br><small><?php echo $escapeAdminDashboard($activity['ip'] ?? ''); ?></small></span><strong><?php echo $escapeAdminDashboard(date('Y-m-d H:i', strtotime((string) ($activity['created_at'] ?? 'now')))); ?></strong></div>
+                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($activity['username'] ?? 'GirffoN Admin'); ?><br><small><?php echo $escapeAdminDashboard($activity['ip'] ?? ''); ?></small></span><strong><?php echo $escapeAdminDashboard($formatAdminDashboardDateTime($activity['created_at'] ?? '')); ?></strong></div>
               <?php endforeach; ?>
             <?php else: ?>
               <p class="admin-empty">No login activity captured yet.</p>
@@ -390,14 +424,14 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
               </div>
               <div class="admin-analytics-filter-group" data-analytics-year-group>
                 <?php foreach (($adminAnalyticsExplorer['years'] ?? []) as $year): ?>
-                  <button type="button" class="admin-chip <?php echo ((int) $year === (int) ($adminAnalyticsExplorer['selectedYear'] ?? date('Y'))) ? 'is-active' : ''; ?>" data-analytics-year="<?php echo $escapeAdminDashboard($year); ?>"><?php echo $escapeAdminDashboard($year); ?></button>
+                  <button type="button" class="admin-chip <?php echo ((int) $year === (int) ($adminAnalyticsExplorer['selectedYear'] ?? $adminRomeCurrentYear)) ? 'is-active' : ''; ?>" data-analytics-year="<?php echo $escapeAdminDashboard($year); ?>"><?php echo $escapeAdminDashboard($year); ?></button>
                 <?php endforeach; ?>
               </div>
               <label class="admin-inline-select" data-analytics-month-wrap>
                 <span>Month</span>
                 <select data-analytics-month>
                   <?php for ($month = 1; $month <= 12; $month++): ?>
-                    <option value="<?php echo $escapeAdminDashboard($month); ?>" <?php echo ((int) $month === (int) ($adminAnalyticsExplorer['selectedMonth'] ?? date('n'))) ? 'selected' : ''; ?>><?php echo $escapeAdminDashboard(date('F', mktime(0, 0, 0, $month, 1))); ?></option>
+                    <option value="<?php echo $escapeAdminDashboard($month); ?>" <?php echo ((int) $month === (int) ($adminAnalyticsExplorer['selectedMonth'] ?? $adminRomeCurrentMonth)) ? 'selected' : ''; ?>><?php echo $escapeAdminDashboard(date('F', mktime(0, 0, 0, $month, 1))); ?></option>
                   <?php endfor; ?>
                 </select>
               </label>

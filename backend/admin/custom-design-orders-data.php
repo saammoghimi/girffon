@@ -98,6 +98,31 @@ function girffonAdminCustomDesignNormalizePath(?string $path): string
     return $normalizedPath;
 }
 
+function girffonAdminCustomDesignFormatRomeDate(string $value, string $format = 'd M Y · H:i'): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '-';
+    }
+
+    try {
+        $date = new DateTimeImmutable($value, new DateTimeZone('UTC'));
+        return $date->setTimezone(new DateTimeZone('Europe/Rome'))->format($format);
+    } catch (Throwable $exception) {
+        $timestamp = strtotime($value);
+        if ($timestamp === false) {
+            return '-';
+        }
+
+        try {
+            $fallbackDate = new DateTimeImmutable('@' . $timestamp);
+            return $fallbackDate->setTimezone(new DateTimeZone('Europe/Rome'))->format($format);
+        } catch (Throwable $innerException) {
+            return '-';
+        }
+    }
+}
+
 function girffonAdminCustomDesignFormatBytes($value): string
 {
     $bytes = (float) $value;

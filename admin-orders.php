@@ -94,6 +94,9 @@ $formatAdminOrderDate = static function ($value) use ($escapeAdminOrder) {
   $timestamp = strtotime((string) $value);
   return $timestamp ? $escapeAdminOrder(date("Y-m-d H:i", $timestamp)) : $escapeAdminOrder($value);
 };
+$formatAdminCustomDesignDate = static function ($value) use ($escapeAdminOrder) {
+  return $escapeAdminOrder(girffonAdminCustomDesignFormatRomeDate((string) $value));
+};
 $formatAdminOrderInputDate = static function ($value) {
   if (!$value) {
     return "";
@@ -509,7 +512,7 @@ $renderAdminOrderOptionList = static function (array $options, $selected) use ($
                         <div><?php echo $formatAdminOrderLabel($customOrder['status'] ?? 'paid_review'); ?></div>
                       </td>
                       <td><?php echo $escapeAdminOrder($formatAdminOrderCurrency($customOrder['order_total'] ?? 0)); ?></td>
-                      <td><?php echo $formatAdminOrderDate($customOrder['paid_at'] ?? ''); ?></td>
+                      <td><?php echo $formatAdminCustomDesignDate($customOrder['paid_at'] ?? ($customOrder['created_at'] ?? '')); ?></td>
                       <td class="admin-order-update-actions">
                         <div class="admin-order-action-stack">
                           <a class="admin-button admin-button-soft" href="/GirffoN/admin-custom-order-view.php?id=<?php echo $escapeAdminOrder($customOrder['id'] ?? 0); ?>">View Custom Order</a>

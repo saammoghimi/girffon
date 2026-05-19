@@ -46,6 +46,139 @@ function girffonAdminDashboardNormalizeTimestamp($value): int
     return $timestamp !== false ? $timestamp : 0;
 }
 
+function girffonAdminDashboardRomeTimezone(): DateTimeZone
+{
+    static $timezone = null;
+    if ($timezone instanceof DateTimeZone) {
+        return $timezone;
+    }
+
+    $timezone = new DateTimeZone('Europe/Rome');
+    return $timezone;
+}
+
+function girffonAdminDashboardUtcTimezone(): DateTimeZone
+{
+    static $timezone = null;
+    if ($timezone instanceof DateTimeZone) {
+        return $timezone;
+    }
+
+    $timezone = new DateTimeZone('UTC');
+    return $timezone;
+}
+
+function girffonAdminDashboardRomeNow(): DateTimeImmutable
+{
+    return new DateTimeImmutable('now', girffonAdminDashboardRomeTimezone());
+}
+
+function girffonAdminDashboardRomeCurrent(string $format = 'd M Y · H:i'): string
+{
+    return girffonAdminDashboardRomeNow()->format($format);
+}
+
+function girffonAdminDashboardFormatRome(string $value, string $format = 'd M Y · H:i'): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '-';
+    }
+
+    try {
+        $date = new DateTimeImmutable($value, girffonAdminDashboardUtcTimezone());
+        return $date->setTimezone(girffonAdminDashboardRomeTimezone())->format($format);
+    } catch (Throwable $exception) {
+        $timestamp = strtotime($value);
+        if ($timestamp === false) {
+            return '-';
+        }
+
+        return (new DateTimeImmutable('@' . $timestamp))
+            ->setTimezone(girffonAdminDashboardRomeTimezone())
+            ->format($format);
+    }
+}
+
+function girffonAdminDashboardRomeUtcRange(DateTimeImmutable $startRome, DateTimeImmutable $endRome): array
+{
+    return [
+        'start' => $startRome->setTimezone(girffonAdminDashboardUtcTimezone())->format('Y-m-d H:i:s'),
+        'end' => $endRome->setTimezone(girffonAdminDashboardUtcTimezone())->format('Y-m-d H:i:s'),
+    ];
+}
+
+function girffonAdminDashboardRomePeriodRange(string $period): array
+{
+    $now = girffonAdminDashboardRomeNow();
+
+    if ($period === 'yearly') {
+        $start = $now->setDate((int) $now->format('Y'), 1, 1)->setTime(0, 0, 0);
+        return girffonAdminDashboardRomeUtcRange($start, $start->modify('+1 year'));
+    }
+
+    if ($period === 'monthly') {
+        $start = $now->modify('first day of this month')->setTime(0, 0, 0);
+        return girffonAdminDashboardRomeUtcRange($start, $start->modify('+1 month'));
+    }
+
+    $start = $now->setTime(0, 0, 0);
+    return girffonAdminDashboardRomeUtcRange($start, $start->modify('+1 day'));
+}
+
+function girffonAdminDashboardRomeMonthRange(int $year, int $month): array
+{
+    $month = max(1, min(12, $month));
+    $start = (new DateTimeImmutable('now', girffonAdminDashboardRomeTimezone()))->setDate($year, $month, 1)->setTime(0, 0, 0);
+    return girffonAdminDashboardRomeUtcRange($start, $start->modify('+1 month'));
+}
+
+function girffonAdminDashboardRomeYearRange(int $year): array
+{
+    $start = (new DateTimeImmutable('now', girffonAdminDashboardRomeTimezone()))->setDate($year, 1, 1)->setTime(0, 0, 0);
+    return girffonAdminDashboardRomeUtcRange($start, $start->modify('+1 year'));
+}
+
+function girffonAdminDashboardBucketKey(string $value, string $period): string
+{
+    try {
+        $date = new DateTimeImmutable($value, girffonAdminDashboardUtcTimezone());
+        $romeDate = $date->setTimezone(girffonAdminDashboardRomeTimezone());
+    } catch (Throwable $exception) {
+        return '';
+    }
+
+    if ($period === 'yearly') {
+        return $romeDate->format('Y');
+    }
+
+    if ($period === 'monthly') {
+        return (string) ((int) $romeDate->format('n'));
+    }
+
+    return (string) ((int) $romeDate->format('j'));
+}
+
+function girffonAdminDashboardFetchRowsForRange(PDO $pdo, string $table, string $startUtc, string $endUtc, array $columns, string $extraWhere = ''): array
+{
+    try {
+        $select = implode(', ', $columns);
+        $where = "created_at >= :start_at AND created_at < :end_at";
+        if ($extraWhere !== '') {
+            $where .= ' AND ' . $extraWhere;
+        }
+
+        $statement = $pdo->prepare("SELECT {$select} FROM {$table} WHERE {$where}");
+        $statement->execute([
+            ':start_at' => $startUtc,
+            ':end_at' => $endUtc,
+        ]);
+        return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $exception) {
+        return [];
+    }
+}
+
 function girffonAdminDashboardTrimLogEntries(array $entries, int $maxEntries = 600): array
 {
     usort($entries, static function (array $left, array $right): int {
@@ -176,8 +309,9 @@ function girffonAdminFetchLastLoginTime(int $adminId = 0, string $username = '')
 function girffonAdminCountOrdersForDateRange(PDO $pdo, string $startExpression, string $endExpression): int
 {
     try {
-        $statement = $pdo->query("SELECT COUNT(*) FROM orders WHERE created_at >= {$startExpression} AND created_at < {$endExpression}");
-        return $statement ? (int) $statement->fetchColumn() : 0;
+        $statement = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE created_at >= :start_at AND created_at < :end_at");
+        $statement->execute([':start_at' => $startExpression, ':end_at' => $endExpression]);
+        return (int) $statement->fetchColumn();
     } catch (PDOException $exception) {
         return 0;
     }
@@ -186,8 +320,9 @@ function girffonAdminCountOrdersForDateRange(PDO $pdo, string $startExpression, 
 function girffonAdminSumRevenueForDateRange(PDO $pdo, string $startExpression, string $endExpression): float
 {
     try {
-        $statement = $pdo->query("SELECT COALESCE(SUM(total), 0) FROM orders WHERE created_at >= {$startExpression} AND created_at < {$endExpression}");
-        return $statement ? (float) $statement->fetchColumn() : 0.0;
+        $statement = $pdo->prepare("SELECT COALESCE(SUM(total), 0) FROM orders WHERE created_at >= :start_at AND created_at < :end_at");
+        $statement->execute([':start_at' => $startExpression, ':end_at' => $endExpression]);
+        return (float) $statement->fetchColumn();
     } catch (PDOException $exception) {
         return 0.0;
     }
@@ -196,8 +331,9 @@ function girffonAdminSumRevenueForDateRange(PDO $pdo, string $startExpression, s
 function girffonAdminCountInvoicesForDateRange(PDO $pdo, string $startExpression, string $endExpression): int
 {
     try {
-        $statement = $pdo->query("SELECT COUNT(*) FROM invoices WHERE created_at >= {$startExpression} AND created_at < {$endExpression}");
-        return $statement ? (int) $statement->fetchColumn() : 0;
+        $statement = $pdo->prepare("SELECT COUNT(*) FROM invoices WHERE created_at >= :start_at AND created_at < :end_at");
+        $statement->execute([':start_at' => $startExpression, ':end_at' => $endExpression]);
+        return (int) $statement->fetchColumn();
     } catch (PDOException $exception) {
         return 0;
     }
@@ -206,8 +342,9 @@ function girffonAdminCountInvoicesForDateRange(PDO $pdo, string $startExpression
 function girffonAdminCountMembersForDateRange(PDO $pdo, string $startExpression, string $endExpression): int
 {
     try {
-        $statement = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'customer' AND created_at >= {$startExpression} AND created_at < {$endExpression}");
-        return $statement ? (int) $statement->fetchColumn() : 0;
+        $statement = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role = 'customer' AND created_at >= :start_at AND created_at < :end_at");
+        $statement->execute([':start_at' => $startExpression, ':end_at' => $endExpression]);
+        return (int) $statement->fetchColumn();
     } catch (PDOException $exception) {
         return 0;
     }
@@ -218,18 +355,15 @@ function girffonAdminFetchPeriodStats(PDO $pdo): array
     $ranges = [
         'daily' => [
             'label' => 'Today',
-            'start' => 'CURDATE()',
-            'end' => 'DATE_ADD(CURDATE(), INTERVAL 1 DAY)',
+            'range' => girffonAdminDashboardRomePeriodRange('daily'),
         ],
         'monthly' => [
             'label' => 'This Month',
-            'start' => "DATE_FORMAT(CURDATE(), '%Y-%m-01')",
-            'end' => "DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)",
+            'range' => girffonAdminDashboardRomePeriodRange('monthly'),
         ],
         'yearly' => [
             'label' => 'This Year',
-            'start' => "MAKEDATE(YEAR(CURDATE()), 1)",
-            'end' => "DATE_ADD(MAKEDATE(YEAR(CURDATE()), 1), INTERVAL 1 YEAR)",
+            'range' => girffonAdminDashboardRomePeriodRange('yearly'),
         ],
     ];
 
@@ -237,10 +371,10 @@ function girffonAdminFetchPeriodStats(PDO $pdo): array
     foreach ($ranges as $key => $range) {
         $stats[$key] = [
             'label' => $range['label'],
-            'orders' => girffonAdminCountOrdersForDateRange($pdo, $range['start'], $range['end']),
-            'revenue' => girffonAdminSumRevenueForDateRange($pdo, $range['start'], $range['end']),
-            'invoices' => girffonAdminCountInvoicesForDateRange($pdo, $range['start'], $range['end']),
-            'members' => girffonAdminCountMembersForDateRange($pdo, $range['start'], $range['end']),
+            'orders' => girffonAdminCountOrdersForDateRange($pdo, $range['range']['start'], $range['range']['end']),
+            'revenue' => girffonAdminSumRevenueForDateRange($pdo, $range['range']['start'], $range['range']['end']),
+            'invoices' => girffonAdminCountInvoicesForDateRange($pdo, $range['range']['start'], $range['range']['end']),
+            'members' => girffonAdminCountMembersForDateRange($pdo, $range['range']['start'], $range['range']['end']),
         ];
     }
 
@@ -249,7 +383,32 @@ function girffonAdminFetchPeriodStats(PDO $pdo): array
 
 function girffonAdminFetchAvailableStatYears(PDO $pdo): array
 {
-    return [2026, 2027, 2028, 2029, 2030];
+    $years = [(int) girffonAdminDashboardRomeNow()->format('Y')];
+
+    foreach ([
+        ['orders', 'created_at', ''],
+        ['invoices', 'created_at', ''],
+        ['users', 'created_at', "role = 'customer'"],
+    ] as [$table, $column, $extraWhere]) {
+        try {
+            $sql = "SELECT DISTINCT YEAR({$column}) AS year_value FROM {$table} WHERE {$column} IS NOT NULL";
+            if ($extraWhere !== '') {
+                $sql .= ' AND ' . $extraWhere;
+            }
+            $statement = $pdo->query($sql);
+            foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
+                $year = (int) ($row['year_value'] ?? 0);
+                if ($year > 0) {
+                    $years[] = $year;
+                }
+            }
+        } catch (PDOException $exception) {
+        }
+    }
+
+    $years = array_values(array_unique(array_filter($years)));
+    sort($years);
+    return $years ?: [(int) date('Y')];
 }
 
 function girffonAdminAnalyticsBuildBaseSeries(array $labels): array
@@ -303,46 +462,32 @@ function girffonAdminAnalyticsDailySeries(PDO $pdo, int $year, int $month): arra
         $labels[(string) $day] = str_pad((string) $day, 2, '0', STR_PAD_LEFT);
     }
     $series = girffonAdminAnalyticsBuildBaseSeries($labels);
+    $range = girffonAdminDashboardRomeMonthRange($year, $month);
 
-    try {
-        $statement = $pdo->prepare("SELECT DAY(created_at) AS bucket_day, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue FROM orders WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month GROUP BY DAY(created_at)");
-        $statement->execute([':year' => $year, ':month' => $month]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $key = (string) ((int) ($row['bucket_day'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['orders'] = (int) ($row['orders'] ?? 0);
-                $series[$key]['revenue'] = (float) ($row['revenue'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'orders', $range['start'], $range['end'], ['created_at', 'total']) as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'daily');
+        if (isset($series[$key])) {
+            $series[$key]['orders']++;
+            $series[$key]['revenue'] += (float) ($row['total'] ?? 0);
         }
-    } catch (PDOException $exception) {
     }
 
-    try {
-        $statement = $pdo->prepare("SELECT DAY(created_at) AS bucket_day, COUNT(*) AS invoices FROM invoices WHERE YEAR(created_at) = :year AND MONTH(created_at) = :month GROUP BY DAY(created_at)");
-        $statement->execute([':year' => $year, ':month' => $month]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $key = (string) ((int) ($row['bucket_day'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['invoices'] = (int) ($row['invoices'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'invoices', $range['start'], $range['end'], ['created_at']) as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'daily');
+        if (isset($series[$key])) {
+            $series[$key]['invoices']++;
         }
-    } catch (PDOException $exception) {
     }
 
-    try {
-        $statement = $pdo->prepare("SELECT DAY(created_at) AS bucket_day, COUNT(*) AS members FROM users WHERE role = 'customer' AND YEAR(created_at) = :year AND MONTH(created_at) = :month GROUP BY DAY(created_at)");
-        $statement->execute([':year' => $year, ':month' => $month]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $key = (string) ((int) ($row['bucket_day'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['members'] = (int) ($row['members'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'users', $range['start'], $range['end'], ['created_at'], "role = 'customer'") as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'daily');
+        if (isset($series[$key])) {
+            $series[$key]['members']++;
         }
-    } catch (PDOException $exception) {
     }
 
     return [
-        'label' => date('F Y', strtotime(sprintf('%04d-%02d-01', $year, $month))),
+        'label' => (new DateTimeImmutable(sprintf('%04d-%02d-01 00:00:00', $year, $month), girffonAdminDashboardRomeTimezone()))->format('F Y'),
         'summary' => girffonAdminAnalyticsSeriesSummary($series),
         'series' => girffonAdminAnalyticsSeriesValues($series),
     ];
@@ -356,42 +501,28 @@ function girffonAdminAnalyticsMonthlySeries(PDO $pdo, int $year): array
         '7' => 'Jul', '8' => 'Aug', '9' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec',
     ];
     $series = girffonAdminAnalyticsBuildBaseSeries($labels);
+    $range = girffonAdminDashboardRomeYearRange($year);
 
-    try {
-        $statement = $pdo->prepare("SELECT MONTH(created_at) AS bucket_month, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue FROM orders WHERE YEAR(created_at) = :year GROUP BY MONTH(created_at)");
-        $statement->execute([':year' => $year]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $key = (string) ((int) ($row['bucket_month'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['orders'] = (int) ($row['orders'] ?? 0);
-                $series[$key]['revenue'] = (float) ($row['revenue'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'orders', $range['start'], $range['end'], ['created_at', 'total']) as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'monthly');
+        if (isset($series[$key])) {
+            $series[$key]['orders']++;
+            $series[$key]['revenue'] += (float) ($row['total'] ?? 0);
         }
-    } catch (PDOException $exception) {
     }
 
-    try {
-        $statement = $pdo->prepare("SELECT MONTH(created_at) AS bucket_month, COUNT(*) AS invoices FROM invoices WHERE YEAR(created_at) = :year GROUP BY MONTH(created_at)");
-        $statement->execute([':year' => $year]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $key = (string) ((int) ($row['bucket_month'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['invoices'] = (int) ($row['invoices'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'invoices', $range['start'], $range['end'], ['created_at']) as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'monthly');
+        if (isset($series[$key])) {
+            $series[$key]['invoices']++;
         }
-    } catch (PDOException $exception) {
     }
 
-    try {
-        $statement = $pdo->prepare("SELECT MONTH(created_at) AS bucket_month, COUNT(*) AS members FROM users WHERE role = 'customer' AND YEAR(created_at) = :year GROUP BY MONTH(created_at)");
-        $statement->execute([':year' => $year]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $key = (string) ((int) ($row['bucket_month'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['members'] = (int) ($row['members'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'users', $range['start'], $range['end'], ['created_at'], "role = 'customer'") as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'monthly');
+        if (isset($series[$key])) {
+            $series[$key]['members']++;
         }
-    } catch (PDOException $exception) {
     }
 
     return [
@@ -408,39 +539,37 @@ function girffonAdminAnalyticsYearlySeries(PDO $pdo, array $years): array
         $keys[(string) $year] = (string) $year;
     }
     $series = girffonAdminAnalyticsBuildBaseSeries($keys);
-
-    try {
-        $statement = $pdo->query("SELECT YEAR(created_at) AS bucket_year, COUNT(*) AS orders, COALESCE(SUM(total), 0) AS revenue FROM orders WHERE created_at IS NOT NULL GROUP BY YEAR(created_at)");
-        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
-            $key = (string) ((int) ($row['bucket_year'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['orders'] = (int) ($row['orders'] ?? 0);
-                $series[$key]['revenue'] = (float) ($row['revenue'] ?? 0);
-            }
-        }
-    } catch (PDOException $exception) {
+    if (!$years) {
+        return [
+            'label' => (string) girffonAdminDashboardRomeNow()->format('Y'),
+            'summary' => girffonAdminAnalyticsSeriesSummary($series),
+            'series' => girffonAdminAnalyticsSeriesValues($series),
+        ];
     }
 
-    try {
-        $statement = $pdo->query("SELECT YEAR(created_at) AS bucket_year, COUNT(*) AS invoices FROM invoices WHERE created_at IS NOT NULL GROUP BY YEAR(created_at)");
-        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
-            $key = (string) ((int) ($row['bucket_year'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['invoices'] = (int) ($row['invoices'] ?? 0);
-            }
+    $startRange = girffonAdminDashboardRomeYearRange((int) min($years));
+    $endRange = girffonAdminDashboardRomeYearRange((int) max($years) + 1);
+
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'orders', $startRange['start'], $endRange['start'], ['created_at', 'total']) as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'yearly');
+        if (isset($series[$key])) {
+            $series[$key]['orders']++;
+            $series[$key]['revenue'] += (float) ($row['total'] ?? 0);
         }
-    } catch (PDOException $exception) {
     }
 
-    try {
-        $statement = $pdo->query("SELECT YEAR(created_at) AS bucket_year, COUNT(*) AS members FROM users WHERE role = 'customer' AND created_at IS NOT NULL GROUP BY YEAR(created_at)");
-        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
-            $key = (string) ((int) ($row['bucket_year'] ?? 0));
-            if (isset($series[$key])) {
-                $series[$key]['members'] = (int) ($row['members'] ?? 0);
-            }
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'invoices', $startRange['start'], $endRange['start'], ['created_at']) as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'yearly');
+        if (isset($series[$key])) {
+            $series[$key]['invoices']++;
         }
-    } catch (PDOException $exception) {
+    }
+
+    foreach (girffonAdminDashboardFetchRowsForRange($pdo, 'users', $startRange['start'], $endRange['start'], ['created_at'], "role = 'customer'") as $row) {
+        $key = girffonAdminDashboardBucketKey((string) ($row['created_at'] ?? ''), 'yearly');
+        if (isset($series[$key])) {
+            $series[$key]['members']++;
+        }
     }
 
     return [
@@ -453,8 +582,9 @@ function girffonAdminAnalyticsYearlySeries(PDO $pdo, array $years): array
 function girffonAdminFetchAnalyticsExplorer(PDO $pdo): array
 {
     $years = girffonAdminFetchAvailableStatYears($pdo);
-    $selectedYear = 2026;
-    $selectedMonth = (int) date('n');
+    $romeNow = girffonAdminDashboardRomeNow();
+    $selectedYear = (int) $romeNow->format('Y');
+    $selectedMonth = (int) $romeNow->format('n');
 
     $daily = [];
     $monthly = [];
@@ -478,20 +608,23 @@ function girffonAdminFetchAnalyticsExplorer(PDO $pdo): array
 
 function girffonAdminCountOrdersToday(PDO $pdo): int
 {
-    return girffonAdminCountOrdersForDateRange($pdo, 'CURDATE()', 'DATE_ADD(CURDATE(), INTERVAL 1 DAY)');
+    $range = girffonAdminDashboardRomePeriodRange('daily');
+    return girffonAdminCountOrdersForDateRange($pdo, $range['start'], $range['end']);
 }
 
 function girffonAdminRevenueThisMonth(PDO $pdo): float
 {
-    return girffonAdminSumRevenueForDateRange($pdo, "DATE_FORMAT(CURDATE(), '%Y-%m-01')", "DATE_ADD(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 1 MONTH)");
+    $range = girffonAdminDashboardRomePeriodRange('monthly');
+    return girffonAdminSumRevenueForDateRange($pdo, $range['start'], $range['end']);
 }
 
 function girffonAdminFetchVisitorAnalytics(): array
 {
     $entries = girffonAdminDashboardReadJsonLog('admin-dashboard-visits.json');
-    $today = date('Y-m-d');
-    $month = date('Y-m');
-    $year = date('Y');
+    $romeNow = girffonAdminDashboardRomeNow();
+    $today = $romeNow->format('Y-m-d');
+    $month = $romeNow->format('Y-m');
+    $year = $romeNow->format('Y');
 
     $analytics = [
         'today' => 0,
@@ -506,13 +639,18 @@ function girffonAdminFetchVisitorAnalytics(): array
             continue;
         }
 
-        if (strpos($createdAt, $today) === 0) {
+        $romeCreatedAt = girffonAdminDashboardFormatRome($createdAt, 'Y-m-d H:i:s');
+        if ($romeCreatedAt === '-') {
+            continue;
+        }
+
+        if (strpos($romeCreatedAt, $today) === 0) {
             $analytics['today']++;
         }
-        if (strpos($createdAt, $month) === 0) {
+        if (strpos($romeCreatedAt, $month) === 0) {
             $analytics['month']++;
         }
-        if (strpos($createdAt, $year) === 0) {
+        if (strpos($romeCreatedAt, $year) === 0) {
             $analytics['year']++;
         }
     }

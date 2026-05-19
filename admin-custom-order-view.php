@@ -33,8 +33,7 @@ $formatCustomDesignViewStatus = static function ($value) {
 };
 
 $formatCustomDesignViewDate = static function ($value) {
-  $timestamp = strtotime((string) $value);
-  return $timestamp ? date('d M Y · H:i', $timestamp) : '-';
+  return girffonAdminCustomDesignFormatRomeDate((string) $value);
 };
 
 $customDesignStatuses = girffonAdminCustomDesignOrderStatuses();
