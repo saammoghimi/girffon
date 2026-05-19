@@ -40,6 +40,8 @@ if (!is_array($payload) || !is_array($payload['snapshot'] ?? null)) {
     ]);
 }
 
+$payload['status'] = 'pending_payment';
+
 $result = girffonAdminCreateCustomDesignOrder($pdo, girffonProfileNormalizeUserRow($user), $payload);
 if (!($result['success'] ?? false)) {
     girffonProfileJsonResponse(500, [
@@ -52,5 +54,5 @@ girffonProfileJsonResponse(200, [
     'success' => true,
     'order_id' => (int) ($result['order_id'] ?? 0),
     'order_code' => (string) ($result['order_code'] ?? ''),
-    'redirect' => '../../ProfilePage.php',
+    'redirect' => '/GirffoN/custom-design-checkout.php?order=' . (int) ($result['order_id'] ?? 0),
 ]);

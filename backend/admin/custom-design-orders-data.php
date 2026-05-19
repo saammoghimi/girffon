@@ -3,7 +3,7 @@ require_once __DIR__ . '/../config/database.php';
 
 function girffonAdminCustomDesignOrderStatuses(): array
 {
-    return ['new', 'reviewing', 'approved', 'rejected', 'in_production', 'completed'];
+    return ['new', 'pending_payment', 'paid', 'paid_reviewing', 'reviewing', 'approved', 'rejected', 'in_production', 'completed'];
 }
 
 function girffonAdminCustomDesignOrderBaseUploadDirectory(): string
@@ -214,6 +214,10 @@ function girffonAdminCreateCustomDesignOrder(PDO $pdo, array $customer, array $p
     $customerEmail = trim((string) ($customer['email'] ?? ''));
     $customerPhone = trim((string) ($customer['phone'] ?? ''));
     $orderCode = girffonAdminCustomDesignGenerateOrderCode();
+    $initialStatus = strtolower(trim((string) ($payload['status'] ?? 'new')));
+    if (!in_array($initialStatus, girffonAdminCustomDesignOrderStatuses(), true)) {
+        $initialStatus = 'new';
+    }
 
     $designPayload = $payload;
     $designPayload['size_requests'] = $sizeLineItems;
@@ -251,7 +255,7 @@ function girffonAdminCreateCustomDesignOrder(PDO $pdo, array $customer, array $p
             ':customer_email' => $customerEmail,
             ':customer_phone' => $customerPhone,
             ':product_name' => $productName,
-            ':status' => 'new',
+            ':status' => $initialStatus,
             ':customer_note' => $customerNote,
             ':admin_note' => '',
             ':preview_front' => '',
@@ -845,8 +849,33 @@ function girffonAdminCustomDesignBuildDetail(array $orderRow, array $uploadRows,
     }
     $addDesign = array_merge($addDesign, $guessed['add_design']);
 
+    $fallbackPreview = '';
+    foreach (['front', 'back', 'right', 'left'] as $viewKey) {
+        $candidate = (string) ($previewViews[$viewKey]['path'] ?? '');
+        if ($candidate !== '') {
+            $fallbackPreview = $candidate;
+            break;
+        }
+    }
+
+    $summaryQuantity = (int) girffonAdminCustomDesignValueAt($payload, ['product.quantity', 'snapshot.quantity', 'quantity'], 0);
+    if ($summaryQuantity <= 0 && $sizeLines) {
+        $summaryQuantity = array_reduce($sizeLines, static function (int $carry, array $entry): int {
+            return $carry + max(1, (int) ($entry['quantity'] ?? 1));
+        }, 0);
+    }
+    if ($summaryQuantity <= 0) {
+        $summaryQuantity = 1;
+    }
+
+    $summaryUnitTotal = (float) girffonAdminCustomDesignValueAt($payload, ['product.unit_total', 'snapshot.unitTotal', 'unit_total', 'snapshot.total'], 0);
+    $summaryOrderTotal = (float) girffonAdminCustomDesignValueAt($payload, ['product.order_total', 'snapshot.orderTotal', 'order_total', 'snapshot.total'], 0);
+    $summaryColor = (string) girffonAdminCustomDesignValueAt($payload, ['product.color', 'snapshot.color', 'selectedColorName', 'fill.name'], '');
+    $summarySize = (string) girffonAdminCustomDesignValueAt($payload, ['product.size', 'snapshot.size'], '');
+
     return [
         'id' => (int) ($orderRow['id'] ?? 0),
+        'user_id' => (int) ($orderRow['user_id'] ?? 0),
         'order_code' => (string) ($orderRow['order_code'] ?? ''),
         'customer_name' => (string) ($orderRow['customer_name'] ?? ''),
         'customer_email' => (string) ($orderRow['customer_email'] ?? ''),
@@ -857,6 +886,7 @@ function girffonAdminCustomDesignBuildDetail(array $orderRow, array $uploadRows,
         'admin_note' => (string) ($orderRow['admin_note'] ?? ''),
         'created_at' => (string) ($orderRow['created_at'] ?? ''),
         'preview_views' => $previewViews,
+        'front_preview' => (string) ($previewViews['front']['path'] ?? $fallbackPreview),
         'uploads' => $uploads,
         'texts' => $texts,
         'flags' => $flags,
@@ -865,6 +895,13 @@ function girffonAdminCustomDesignBuildDetail(array $orderRow, array $uploadRows,
         'fill' => $fill,
         'size_lines' => $sizeLines,
         'add_design' => $addDesign,
+        'checkout_summary' => [
+            'quantity' => $summaryQuantity,
+            'unit_total' => $summaryUnitTotal,
+            'order_total' => $summaryOrderTotal,
+            'color' => $summaryColor,
+            'size' => $summarySize,
+        ],
     ];
 }
 
@@ -991,6 +1028,60 @@ function girffonAdminUpdateCustomDesignOrder(PDO $pdo, int $orderId, string $sta
             ':id' => $orderId,
         ]);
     } catch (PDOException $exception) {
+        return false;
+    }
+}
+
+function girffonAdminUpdateCustomDesignOrderPayment(PDO $pdo, int $orderId, string $status, array $paymentData = []): bool
+{
+    if ($orderId <= 0 || !girffonAdminEnsureCustomDesignOrderTables($pdo)) {
+        return false;
+    }
+
+    $status = strtolower(trim($status));
+    if (!in_array($status, girffonAdminCustomDesignOrderStatuses(), true)) {
+        $status = 'paid_reviewing';
+    }
+
+    try {
+        $customerPayload = is_array($paymentData['customer'] ?? null) ? $paymentData['customer'] : [];
+        $statement = $pdo->prepare(
+            'SELECT design_payload_json
+             FROM custom_design_orders
+             WHERE id = :id
+             LIMIT 1'
+        );
+        $statement->execute([':id' => $orderId]);
+        $currentPayload = girffonAdminCustomDesignDecodeJson($statement->fetchColumn());
+        $currentPayload['payment'] = array_merge(
+            is_array($currentPayload['payment'] ?? null) ? $currentPayload['payment'] : [],
+            $paymentData,
+            [
+                'status' => $status,
+                'paid_at' => date('c'),
+            ]
+        );
+
+        $update = $pdo->prepare(
+            'UPDATE custom_design_orders
+             SET status = :status,
+                 customer_name = :customer_name,
+                 customer_email = :customer_email,
+                 customer_phone = :customer_phone,
+                 design_payload_json = :design_payload_json,
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = :id'
+        );
+
+        return $update->execute([
+            ':status' => $status,
+            ':customer_name' => trim((string) ($customerPayload['name'] ?? '')),
+            ':customer_email' => trim((string) ($customerPayload['email'] ?? '')),
+            ':customer_phone' => trim((string) ($customerPayload['phone'] ?? '')),
+            ':design_payload_json' => json_encode($currentPayload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ':id' => $orderId,
+        ]);
+    } catch (Throwable $exception) {
         return false;
     }
 }

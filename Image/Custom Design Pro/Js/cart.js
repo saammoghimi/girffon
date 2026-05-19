@@ -2062,8 +2062,9 @@
         cartState.lastSnapshot = snapshot;
         updateScanArea(snapshot);
         cachePayload(snapshot);
-        await submitCustomOrder(customOrderPayload);
-        window.location.href = PROFILE_PAGE_URL;
+        const result = await submitCustomOrder(customOrderPayload);
+        const redirectUrl = result && typeof result.redirect === "string" ? result.redirect.trim() : "";
+        window.location.href = redirectUrl || PROFILE_PAGE_URL;
       } catch (error) {
         showToast(error && error.message ? error.message : "Unable to save custom design order.");
       } finally {

@@ -5,7 +5,10 @@ require_once __DIR__ . "/backend/admin/custom-design-orders-data.php";
 $customDesignOrders = girffonAdminFetchCustomDesignOrderSummaries($pdo, 120);
 $customDesignOrderStatusCounts = [
   'new' => 0,
+  'pending_payment' => 0,
   'reviewing' => 0,
+  'paid' => 0,
+  'paid_reviewing' => 0,
   'in_production' => 0,
   'completed' => 0,
 ];
@@ -298,13 +301,13 @@ $formatCustomOrderDate = static function ($value) {
           <div class="admin-panel-head">
             <div>
               <h2>Custom Design Orders</h2>
-              <p class="admin-panel-note">Standalone intake for custom design review. CartTest and invoice flow are intentionally disconnected here.</p>
+              <p class="admin-panel-note">Standalone intake for custom design review. Custom design payment runs through its own checkout flow and stays disconnected from CartTest and invoice-before-payment.</p>
             </div>
           </div>
           <div class="admin-custom-summary-grid" aria-label="Custom design order summary">
             <article class="admin-custom-summary-card"><span>Total Orders</span><strong><?php echo $escapeCustomOrder(count($customDesignOrders)); ?></strong></article>
-            <article class="admin-custom-summary-card"><span>New</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['new']); ?></strong></article>
-            <article class="admin-custom-summary-card"><span>Reviewing</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['reviewing']); ?></strong></article>
+            <article class="admin-custom-summary-card"><span>New / Pending Payment</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['new'] + $customDesignOrderStatusCounts['pending_payment']); ?></strong></article>
+            <article class="admin-custom-summary-card"><span>Paid / Reviewing</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['paid'] + $customDesignOrderStatusCounts['paid_reviewing'] + $customDesignOrderStatusCounts['reviewing']); ?></strong></article>
             <article class="admin-custom-summary-card"><span>In Production / Completed</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['in_production'] + $customDesignOrderStatusCounts['completed']); ?></strong></article>
           </div>
         </article>
