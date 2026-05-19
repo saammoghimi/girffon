@@ -172,15 +172,33 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
   <link rel="stylesheet" href="CSS/style.css">
   <link rel="stylesheet" href="CSS/cart-block.css">
   <style>
+    :root {
+      --gf-checkout-cream: #f7f1e8;
+      --gf-checkout-cream-strong: #f1e8db;
+      --gf-checkout-white: #ffffff;
+      --gf-checkout-gold: #c79a2b;
+      --gf-checkout-gold-strong: #ad8119;
+      --gf-checkout-ink: #222222;
+      --gf-checkout-muted: #6b675f;
+      --gf-checkout-line: rgba(87, 67, 27, 0.12);
+      --gf-checkout-shadow: 0 20px 50px rgba(76, 55, 22, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       background: linear-gradient(180deg, #f7f1e8 0%, #fffdf9 100%);
-      color: #222;
+      color: var(--gf-checkout-ink);
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
     .gf-custom-checkout {
-      max-width: 1180px;
+      max-width: 1240px;
       margin: 0 auto;
-      padding: 48px 20px 72px;
+      padding: 48px 24px 72px;
     }
 
     .gf-custom-checkout-header {
@@ -195,7 +213,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 14px;
+      padding: 9px 15px;
       border-radius: 999px;
       background: rgba(255, 196, 58, 0.18);
       color: #8a5f00;
@@ -214,16 +232,17 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
     .gf-custom-checkout-header p {
       margin: 0;
       max-width: 700px;
-      color: #555;
+      color: var(--gf-checkout-muted);
       line-height: 1.6;
     }
 
     .gf-custom-checkout-order {
-      padding: 14px 18px;
-      border-radius: 18px;
-      background: #fff;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
-      min-width: 220px;
+      padding: 16px 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--gf-checkout-line);
+      box-shadow: var(--gf-checkout-shadow);
+      min-width: 240px;
       text-align: right;
     }
 
@@ -235,33 +254,35 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
 
     .gf-custom-checkout-grid {
       display: grid;
-      grid-template-columns: minmax(320px, 0.95fr) minmax(340px, 1.05fr);
-      gap: 26px;
+      grid-template-columns: minmax(340px, 0.92fr) minmax(420px, 1.08fr);
+      gap: 28px;
       align-items: start;
     }
 
     .gf-custom-checkout-card,
     .gf-custom-checkout-payment {
-      background: #fff;
-      border-radius: 28px;
-      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid var(--gf-checkout-line);
+      border-radius: 30px;
+      box-shadow: var(--gf-checkout-shadow);
       overflow: hidden;
     }
 
     .gf-custom-checkout-card {
-      padding: 24px;
+      padding: 26px;
     }
 
     .gf-custom-checkout-preview {
       aspect-ratio: 1 / 1;
       width: 100%;
-      border-radius: 22px;
+      border-radius: 24px;
       background: linear-gradient(160deg, #f4eee3 0%, #ffffff 100%);
+      border: 1px solid rgba(146, 112, 40, 0.12);
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
-      margin-bottom: 20px;
+      margin-bottom: 24px;
     }
 
     .gf-custom-checkout-preview img {
@@ -278,19 +299,37 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       font-size: 0.85rem;
     }
 
+    .gf-custom-checkout-product-title,
+    .gf-custom-checkout-section-title {
+      margin: 0;
+      color: var(--gf-checkout-ink);
+      letter-spacing: -0.02em;
+    }
+
+    .gf-custom-checkout-product-title {
+      margin-bottom: 12px;
+      font-size: 1.6rem;
+      line-height: 1.2;
+    }
+
+    .gf-custom-checkout-section-title {
+      margin-bottom: 14px;
+      font-size: 1.08rem;
+    }
+
     .gf-custom-checkout-meta {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
-      margin: 18px 0 22px;
+      margin: 20px 0 24px;
     }
 
     .gf-custom-checkout-meta div,
     .gf-custom-checkout-line-item,
     .gf-custom-checkout-total {
-      border: 1px solid rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(113, 87, 32, 0.12);
       border-radius: 18px;
-      padding: 14px 16px;
+      padding: 16px 18px;
       background: #fffdfa;
     }
 
@@ -319,10 +358,11 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
     }
 
     .gf-custom-checkout-total {
-      margin-top: 18px;
-      background: #1f1f1f;
+      margin-top: 20px;
+      background: linear-gradient(135deg, #28231a 0%, #3a301d 100%);
       color: #fff;
       border-color: transparent;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     .gf-custom-checkout-total span,
@@ -331,7 +371,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
     }
 
     .gf-custom-checkout-payment {
-      padding: 30px 28px;
+      padding: 30px 30px 32px;
     }
 
     .gf-custom-checkout-payment h2 {
@@ -345,14 +385,107 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       line-height: 1.6;
     }
 
+    .gf-checkout-form {
+      display: block;
+    }
+
     .gf-checkout-form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      gap: 16px;
     }
 
     .gf-checkout-form-grid .gf-checkout-form-span {
       grid-column: 1 / -1;
+    }
+
+    .gf-checkout-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .gf-checkout-field span {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6f6246;
+      padding-left: 2px;
+    }
+
+    .gf-checkout-field input {
+      appearance: none;
+      width: 100%;
+      min-height: 56px;
+      border: 1px solid rgba(130, 102, 34, 0.16);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff 0%, #fffaf1 100%);
+      padding: 0 18px;
+      font: inherit;
+      font-size: 1rem;
+      color: var(--gf-checkout-ink);
+      outline: none;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 24px rgba(128, 95, 28, 0.06);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .gf-checkout-field input::placeholder {
+      color: #b2a38a;
+    }
+
+    .gf-checkout-field input:hover {
+      border-color: rgba(130, 102, 34, 0.24);
+      background: linear-gradient(180deg, #ffffff 0%, #fff8eb 100%);
+    }
+
+    .gf-checkout-field input:focus {
+      border-color: rgba(199, 154, 43, 0.95);
+      box-shadow: 0 0 0 4px rgba(199, 154, 43, 0.14), 0 16px 30px rgba(128, 95, 28, 0.10);
+      background: #fffefc;
+      transform: translateY(-1px);
+    }
+
+    .gf-checkout-field input:-webkit-autofill,
+    .gf-checkout-field input:-webkit-autofill:hover,
+    .gf-checkout-field input:-webkit-autofill:focus {
+      -webkit-text-fill-color: var(--gf-checkout-ink);
+      -webkit-box-shadow: 0 0 0 1000px #fffaf1 inset;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+
+    .gf-checkout-form-section {
+      margin-top: 24px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(87, 67, 27, 0.10);
+    }
+
+    .gf-checkout-form-section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .gf-checkout-form-section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .gf-checkout-form-section-head h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: #2f281e;
+    }
+
+    .gf-checkout-form-section-head p {
+      margin: 0;
+      font-size: 0.92rem;
+      color: var(--gf-checkout-muted);
     }
 
     .gf-checkout-alert {
@@ -378,23 +511,61 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       display: flex;
       gap: 12px;
       align-items: center;
-      margin-top: 22px;
+      margin-top: 24px;
       flex-wrap: wrap;
     }
 
+    .gf-checkout-primary,
     .gf-checkout-secondary {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      min-height: 48px;
-      padding: 0 18px;
+      min-height: 52px;
+      padding: 0 22px;
       border-radius: 999px;
-      border: 1px solid rgba(0, 0, 0, 0.12);
-      background: #fff;
-      color: #222;
+      font-size: 0.98rem;
       font-weight: 700;
       text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .gf-checkout-primary {
+      border: 1px solid transparent;
+      background: linear-gradient(135deg, var(--gf-checkout-gold) 0%, #e0b751 100%);
+      color: #fff;
+      box-shadow: 0 18px 30px rgba(199, 154, 43, 0.24);
+      min-width: 220px;
+      cursor: pointer;
+    }
+
+    .gf-checkout-primary:hover,
+    .gf-checkout-primary:focus-visible {
+      background: linear-gradient(135deg, var(--gf-checkout-gold-strong) 0%, #d3a739 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 20px 34px rgba(199, 154, 43, 0.30);
+    }
+
+    .gf-checkout-primary:disabled {
+      cursor: wait;
+      opacity: 0.82;
+      transform: none;
+      box-shadow: 0 10px 24px rgba(128, 95, 28, 0.14);
+    }
+
+    .gf-checkout-secondary {
+      border: 1px solid rgba(130, 102, 34, 0.16);
+      background: rgba(255, 255, 255, 0.92);
+      color: #2e271c;
+      box-shadow: 0 10px 22px rgba(76, 55, 22, 0.06);
+    }
+
+    .gf-checkout-secondary:hover,
+    .gf-checkout-secondary:focus-visible {
+      border-color: rgba(199, 154, 43, 0.45);
+      background: #fff8ea;
+      color: #7e5f14;
+      transform: translateY(-1px);
     }
 
     @media (max-width: 960px) {
@@ -426,6 +597,24 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
       .gf-custom-checkout-card {
         border-radius: 22px;
       }
+
+      .gf-custom-checkout-payment {
+        padding: 24px 18px 26px;
+      }
+
+      .gf-custom-checkout-card {
+        padding: 20px;
+      }
+
+      .gf-checkout-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .gf-checkout-primary,
+      .gf-checkout-secondary {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -453,7 +642,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
           <?php endif; ?>
         </div>
 
-        <h2 style="margin:0 0 10px;font-size:1.5rem;"><?php echo girffonCustomDesignCheckoutEscape((string) ($order['product_name'] ?? 'Custom Product')); ?></h2>
+        <h2 class="gf-custom-checkout-product-title"><?php echo girffonCustomDesignCheckoutEscape((string) ($order['product_name'] ?? 'Custom Product')); ?></h2>
         <div class="gf-custom-checkout-meta">
           <div>
             <span>Quantity</span>
@@ -473,7 +662,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
           </div>
         </div>
 
-        <h3 style="margin:0 0 12px;font-size:1.05rem;">Size and color lines</h3>
+        <h3 class="gf-custom-checkout-section-title">Size and color lines</h3>
         <div class="gf-custom-checkout-line-list">
           <?php if ($sizeLines): ?>
             <?php foreach ($sizeLines as $line): ?>
@@ -520,43 +709,62 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
             <a class="gf-checkout-secondary" href="ProfilePage.php"><i class="fa-solid fa-user"></i> Back to Profile</a>
           </div>
         <?php else: ?>
-          <form method="post" class="bank-form" id="gfCustomDesignCheckoutForm" novalidate>
+          <form method="post" class="gf-checkout-form" id="gfCustomDesignCheckoutForm" novalidate>
             <input type="hidden" name="order" value="<?php echo (int) $order['id']; ?>">
-            <div class="gf-checkout-form-grid">
-              <label class="gf-checkout-form-span"><span>Full Name</span>
-                <input type="text" id="gfBankNameInput" name="fullName" required autocomplete="name" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['fullName']); ?>">
-              </label>
-              <label><span>Email</span>
-                <input type="email" id="gfBankEmailInput" name="email" required autocomplete="email" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['email']); ?>">
-              </label>
-              <label><span>Phone</span>
-                <input type="tel" id="gfBankPhoneInput" name="phone" required autocomplete="tel" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['phone']); ?>">
-              </label>
-              <label class="gf-checkout-form-span"><span>Address</span>
-                <input type="text" id="gfBankAddressInput" name="address" required autocomplete="street-address" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['address']); ?>">
-              </label>
-              <label><span>City</span>
-                <input type="text" id="gfBankCityInput" name="city" required autocomplete="address-level2" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['city']); ?>">
-              </label>
-              <label><span>Postal Code</span>
-                <input type="text" id="gfBankPostalCodeInput" name="postalCode" required autocomplete="postal-code" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['postalCode']); ?>">
-              </label>
-              <label class="gf-checkout-form-span"><span>Country</span>
-                <input type="text" id="gfBankCountryInput" name="country" required autocomplete="country-name" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['country']); ?>">
-              </label>
-              <label class="gf-checkout-form-span"><span>Card Number</span>
-                <input type="text" id="gfBankNumberInput" name="number" required maxlength="19" autocomplete="cc-number" placeholder="1234 5678 9012 3456" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['number']); ?>">
-              </label>
-              <label><span>Expiry</span>
-                <input type="text" id="gfBankExpiryInput" name="expiry" required maxlength="5" autocomplete="cc-exp" placeholder="MM/YY" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['expiry']); ?>">
-              </label>
-              <label><span>CVC</span>
-                <input type="text" id="gfBankCvcInput" name="cvc" required maxlength="4" autocomplete="cc-csc" placeholder="CVC" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['cvc']); ?>">
-              </label>
-            </div>
+            <section class="gf-checkout-form-section">
+              <div class="gf-checkout-form-section-head">
+                <div>
+                  <h3>Billing details</h3>
+                  <p>Review or update the customer information saved for this order.</p>
+                </div>
+              </div>
+              <div class="gf-checkout-form-grid">
+                <label class="gf-checkout-field gf-checkout-form-span"><span>Full Name</span>
+                  <input type="text" id="gfBankNameInput" name="fullName" required autocomplete="name" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['fullName']); ?>">
+                </label>
+                <label class="gf-checkout-field"><span>Email</span>
+                  <input type="email" id="gfBankEmailInput" name="email" required autocomplete="email" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['email']); ?>">
+                </label>
+                <label class="gf-checkout-field"><span>Phone</span>
+                  <input type="tel" id="gfBankPhoneInput" name="phone" required autocomplete="tel" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['phone']); ?>">
+                </label>
+                <label class="gf-checkout-field gf-checkout-form-span"><span>Address</span>
+                  <input type="text" id="gfBankAddressInput" name="address" required autocomplete="street-address" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['address']); ?>">
+                </label>
+                <label class="gf-checkout-field"><span>City</span>
+                  <input type="text" id="gfBankCityInput" name="city" required autocomplete="address-level2" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['city']); ?>">
+                </label>
+                <label class="gf-checkout-field"><span>Postal Code</span>
+                  <input type="text" id="gfBankPostalCodeInput" name="postalCode" required autocomplete="postal-code" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['postalCode']); ?>">
+                </label>
+                <label class="gf-checkout-field gf-checkout-form-span"><span>Country</span>
+                  <input type="text" id="gfBankCountryInput" name="country" required autocomplete="country-name" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['country']); ?>">
+                </label>
+              </div>
+            </section>
+
+            <section class="gf-checkout-form-section">
+              <div class="gf-checkout-form-section-head">
+                <div>
+                  <h3>Card details</h3>
+                  <p>Complete the secure card fields to finish the custom design payment.</p>
+                </div>
+              </div>
+              <div class="gf-checkout-form-grid">
+                <label class="gf-checkout-field gf-checkout-form-span"><span>Card Number</span>
+                  <input type="text" id="gfBankNumberInput" name="number" required maxlength="19" autocomplete="cc-number" placeholder="1234 5678 9012 3456" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['number']); ?>">
+                </label>
+                <label class="gf-checkout-field"><span>Expiry</span>
+                  <input type="text" id="gfBankExpiryInput" name="expiry" required maxlength="5" autocomplete="cc-exp" placeholder="MM/YY" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['expiry']); ?>">
+                </label>
+                <label class="gf-checkout-field"><span>CVC</span>
+                  <input type="text" id="gfBankCvcInput" name="cvc" required maxlength="4" autocomplete="cc-csc" placeholder="CVC" value="<?php echo girffonCustomDesignCheckoutEscape($formValues['cvc']); ?>">
+                </label>
+              </div>
+            </section>
 
             <div class="gf-checkout-actions">
-              <button type="submit" class="cart-btn cart-btn-checkout" id="gfPayNowBtn">
+              <button type="submit" class="gf-checkout-primary" id="gfPayNowBtn">
                 <span>Pay <?php echo girffonCustomDesignCheckoutEscape(girffonCustomDesignCheckoutPrice((float) $summary['order_total'])); ?></span>
                 <i class="fa-solid fa-lock"></i>
               </button>
