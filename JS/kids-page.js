@@ -88,12 +88,21 @@ document.addEventListener("DOMContentLoaded", function () {
     if (badge) badge.textContent = String(count);
   }
 
-  function updateTopCounts() {
+  async function updateTopCounts() {
     const cartCount = getCartItems().reduce(function (sum, item) {
       return sum + (Number(item.qty) || 1);
     }, 0);
 
-    setBadgeCount("gfCartTrigger", cartCount);
+    if (window.GirffonCartApi && typeof window.GirffonCartApi.getCart === "function") {
+      try {
+        const cart = await window.GirffonCartApi.getCart();
+        setBadgeCount("gfCartTrigger", cart && cart.summary ? (cart.summary.itemCount || 0) : 0);
+      } catch (_error) {
+        setBadgeCount("gfCartTrigger", cartCount);
+      }
+    } else {
+      setBadgeCount("gfCartTrigger", cartCount);
+    }
     setBadgeCount("gfWishlistTrigger", getWishlistItems().length);
   }
 
@@ -380,6 +389,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   sections.forEach(initSection);
   updateTopCounts();
+  window.addEventListener("girffon:cart-synced", updateTopCounts);
   if (localeHelper) {
     localeHelper.applyPage(document);
     localeHelper.bindBankModal(document);

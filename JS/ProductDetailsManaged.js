@@ -555,6 +555,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   async function addCurrentToCart() {
+    if (window.GirffonProductCartSessionActive) {
+      return;
+    }
+
     if (!window.GirffonCartApi || typeof window.GirffonCartApi.addItem !== 'function') {
       return;
     }
@@ -699,6 +703,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const productItem = items.find(function (item) { return item.sku === productId; }) || items[0];
 
       enterBtn.addEventListener('click', async function () {
+        if (window.GirffonProductCartSessionActive) {
+          return;
+        }
+
         if (!window.GirffonCartApi || typeof window.GirffonCartApi.addItem !== 'function') {
           return;
         }

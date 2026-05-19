@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const continueButton = document.getElementById("gfWishlistContinueBtn");
   const cartButton = document.getElementById("gfWishlistOpenCartBtn");
   const WISHLIST_KEY = "girffon_wishlist";
+  const CART_STORAGE_KEY = "girffon_cart";
   const CART_URL = "CartTest.html";
   const WISHLIST_TRANSFER_KEY = "girffon_wishlist_cart_transfer";
 
@@ -82,9 +83,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function addToCart(item) {
     const cartApi = getCartApi();
-    if (!cartApi) {
-      throw new Error("Cart API is unavailable.");
-    }
 
     const nextItem = {
       id: item.id || item.title || item.name,
@@ -96,7 +94,42 @@ document.addEventListener("DOMContentLoaded", function () {
       quantity: 1
     };
 
-    await cartApi.addItem(nextItem);
+    if (cartApi) {
+      await cartApi.addItem(nextItem);
+      await syncBadges();
+      return;
+    }
+
+    const existingCart = safeReadArray(CART_STORAGE_KEY);
+    const existingIndex = existingCart.findIndex(function (entry) {
+      return String(entry.code || entry.sku || entry.id || entry.title || entry.name || "") === String(nextItem.id)
+        && String(entry.color || "") === String(nextItem.color || "")
+        && String(entry.size || "") === String(nextItem.size || "");
+    });
+
+    if (existingIndex >= 0) {
+      const currentQty = Number(existingCart[existingIndex].qty != null ? existingCart[existingIndex].qty : existingCart[existingIndex].quantity) || 1;
+      existingCart[existingIndex].qty = currentQty + 1;
+      existingCart[existingIndex].quantity = currentQty + 1;
+    } else {
+      existingCart.push({
+        id: nextItem.id,
+        sku: nextItem.id,
+        code: nextItem.id,
+        name: nextItem.name,
+        title: nextItem.name,
+        image: nextItem.image,
+        img: nextItem.image,
+        price: Number(nextItem.price) || 0,
+        priceNumber: Number(nextItem.price) || 0,
+        color: nextItem.color,
+        size: nextItem.size,
+        qty: 1,
+        quantity: 1
+      });
+    }
+
+    safeWriteArray(CART_STORAGE_KEY, existingCart);
     await syncBadges();
   }
 

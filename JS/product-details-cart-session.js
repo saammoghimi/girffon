@@ -1,4 +1,6 @@
 (function () {
+  window.GirffonProductCartSessionActive = true;
+
   function parsePrice(value) {
     return Number.parseFloat(String(value || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0;
   }

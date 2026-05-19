@@ -463,6 +463,7 @@
     const LAST_CUSTOM_INVOICE_KEY = 'girffon_last_custom_invoice';
     const LAST_CUSTOM_INVOICE_CONSUMED_KEY = 'girffon_last_custom_invoice_consumed';
     const WISHLIST_TRANSFER_KEY = 'girffon_wishlist_cart_transfer';
+    const NORMAL_CART_STORAGE_KEY = 'girffon_cart';
 
     function saveCart() {
       const summary = {
@@ -477,6 +478,28 @@
           return sum + ((Number(item.price) || 0) * (Number(item.qty) || 0));
         }, 0)
       };
+
+      try {
+        localStorage.setItem(NORMAL_CART_STORAGE_KEY, JSON.stringify(cartData.map(function (item) {
+          return {
+            id: item.id || item.code || item.name,
+            sku: item.sku || item.id || item.code || item.name,
+            code: item.code || item.id || item.sku || '',
+            name: item.name,
+            title: item.name,
+            image: item.img,
+            img: item.img,
+            price: Number(item.price) || 0,
+            priceNumber: Number(item.price) || 0,
+            size: item.size,
+            color: item.color,
+            qty: Number(item.qty) || 1,
+            quantity: Number(item.qty) || 1
+          };
+        })));
+      } catch (_error) {
+        // Ignore local storage failures.
+      }
 
       if (window.GirffonCartApi) {
         window.GirffonCartApi.updateBadge({ items: cartData, summary: summary });
@@ -655,6 +678,10 @@
     async function loadCartFromServer() {
       if (!window.GirffonCartApi || typeof window.GirffonCartApi.getCart !== 'function') {
         throw new Error('GirffoN cart API is unavailable.');
+      }
+
+      if (typeof window.GirffonCartApi.syncLocalCartToBackend === 'function') {
+        await window.GirffonCartApi.syncLocalCartToBackend();
       }
 
       const cart = await window.GirffonCartApi.getCart();

@@ -15,6 +15,7 @@
   const PRODUCT_DETAILS_URL = '/GirffoN/ProductDetails.html';
   const NOTIFICATION_PREFERENCES_URL = '/GirffoN/backend/auth/save-notification-preferences.php';
   const AVATAR_STORAGE_KEY = 'girffon_profile_avatar';
+  const CART_STORAGE_KEY = 'girffon_cart';
   const WISHLIST_STORAGE_KEY = 'girffon_wishlist';
   const EMPTY_AVATAR_DATA_URI = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'110\' height=\'110\'%3E%3C/svg%3E';
   const NOTIFICATION_PREFERENCE_KEYS = [
@@ -1290,6 +1291,31 @@
     }
   }
 
+  function readLocalCart() {
+    try {
+      const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_error) {
+      return [];
+    }
+  }
+
+  function writeLocalCart(items) {
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(Array.isArray(items) ? items : []));
+    } catch (_error) {
+      // Ignore storage failures.
+    }
+  }
+
+  function updateHeaderCartBadge(count) {
+    const badge = document.querySelector('#gfCartTrigger .count-badge');
+    if (badge) {
+      badge.textContent = String(Math.max(0, Number(count) || 0));
+    }
+  }
+
   function getLocalWishlistItemId(item, index) {
     return String(item && (item.id || item.sku || item.code || item.title || item.name) || ('local-wishlist-' + index));
   }
@@ -1394,15 +1420,59 @@
       }
 
       if (action === 'cart') {
-        postJson(CART_ADD_URL, {
+        const cartPayload = {
           sku: button.getAttribute('data-gf-sku') || '',
+          id: button.getAttribute('data-gf-sku') || button.getAttribute('data-gf-name') || '',
           name: button.getAttribute('data-gf-name') || '',
           price: button.getAttribute('data-gf-price') || '',
           image: button.getAttribute('data-gf-image') || '',
           size: button.getAttribute('data-gf-size') || '',
           color: button.getAttribute('data-gf-color') || '',
           quantity: 1
-        }).then(function () {
+        };
+
+        if (window.GirffonCartApi && typeof window.GirffonCartApi.addItem === 'function') {
+          window.GirffonCartApi.addItem(cartPayload).then(function (cart) {
+            button.textContent = 'Added';
+            updateHeaderCartBadge(cart && cart.summary ? cart.summary.itemCount : 0);
+          }).catch(function () {});
+          return;
+        }
+
+        postJson(CART_ADD_URL, cartPayload).then(function () {
+          const existingCart = readLocalCart();
+          const existingIndex = existingCart.findIndex(function (item) {
+            return String(item.code || item.sku || item.id || item.title || item.name || '') === String(cartPayload.sku || cartPayload.id)
+              && String(item.color || '') === String(cartPayload.color || '')
+              && String(item.size || '') === String(cartPayload.size || '');
+          });
+
+          if (existingIndex >= 0) {
+            const currentQty = Number(existingCart[existingIndex].qty != null ? existingCart[existingIndex].qty : existingCart[existingIndex].quantity) || 1;
+            existingCart[existingIndex].qty = currentQty + 1;
+            existingCart[existingIndex].quantity = currentQty + 1;
+          } else {
+            existingCart.push({
+              id: cartPayload.id || cartPayload.sku,
+              sku: cartPayload.sku || cartPayload.id,
+              code: cartPayload.sku || cartPayload.id,
+              name: cartPayload.name,
+              title: cartPayload.name,
+              image: cartPayload.image,
+              img: cartPayload.image,
+              price: Number(cartPayload.price) || 0,
+              priceNumber: Number(cartPayload.price) || 0,
+              size: cartPayload.size,
+              color: cartPayload.color,
+              qty: 1,
+              quantity: 1
+            });
+          }
+
+          writeLocalCart(existingCart);
+          updateHeaderCartBadge(existingCart.reduce(function (sum, item) {
+            return sum + (Number(item.qty != null ? item.qty : item.quantity) || 0);
+          }, 0));
           button.textContent = 'Added';
         }).catch(function () {});
       }

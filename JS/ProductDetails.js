@@ -477,6 +477,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (addToCartBtn) {
     addToCartBtn.addEventListener("click", async function () {
+      if (window.GirffonProductCartSessionActive) {
+        return;
+      }
+
       const selectedThumb = mainImg.dataset.thumb || mainImg.src;
 
       const cartItem = {
@@ -716,6 +720,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const addBtn = e.target.closest(".gx25-enter");
       if (addBtn) {
+        if (window.GirffonProductCartSessionActive) {
+          return;
+        }
+
         if (window.GirffonCartApi && typeof window.GirffonCartApi.addItem === "function") {
           window.GirffonCartApi.addItem({
             id: productId,
