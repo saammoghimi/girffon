@@ -826,12 +826,22 @@
 
       const boxWidth = Math.max(1, Math.round(boxRect.width));
       const boxHeight = Math.max(1, Math.round(boxRect.height));
+      const outputMaxSide = Math.max(0, Number(options.outputMaxSide) || 0);
+      const exportScale = outputMaxSide > 0
+        ? Math.max(1, outputMaxSide / Math.max(boxWidth, boxHeight))
+        : 1;
+      const exportWidth = Math.max(1, Math.round(boxWidth * exportScale));
+      const exportHeight = Math.max(1, Math.round(boxHeight * exportScale));
       const canvas = document.createElement('canvas');
-      canvas.width = boxWidth;
-      canvas.height = boxHeight;
+      canvas.width = exportWidth;
+      canvas.height = exportHeight;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         return fallbackPreview;
+      }
+
+      if (exportScale !== 1) {
+        ctx.scale(exportScale, exportScale);
       }
 
       if (options.backgroundColor) {
@@ -2181,7 +2191,8 @@
         includeFrame: true,
         frameColor: "#111827",
         frameWidth: 2,
-        frameDash: [8, 6]
+        frameDash: [8, 6],
+        outputMaxSide: 1800
       });
     }
 

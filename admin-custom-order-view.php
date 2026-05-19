@@ -182,7 +182,7 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
                 </div>
                 <?php if (!empty($previewView['path'])): ?>
                   <div class="admin-custom-preview-actions">
-                    <a class="admin-button admin-button-soft" href="<?php echo $escapeCustomDesignView($previewView['path']); ?>" download="<?php echo $escapeCustomDesignView($customDesignPreviewDownloadNames[$previewKey] ?? ('custom-order-' . $previewKey . '.png')); ?>">Download</a>
+                    <a class="admin-button admin-button-soft" href="<?php echo $escapeCustomDesignView($previewView['path']); ?>" download="<?php echo $escapeCustomDesignView($customDesignPreviewDownloadNames[$previewKey] ?? ('custom-order-' . $previewKey . '.png')); ?>" data-preview-download data-preview-src="<?php echo $escapeCustomDesignView($previewView['path']); ?>" data-preview-filename="<?php echo $escapeCustomDesignView($customDesignPreviewDownloadNames[$previewKey] ?? ('custom-order-' . $previewKey . '.png')); ?>">Download</a>
                   </div>
                 <?php endif; ?>
               </section>
@@ -387,5 +387,81 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
   </div>
 
   <script src="JS/admin-girffon.js?v=20260518r11"></script>
+  <script>
+    (function () {
+      const previewDownloadLinks = document.querySelectorAll('[data-preview-download]');
+      if (!previewDownloadLinks.length) {
+        return;
+      }
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = () => reject(new Error('preview-load-failed'));
+          image.src = src;
+        });
+      }
+
+      async function downloadUpscaledPreview(event) {
+        event.preventDefault();
+        const link = event.currentTarget;
+        if (!(link instanceof HTMLAnchorElement)) {
+          return;
+        }
+
+        const src = (link.dataset.previewSrc || link.getAttribute('href') || '').trim();
+        const filename = (link.dataset.previewFilename || link.getAttribute('download') || 'custom-order-preview.png').trim();
+        if (!src) {
+          return;
+        }
+
+        try {
+          const image = await loadImage(src);
+          const sourceWidth = Math.max(1, Number(image.naturalWidth) || 0);
+          const sourceHeight = Math.max(1, Number(image.naturalHeight) || 0);
+          const targetWidth = 900;
+          const targetHeight = Math.max(1, Math.round((sourceHeight / sourceWidth) * targetWidth));
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          const ctx = canvas.getContext('2d');
+
+          if (!ctx) {
+            window.location.href = src;
+            return;
+          }
+
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, targetWidth, targetHeight);
+          ctx.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+          canvas.toBlob((blob) => {
+            if (!blob) {
+              window.location.href = src;
+              return;
+            }
+
+            const blobUrl = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = blobUrl;
+            downloadLink.download = filename;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            downloadLink.remove();
+            window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+          }, 'image/png');
+        } catch (error) {
+          window.location.href = src;
+        }
+      }
+
+      previewDownloadLinks.forEach((link) => {
+        link.addEventListener('click', downloadUpscaledPreview);
+      });
+    }());
+  </script>
 </body>
 </html>
