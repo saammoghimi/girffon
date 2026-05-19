@@ -430,47 +430,7 @@ function girffonAdminFetchPeriodStats(PDO $pdo): array
 
 function girffonAdminFetchAvailableStatYears(PDO $pdo): array
 {
-    $years = [(int) girffonAdminDashboardRomeNow()->format('Y')];
-
-    foreach ([
-        ['orders', 'created_at', ''],
-        ['invoices', 'created_at', ''],
-        ['users', 'created_at', "role = 'customer'"],
-    ] as [$table, $column, $extraWhere]) {
-        try {
-            $sql = "SELECT DISTINCT YEAR({$column}) AS year_value FROM {$table} WHERE {$column} IS NOT NULL";
-            if ($extraWhere !== '') {
-                $sql .= ' AND ' . $extraWhere;
-            }
-            $statement = $pdo->query($sql);
-            foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
-                $year = (int) ($row['year_value'] ?? 0);
-                if (girffonAdminDashboardIsSaneYear($year)) {
-                    $years[] = $year;
-                }
-            }
-        } catch (PDOException $exception) {
-        }
-    }
-
-    if (girffonAdminEnsureCustomDesignOrderTables($pdo)) {
-        foreach (['created_at', 'paid_at'] as $column) {
-            try {
-                $statement = $pdo->query("SELECT DISTINCT YEAR({$column}) AS year_value FROM custom_design_orders WHERE {$column} IS NOT NULL");
-                foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $row) {
-                    $year = (int) ($row['year_value'] ?? 0);
-                    if (girffonAdminDashboardIsSaneYear($year)) {
-                        $years[] = $year;
-                    }
-                }
-            } catch (PDOException $exception) {
-            }
-        }
-    }
-
-    $years = array_values(array_unique(array_filter($years)));
-    sort($years);
-    return $years ?: [(int) girffonAdminDashboardRomeNow()->format('Y')];
+    return [2025, 2026, 2027, 2028, 2029, 2030];
 }
 
 function girffonAdminAnalyticsBuildBaseSeries(array $labels): array
@@ -816,8 +776,7 @@ function girffonAdminFetchRecentMembers(PDO $pdo, int $limit = 5): array
 
 function girffonAdminDashboardSaneYearRange(): array
 {
-    $currentYear = (int) girffonAdminDashboardRomeNow()->format('Y');
-    return [2024, $currentYear];
+    return [2025, 2030];
 }
 
 function girffonAdminDashboardIsSaneYear(int $year): bool
