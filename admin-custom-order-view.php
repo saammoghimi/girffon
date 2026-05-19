@@ -38,6 +38,12 @@ $formatCustomDesignViewDate = static function ($value) {
 };
 
 $customDesignStatuses = girffonAdminCustomDesignOrderStatuses();
+$customDesignPreviewDownloadNames = [
+  'front' => 'custom-order-front.png',
+  'back' => 'custom-order-back.png',
+  'right' => 'custom-order-right.png',
+  'left' => 'custom-order-left.png',
+];
 $customDesignPreviewViews = is_array($customDesignOrder['preview_views'] ?? null) ? $customDesignOrder['preview_views'] : [];
 $customDesignUploads = is_array($customDesignOrder['uploads'] ?? null) ? $customDesignOrder['uploads'] : [];
 $customDesignTexts = is_array($customDesignOrder['texts'] ?? null) ? $customDesignOrder['texts'] : [];
@@ -67,6 +73,7 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
     .admin-custom-preview-card h3, .admin-custom-upload-card h3, .admin-custom-info-card h3 { margin:0 0 12px; color:#2b241b; font-size:1rem; }
     .admin-custom-preview-frame { min-height:220px; border-radius:18px; border:1px dashed rgba(160,131,54,0.34); background:linear-gradient(180deg, rgba(252,249,243,0.98), rgba(244,236,220,0.92)); display:flex; align-items:center; justify-content:center; overflow:hidden; }
     .admin-custom-preview-frame img { width:100%; height:100%; object-fit:contain; display:block; }
+    .admin-custom-preview-actions { display:flex; justify-content:flex-start; margin-top:12px; }
     .admin-custom-preview-empty { color:#7d715f; text-align:center; padding:24px; line-height:1.6; }
     .admin-custom-upload-grid { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; }
     .admin-custom-upload-thumb { min-height:120px; border-radius:16px; background:rgba(247,240,225,0.9); border:1px solid rgba(199,165,75,0.15); display:flex; align-items:center; justify-content:center; overflow:hidden; }
@@ -163,7 +170,7 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
         <article class="admin-panel">
           <div class="admin-panel-head"><div><h2>T-Shirt Preview</h2><p class="admin-panel-note">Front, back, right sleeve, and left sleeve previews are separated for faster design review.</p></div></div>
           <div class="admin-custom-preview-grid">
-            <?php foreach ($customDesignPreviewViews as $previewView): ?>
+            <?php foreach ($customDesignPreviewViews as $previewKey => $previewView): ?>
               <section class="admin-custom-preview-card">
                 <h3><?php echo $escapeCustomDesignView($previewView['label'] ?? 'Preview'); ?></h3>
                 <div class="admin-custom-preview-frame">
@@ -173,6 +180,11 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
                     <div class="admin-custom-preview-empty">No preview image saved for this angle yet.</div>
                   <?php endif; ?>
                 </div>
+                <?php if (!empty($previewView['path'])): ?>
+                  <div class="admin-custom-preview-actions">
+                    <a class="admin-button admin-button-soft" href="<?php echo $escapeCustomDesignView($previewView['path']); ?>" download="<?php echo $escapeCustomDesignView($customDesignPreviewDownloadNames[$previewKey] ?? ('custom-order-' . $previewKey . '.png')); ?>">Download</a>
+                  </div>
+                <?php endif; ?>
               </section>
             <?php endforeach; ?>
           </div>
