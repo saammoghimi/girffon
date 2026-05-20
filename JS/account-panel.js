@@ -69,6 +69,7 @@
   const AVATAR_STORAGE_KEY = "girffon_profile_avatar";
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const REGISTER_SUCCESS_MESSAGE = "Congratulations! Your GirffoN account has been created. Please check your email.";
+  const REGISTER_TUTORIAL_URL = "https://youtube.com/@GirffoN";
 
   let authStatus = document.getElementById("gfAccountAuthStatus");
   let registerNameInput = document.getElementById("gfRegisterName");
@@ -308,6 +309,28 @@
     return normalizedEmail ? `mailto:${normalizedEmail}` : "https://mail.google.com";
   }
 
+  function openExternalUrl(url) {
+    const nextUrl = String(url || "").trim();
+    if (!nextUrl) {
+      return;
+    }
+
+    const openedWindow = window.open(nextUrl, "_blank", "noopener,noreferrer");
+    if (openedWindow) {
+      openedWindow.opener = null;
+      return;
+    }
+
+    const fallbackLink = document.createElement("a");
+    fallbackLink.href = nextUrl;
+    fallbackLink.target = "_blank";
+    fallbackLink.rel = "noopener noreferrer";
+    fallbackLink.hidden = true;
+    document.body.appendChild(fallbackLink);
+    fallbackLink.click();
+    fallbackLink.remove();
+  }
+
   function ensureRegisterSuccessDialog() {
     if (registerSuccessDialog) {
       return registerSuccessDialog;
@@ -437,11 +460,11 @@
 
     dialog.checkEmailButton.onclick = function () {
       const targetUrl = getEmailProviderUrl(email);
-      window.open(targetUrl, "_blank", "noopener");
+      openExternalUrl(targetUrl);
     };
 
     dialog.watchTutorialButton.onclick = function () {
-      window.open("https://youtube.com/@GirffoN", "_blank", "noopener");
+      openExternalUrl(REGISTER_TUTORIAL_URL);
     };
   }
 
