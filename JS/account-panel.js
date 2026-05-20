@@ -435,13 +435,6 @@
     dialog.overlayNode.setAttribute("aria-hidden", "false");
     registerSuccessToastVisible = true;
 
-    if (registerSuccessHideTimer) {
-      window.clearTimeout(registerSuccessHideTimer);
-    }
-    registerSuccessHideTimer = window.setTimeout(function () {
-      hideRegisterSuccessPopup();
-    }, 4000);
-
     dialog.checkEmailButton.onclick = function () {
       const targetUrl = getEmailProviderUrl(email);
       window.open(targetUrl, "_blank", "noopener");
