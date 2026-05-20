@@ -106,6 +106,10 @@ function girffonProfileSaveCatalogSubscription(PDO $pdo, int $userId, string $em
                 $assignments[] = 'source = :source';
                 $params[':source'] = 'profile';
             }
+            if (isset($columns['accepts_catalog_emails'])) {
+                $assignments[] = 'accepts_catalog_emails = :accepts_catalog_emails';
+                $params[':accepts_catalog_emails'] = 1;
+            }
             if (isset($columns['subscribed_at'])) {
                 $assignments[] = 'subscribed_at = CURRENT_TIMESTAMP';
             }
@@ -174,6 +178,12 @@ function girffonProfileSaveCatalogSubscription(PDO $pdo, int $userId, string $em
             $insertColumns[] = 'source';
             $insertValues[] = ':source';
             $params[':source'] = 'profile';
+        }
+
+        if (isset($columns['accepts_catalog_emails'])) {
+            $insertColumns[] = 'accepts_catalog_emails';
+            $insertValues[] = ':accepts_catalog_emails';
+            $params[':accepts_catalog_emails'] = 1;
         }
 
         if (isset($columns['subscribed_at'])) {

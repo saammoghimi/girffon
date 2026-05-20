@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS newsletter_subscribers (
     email VARCHAR(190) NOT NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'subscribed',
     source VARCHAR(60) NOT NULL DEFAULT 'profile',
+    accepts_promotional_emails TINYINT(1) NOT NULL DEFAULT 0,
+    accepts_catalog_emails TINYINT(1) NOT NULL DEFAULT 1,
     subscribed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),

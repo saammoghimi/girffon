@@ -274,17 +274,13 @@ function girffonAdminFetchPromotionalAudience(PDO $pdo): array
     $preferenceColumns = $preferenceTable !== '' ? girffonAdminTableColumns($pdo, $preferenceTable) : [];
     $audience = [];
 
-    if ($userColumns !== [] && isset($userColumns['id'], $userColumns['email'])) {
+    if ($userColumns !== [] && isset($userColumns['id'], $userColumns['email']) && $preferenceTable !== '' && isset($preferenceColumns['user_id'], $preferenceColumns['promotional_emails'])) {
         $firstNameExpression = isset($userColumns['first_name']) ? 'COALESCE(u.first_name, \'\')' : "''";
         $lastNameExpression = isset($userColumns['last_name']) ? 'COALESCE(u.last_name, \'\')' : "''";
         $usernameExpression = isset($userColumns['username']) ? 'NULLIF(u.username, \'\')' : 'NULL';
         $statusExpression = isset($userColumns['status']) ? 'COALESCE(u.status, \'\')' : "''";
-        $promotionalExpression = ($preferenceTable !== '' && isset($preferenceColumns['user_id'], $preferenceColumns['promotional_emails']))
-            ? 'COALESCE(up.promotional_emails, 1)'
-            : '1';
-        $joinPreferences = ($preferenceTable !== '' && isset($preferenceColumns['user_id']))
-            ? ' LEFT JOIN ' . $preferenceTable . ' up ON up.user_id = u.id'
-            : '';
+        $promotionalExpression = 'COALESCE(up.promotional_emails, 0)';
+        $joinPreferences = ' INNER JOIN ' . $preferenceTable . ' up ON up.user_id = u.id';
 
         try {
             $statement = $pdo->query(
@@ -297,8 +293,9 @@ function girffonAdminFetchPromotionalAudience(PDO $pdo): array
                     ) AS name,
                     LOWER(TRIM(COALESCE(u.email, ''))) AS email,
                     {$statusExpression} AS status,
-                    {$promotionalExpression} AS promotional_emails
-                 FROM users u{$joinPreferences}
+                          {$promotionalExpression} AS promotional_emails
+                      FROM users u{$joinPreferences}
+                      WHERE {$promotionalExpression} <> 0
                  ORDER BY u.id ASC"
             );
 
@@ -326,9 +323,13 @@ function girffonAdminFetchPromotionalAudience(PDO $pdo): array
         $joinPreferences = ($preferenceTable !== '' && isset($preferenceColumns['user_id']))
             ? ' LEFT JOIN ' . $preferenceTable . ' up ON up.user_id = ' . $resolvedUserIdExpression
             : '';
-        $promotionalExpression = ($preferenceTable !== '' && isset($preferenceColumns['user_id'], $preferenceColumns['promotional_emails']))
-            ? 'COALESCE(up.promotional_emails, 1)'
-            : '1';
+        if (isset($subscriberColumns['accepts_promotional_emails'])) {
+            $promotionalExpression = 'COALESCE(ns.accepts_promotional_emails, 0)';
+        } elseif ($preferenceTable !== '' && isset($preferenceColumns['user_id'], $preferenceColumns['promotional_emails'])) {
+            $promotionalExpression = 'COALESCE(up.promotional_emails, 0)';
+        } else {
+            $promotionalExpression = '0';
+        }
         $subscriberNameExpression = 'LOWER(TRIM(COALESCE(ns.email, \'\')))';
 
         if ($joinUser !== '') {
@@ -357,6 +358,7 @@ function girffonAdminFetchPromotionalAudience(PDO $pdo): array
                     {$subscriberStatusExpression} AS status,
                     {$promotionalExpression} AS promotional_emails
                  FROM newsletter_subscribers ns{$joinUser}{$joinPreferences}
+                      WHERE {$promotionalExpression} <> 0
                  ORDER BY " . (isset($subscriberColumns['id']) ? 'ns.id ASC' : 'LOWER(TRIM(COALESCE(ns.email, \"\"))) ASC')
             );
 
@@ -542,12 +544,16 @@ function girffonAdminFetchNewsletterSubscribers(PDO $pdo): array
             ? "COALESCE(NULLIF(u.phone, ''), '')"
             : "''";
 
-        $catalogExpression = ($preferenceTable !== '' && isset($preferenceColumns['catalog_emails']))
-            ? 'COALESCE(up.catalog_emails, 1)'
-            : '1';
-        $promotionalExpression = ($preferenceTable !== '' && isset($preferenceColumns['promotional_emails']))
-            ? 'COALESCE(up.promotional_emails, 1)'
-            : '1';
+        $catalogExpression = isset($subscriberColumns['accepts_catalog_emails'])
+            ? 'COALESCE(ns.accepts_catalog_emails, 1)'
+            : (($preferenceTable !== '' && isset($preferenceColumns['catalog_emails']))
+                ? 'COALESCE(up.catalog_emails, 1)'
+                : '1');
+        $promotionalExpression = isset($subscriberColumns['accepts_promotional_emails'])
+            ? 'COALESCE(ns.accepts_promotional_emails, 0)'
+            : (($preferenceTable !== '' && isset($preferenceColumns['promotional_emails']))
+                ? 'COALESCE(up.promotional_emails, 0)'
+                : '0');
         $birthdayExpression = ($preferenceTable !== '' && isset($preferenceColumns['birthday_discount_emails']))
             ? 'COALESCE(up.birthday_discount_emails, 1)'
             : '1';
@@ -577,6 +583,7 @@ function girffonAdminFetchNewsletterSubscribers(PDO $pdo): array
             . $joinUser
             . $joinPreferences
             . " WHERE " . $statusExpression . " = 'subscribed'
+                AND " . $catalogExpression . " <> 0
                 AND LOWER(TRIM(COALESCE(" . $subscriberEmailExpression . ", ''))) <> ''
                 ORDER BY " . $subscribedAtExpression . " DESC, " . $subscriberIdExpression . " DESC";
 

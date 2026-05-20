@@ -68,11 +68,14 @@
   const PROFILE_URL = buildAppPath("ProfilePage.php");
   const AVATAR_STORAGE_KEY = "girffon_profile_avatar";
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const REGISTER_SUCCESS_MESSAGE = "Congratulations! Your GirffoN account has been created. Please check your email.";
 
   let authStatus = document.getElementById("gfAccountAuthStatus");
   let registerNameInput = document.getElementById("gfRegisterName");
   let registerEmailInput = document.getElementById("gfRegisterEmail");
   let registerPhoneInput = document.getElementById("gfRegisterPhone");
+  let registerPromotionalEmailsInput = document.getElementById("gfRegisterPromotionalEmails");
+  let registerCatalogEmailsInput = document.getElementById("gfRegisterCatalogEmails");
   let forgotEmailInput = document.getElementById("gfForgotPasswordEmail");
   let isRegisterMode = false;
   let isForgotPasswordMode = false;
@@ -156,6 +159,63 @@
     return input;
   }
 
+  function createRegisterPreferenceGroup(config) {
+    if (!loginForm) {
+      return null;
+    }
+
+    const group = document.createElement("div");
+    group.className = "gf-account-input-group gf-account-preference-group";
+    group.style.display = "none";
+
+    const label = document.createElement("label");
+    label.htmlFor = config.id;
+    label.style.display = "grid";
+    label.style.gridTemplateColumns = "20px 1fr";
+    label.style.alignItems = "start";
+    label.style.gap = "10px";
+    label.style.cursor = "pointer";
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.id = config.id;
+    input.name = config.name;
+    input.value = "1";
+    input.style.marginTop = "4px";
+    input.style.width = "16px";
+    input.style.height = "16px";
+    input.style.accentColor = "#c7a54b";
+
+    const copy = document.createElement("span");
+    copy.style.display = "grid";
+    copy.style.gap = "4px";
+
+    const title = document.createElement("strong");
+    title.textContent = config.label;
+    title.style.fontSize = "0.95rem";
+
+    const note = document.createElement("span");
+    note.textContent = config.note;
+    note.style.fontSize = "0.86rem";
+    note.style.lineHeight = "1.45";
+    note.style.color = "rgba(255,255,255,0.78)";
+
+    copy.appendChild(title);
+    copy.appendChild(note);
+    label.appendChild(input);
+    label.appendChild(copy);
+    group.appendChild(label);
+
+    const authRowNode = loginForm.querySelector(".gf-account-auth-row");
+    if (authRowNode && authRowNode.parentNode === loginForm) {
+      loginForm.insertBefore(group, authRowNode);
+    } else {
+      loginForm.appendChild(group);
+    }
+
+    return input;
+  }
+
   function ensureRegisterInputs() {
     registerNameInput = registerNameInput || createInputGroup({
       id: "gfRegisterName",
@@ -187,6 +247,20 @@
       iconClass: "fa-solid fa-mobile-screen-button"
     });
 
+    registerPromotionalEmailsInput = registerPromotionalEmailsInput || createRegisterPreferenceGroup({
+      id: "gfRegisterPromotionalEmails",
+      name: "accepts_promotional_emails",
+      label: "Promotional emails",
+      note: "Optional. Receive offers, discounts, campaigns, and marketing updates from GirffoN."
+    });
+
+    registerCatalogEmailsInput = registerCatalogEmailsInput || createRegisterPreferenceGroup({
+      id: "gfRegisterCatalogEmails",
+      name: "accepts_catalog_emails",
+      label: "Catalog emails",
+      note: "Optional. Receive catalog, lookbook, and new collection emails only."
+    });
+
     forgotEmailInput = forgotEmailInput || createInputGroup({
       id: "gfForgotPasswordEmail",
       name: "forgotPasswordEmail",
@@ -206,8 +280,192 @@
   const registerNameGroup = findInputGroup(registerNameInput);
   const registerEmailGroup = findInputGroup(registerEmailInput);
   const registerPhoneGroup = findInputGroup(registerPhoneInput);
+  const registerPromotionalEmailsGroup = findInputGroup(registerPromotionalEmailsInput);
+  const registerCatalogEmailsGroup = findInputGroup(registerCatalogEmailsInput);
   const forgotEmailGroup = findInputGroup(forgotEmailInput);
   const authRow = loginForm ? loginForm.querySelector(".gf-account-auth-row") : null;
+  let registerSuccessDialog = null;
+  let registerSuccessHideTimer = 0;
+  let registerSuccessToastVisible = false;
+
+  function getEmailProviderUrl(email) {
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const domain = normalizedEmail.split("@")[1] || "";
+
+    if (domain === "gmail.com" || domain === "googlemail.com") {
+      return "https://mail.google.com";
+    }
+    if (["outlook.com", "hotmail.com", "live.com", "msn.com"].includes(domain)) {
+      return "https://outlook.live.com/mail";
+    }
+    if (domain.indexOf("yahoo") === 0 || domain.endsWith(".yahoo.com")) {
+      return "https://mail.yahoo.com";
+    }
+    if (["icloud.com", "me.com", "mac.com"].includes(domain)) {
+      return "https://www.icloud.com/mail";
+    }
+
+    return normalizedEmail ? `mailto:${normalizedEmail}` : "https://mail.google.com";
+  }
+
+  function ensureRegisterSuccessDialog() {
+    if (registerSuccessDialog) {
+      return registerSuccessDialog;
+    }
+
+    const overlayNode = document.createElement("div");
+    overlayNode.hidden = true;
+    overlayNode.setAttribute("aria-hidden", "true");
+    overlayNode.style.position = "fixed";
+    overlayNode.style.top = "18px";
+    overlayNode.style.right = "18px";
+    overlayNode.style.zIndex = "10010";
+    overlayNode.style.width = "min(320px, calc(100vw - 20px))";
+    overlayNode.style.maxWidth = "calc(100vw - 20px)";
+    overlayNode.style.pointerEvents = "none";
+
+    const dialogNode = document.createElement("div");
+    dialogNode.setAttribute("role", "dialog");
+    dialogNode.setAttribute("aria-modal", "false");
+    dialogNode.style.width = "100%";
+    dialogNode.style.borderRadius = "18px";
+    dialogNode.style.padding = "15px 15px 14px";
+    dialogNode.style.background = "linear-gradient(180deg, #fffaf2 0%, #f7efe1 100%)";
+    dialogNode.style.color = "#2b241b";
+    dialogNode.style.border = "1px solid rgba(199, 165, 75, 0.24)";
+    dialogNode.style.boxShadow = "0 14px 34px rgba(67, 49, 20, 0.16)";
+    dialogNode.style.pointerEvents = "auto";
+
+    const topRow = document.createElement("div");
+    topRow.style.display = "flex";
+    topRow.style.alignItems = "start";
+    topRow.style.justifyContent = "space-between";
+    topRow.style.gap = "12px";
+
+    const titleNode = document.createElement("h3");
+    titleNode.textContent = "Congratulations!";
+    titleNode.style.margin = "0";
+    titleNode.style.fontSize = "0.98rem";
+    titleNode.style.lineHeight = "1.3";
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close notification");
+    closeButton.textContent = "\u00D7";
+    closeButton.style.border = "none";
+    closeButton.style.background = "transparent";
+    closeButton.style.color = "#8a7753";
+    closeButton.style.cursor = "pointer";
+    closeButton.style.fontSize = "1.45rem";
+    closeButton.style.lineHeight = "1";
+    closeButton.style.padding = "0";
+    closeButton.style.width = "28px";
+    closeButton.style.height = "28px";
+    closeButton.style.flex = "0 0 28px";
+
+    topRow.appendChild(titleNode);
+    topRow.appendChild(closeButton);
+
+    const messageNode = document.createElement("p");
+    messageNode.textContent = REGISTER_SUCCESS_MESSAGE;
+    messageNode.style.margin = "8px 0 0";
+    messageNode.style.fontSize = "0.87rem";
+    messageNode.style.lineHeight = "1.5";
+    messageNode.style.color = "#5d5141";
+
+    const buttonWrap = document.createElement("div");
+    buttonWrap.style.display = "flex";
+    buttonWrap.style.flexWrap = "wrap";
+    buttonWrap.style.gap = "8px";
+    buttonWrap.style.marginTop = "12px";
+
+    const checkEmailButton = document.createElement("button");
+    checkEmailButton.type = "button";
+    checkEmailButton.textContent = "Check Email";
+    checkEmailButton.style.padding = "9px 11px";
+    checkEmailButton.style.borderRadius = "12px";
+    checkEmailButton.style.border = "none";
+    checkEmailButton.style.background = "linear-gradient(180deg, #d4b15a 0%, #c79a2b 100%)";
+    checkEmailButton.style.color = "#fffaf2";
+    checkEmailButton.style.cursor = "pointer";
+    checkEmailButton.style.fontSize = "0.82rem";
+
+    const watchTutorialButton = document.createElement("button");
+    watchTutorialButton.type = "button";
+    watchTutorialButton.textContent = "Watch Tutorial";
+    watchTutorialButton.style.padding = "9px 11px";
+    watchTutorialButton.style.borderRadius = "12px";
+    watchTutorialButton.style.border = "1px solid rgba(199, 165, 75, 0.28)";
+    watchTutorialButton.style.background = "#ffffff";
+    watchTutorialButton.style.color = "#2b241b";
+    watchTutorialButton.style.cursor = "pointer";
+    watchTutorialButton.style.fontSize = "0.82rem";
+
+    buttonWrap.appendChild(checkEmailButton);
+    buttonWrap.appendChild(watchTutorialButton);
+    dialogNode.appendChild(topRow);
+    dialogNode.appendChild(messageNode);
+    dialogNode.appendChild(buttonWrap);
+    overlayNode.appendChild(dialogNode);
+    document.body.appendChild(overlayNode);
+
+    registerSuccessDialog = {
+      overlayNode: overlayNode,
+      closeButton: closeButton,
+      messageNode: messageNode,
+      checkEmailButton: checkEmailButton,
+      watchTutorialButton: watchTutorialButton
+    };
+
+    closeButton.addEventListener("click", function () {
+      hideRegisterSuccessPopup();
+    });
+
+    return registerSuccessDialog;
+  }
+
+  function showRegisterSuccessPopup(email) {
+    if (registerSuccessToastVisible) {
+      return;
+    }
+
+    const dialog = ensureRegisterSuccessDialog();
+    dialog.messageNode.textContent = REGISTER_SUCCESS_MESSAGE;
+    dialog.overlayNode.hidden = false;
+    dialog.overlayNode.setAttribute("aria-hidden", "false");
+    registerSuccessToastVisible = true;
+
+    if (registerSuccessHideTimer) {
+      window.clearTimeout(registerSuccessHideTimer);
+    }
+    registerSuccessHideTimer = window.setTimeout(function () {
+      hideRegisterSuccessPopup();
+    }, 4000);
+
+    dialog.checkEmailButton.onclick = function () {
+      const targetUrl = getEmailProviderUrl(email);
+      window.open(targetUrl, "_blank", "noopener");
+    };
+
+    dialog.watchTutorialButton.onclick = function () {
+      window.open("https://youtube.com/@GirffoN", "_blank", "noopener");
+    };
+  }
+
+  function hideRegisterSuccessPopup() {
+    if (!registerSuccessDialog) {
+      return;
+    }
+
+    if (registerSuccessHideTimer) {
+      window.clearTimeout(registerSuccessHideTimer);
+      registerSuccessHideTimer = 0;
+    }
+
+    registerSuccessDialog.overlayNode.hidden = true;
+    registerSuccessDialog.overlayNode.setAttribute("aria-hidden", "true");
+    registerSuccessToastVisible = false;
+  }
 
   function splitDisplayName(name) {
     const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
@@ -413,6 +671,8 @@
     toggleGroup(registerNameGroup, isRegisterMode);
     toggleGroup(registerEmailGroup, isRegisterMode);
     toggleGroup(registerPhoneGroup, isRegisterMode);
+    toggleGroup(registerPromotionalEmailsGroup, isRegisterMode);
+    toggleGroup(registerCatalogEmailsGroup, isRegisterMode);
     toggleGroup(forgotEmailGroup, false);
 
     if (authRow) {
@@ -470,6 +730,8 @@
     toggleGroup(registerNameGroup, false);
     toggleGroup(registerEmailGroup, false);
     toggleGroup(registerPhoneGroup, false);
+    toggleGroup(registerPromotionalEmailsGroup, false);
+    toggleGroup(registerCatalogEmailsGroup, false);
     toggleGroup(forgotEmailGroup, isForgotPasswordMode);
 
     if (authRow) {
@@ -531,6 +793,12 @@
     }
     if (forgotEmailInput) {
       forgotEmailInput.value = "";
+    }
+    if (registerPromotionalEmailsInput) {
+      registerPromotionalEmailsInput.checked = false;
+    }
+    if (registerCatalogEmailsInput) {
+      registerCatalogEmailsInput.checked = false;
     }
     setAuthStatus("Sign in to continue with your GirffoN account, or create one to save profile and preference details.", false);
   }
@@ -619,7 +887,7 @@
     throw new Error(payload.text.trim() || "Unable to sign in.");
   }
 
-  async function registerRemote(name, email, phone, password) {
+  async function registerRemote(name, email, phone, password, preferences) {
     const nameParts = splitDisplayName(name);
     const formData = new URLSearchParams();
     formData.set("first_name", nameParts.firstName || name);
@@ -627,6 +895,8 @@
     formData.set("email", email);
     formData.set("phone", phone);
     formData.set("password", password);
+    formData.set("accepts_promotional_emails", preferences && preferences.acceptsPromotionalEmails ? "1" : "0");
+    formData.set("accepts_catalog_emails", preferences && preferences.acceptsCatalogEmails ? "1" : "0");
 
     const response = await fetch(REGISTER_URL, {
       method: "POST",
@@ -646,15 +916,25 @@
 
     if (payload.json && payload.json.ok && payload.json.user) {
       setAuthUser(payload.json.user);
-      return currentUser;
+      return {
+        user: currentUser,
+        payload: payload.json
+      };
     }
 
     const sessionUser = await syncSession();
     if (sessionUser) {
-      return sessionUser;
+      return {
+        user: sessionUser,
+        payload: payload.json || null
+      };
     }
 
-    return loginRemote(email, password);
+    const loggedInUser = await loginRemote(email, password);
+    return {
+      user: loggedInUser,
+      payload: payload.json || null
+    };
   }
 
   async function logoutRemote() {
@@ -723,6 +1003,8 @@
     const email = String(registerEmailInput ? registerEmailInput.value : "").trim().toLowerCase();
     const phone = String(registerPhoneInput ? registerPhoneInput.value : "").trim();
     const password = String(loginPasswordInput ? loginPasswordInput.value : "").trim();
+    const acceptsPromotionalEmails = Boolean(registerPromotionalEmailsInput && registerPromotionalEmailsInput.checked);
+    const acceptsCatalogEmails = Boolean(registerCatalogEmailsInput && registerCatalogEmailsInput.checked);
 
     if (!fullName) {
       setAuthStatus("Full name is required.", true);
@@ -743,10 +1025,16 @@
     }
 
     try {
-      await registerRemote(fullName, email, phone, password);
+      const result = await registerRemote(fullName, email, phone, password, {
+        acceptsPromotionalEmails: acceptsPromotionalEmails,
+        acceptsCatalogEmails: acceptsCatalogEmails
+      });
       setRegisterMode(false);
-      setAuthStatus("Account created successfully.", false);
+      setAuthStatus("Congratulations! Your GirffoN account has been created. Please check your email.", false);
       updateAccountView();
+      setPanelVisibility(false);
+      showRegisterSuccessPopup(email);
+      return result;
     } catch (error) {
       setAuthStatus(error && error.message ? error.message : "Unable to create your account.", true);
     }
@@ -825,6 +1113,7 @@
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
+      hideRegisterSuccessPopup();
       setPanelVisibility(false);
     }
   });

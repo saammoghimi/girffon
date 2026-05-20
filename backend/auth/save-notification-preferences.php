@@ -136,8 +136,11 @@ if ($userName === '') {
 }
 
 $userEmail = strtolower(trim((string) ($user['email'] ?? '')));
-if ($normalizedPreferences['catalogEmails'] && $userEmail !== '') {
-    girffonCommunicationSaveNewsletterSubscriber($pdo, $userId, $userEmail, 'preferences');
+if ($userEmail !== '') {
+    girffonCommunicationSaveNewsletterSubscriber($pdo, $userId, $userEmail, 'preferences', [
+        'accepts_promotional_emails' => $normalizedPreferences['promotionalEmails'],
+        'accepts_catalog_emails' => $normalizedPreferences['catalogEmails'],
+    ]);
 }
 
 $preferenceSummary = sprintf(

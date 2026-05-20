@@ -2,6 +2,42 @@
 require_once __DIR__ . "/backend/admin/session.php";
 require_once __DIR__ . "/backend/admin/custom-design-orders-data.php";
 
+$customOrderSettingsFile = __DIR__ . "/backend/admin/custom-order-settings-data.php";
+if (is_file($customOrderSettingsFile)) {
+  require_once $customOrderSettingsFile;
+}
+
+$adminCurrentId = (int) ($_SESSION['admin_id'] ?? $_SESSION['admin_user_id'] ?? $_SESSION['girffon_admin_id'] ?? 0);
+$adminCurrentUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
+
+$customOrderPreferences = [
+  'show_summary_cards' => true,
+  'show_order_list' => true,
+  'show_order_id_column' => true,
+  'show_customer_column' => true,
+  'show_product_column' => true,
+  'show_upload_count_column' => true,
+  'show_text_count_column' => true,
+  'show_status_column' => true,
+  'show_date_column' => true,
+  'show_view_action' => true,
+];
+
+if (function_exists('girffonAdminFetchCustomOrderPreferences')) {
+  $customOrderPreferences = girffonAdminFetchCustomOrderPreferences($pdo, $adminCurrentId, $adminCurrentUsername);
+}
+
+$showCustomOrderSummaryCards = !empty($customOrderPreferences['show_summary_cards']);
+$showCustomOrderList = !empty($customOrderPreferences['show_order_list']);
+$showCustomOrderIdColumn = !empty($customOrderPreferences['show_order_id_column']);
+$showCustomOrderCustomerColumn = !empty($customOrderPreferences['show_customer_column']);
+$showCustomOrderProductColumn = !empty($customOrderPreferences['show_product_column']);
+$showCustomOrderUploadCountColumn = !empty($customOrderPreferences['show_upload_count_column']);
+$showCustomOrderTextCountColumn = !empty($customOrderPreferences['show_text_count_column']);
+$showCustomOrderStatusColumn = !empty($customOrderPreferences['show_status_column']);
+$showCustomOrderDateColumn = !empty($customOrderPreferences['show_date_column']);
+$showCustomOrderViewAction = !empty($customOrderPreferences['show_view_action']);
+
 $customDesignOrders = girffonAdminFetchCustomDesignOrderSummaries($pdo, 120);
 $customDesignOrderStatusCounts = [
   'new' => 0,
@@ -291,12 +327,13 @@ $formatCustomOrderDate = static function ($value) {
         <div class="admin-topbar-actions">
           <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
+          <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-custom.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
         </div>
       </header>
 
       <section class="admin-page-section">
+        <?php if ($showCustomOrderSummaryCards): ?>
         <article class="admin-panel">
           <div class="admin-panel-head">
             <div>
@@ -311,7 +348,9 @@ $formatCustomOrderDate = static function ($value) {
             <article class="admin-custom-summary-card"><span>In Production / Completed</span><strong><?php echo $escapeCustomOrder($customDesignOrderStatusCounts['in_production'] + $customDesignOrderStatusCounts['completed']); ?></strong></article>
           </div>
         </article>
+        <?php endif; ?>
 
+        <?php if ($showCustomOrderList): ?>
         <article class="admin-table-panel">
           <div class="admin-panel-head">
             <div>
@@ -324,39 +363,40 @@ $formatCustomOrderDate = static function ($value) {
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Product</th>
-                  <th>Upload Count</th>
-                  <th>Text Count</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Actions</th>
+                  <?php if ($showCustomOrderIdColumn): ?><th>Order ID</th><?php endif; ?>
+                  <?php if ($showCustomOrderCustomerColumn): ?><th>Customer</th><?php endif; ?>
+                  <?php if ($showCustomOrderProductColumn): ?><th>Product</th><?php endif; ?>
+                  <?php if ($showCustomOrderUploadCountColumn): ?><th>Upload Count</th><?php endif; ?>
+                  <?php if ($showCustomOrderTextCountColumn): ?><th>Text Count</th><?php endif; ?>
+                  <?php if ($showCustomOrderStatusColumn): ?><th>Status</th><?php endif; ?>
+                  <?php if ($showCustomOrderDateColumn): ?><th>Date</th><?php endif; ?>
+                  <?php if ($showCustomOrderViewAction): ?><th>Actions</th><?php endif; ?>
                 </tr>
               </thead>
               <tbody>
                 <?php foreach ($customDesignOrders as $customDesignOrder): ?>
                   <?php $viewHref = !empty($customDesignOrder['is_demo']) ? 'admin-custom-order-view.php?demo=1' : 'admin-custom-order-view.php?id=' . urlencode((string) ($customDesignOrder['id'] ?? 0)); ?>
                   <tr>
-                    <td><strong><?php echo $escapeCustomOrder($customDesignOrder['order_code'] ?? '-'); ?></strong></td>
-                    <td>
+                    <?php if ($showCustomOrderIdColumn): ?><td><strong><?php echo $escapeCustomOrder($customDesignOrder['order_code'] ?? '-'); ?></strong></td><?php endif; ?>
+                    <?php if ($showCustomOrderCustomerColumn): ?><td>
                       <div class="admin-custom-meta">
                         <strong><?php echo $escapeCustomOrder($customDesignOrder['customer_name'] ?? '-'); ?></strong>
                         <small><?php echo $escapeCustomOrder($customDesignOrder['customer_email'] ?? '-'); ?></small>
                       </div>
-                    </td>
-                    <td><?php echo $escapeCustomOrder($customDesignOrder['product_name'] ?? '-'); ?></td>
-                    <td><?php echo $escapeCustomOrder($customDesignOrder['upload_count'] ?? 0); ?></td>
-                    <td><?php echo $escapeCustomOrder($customDesignOrder['text_count'] ?? 0); ?></td>
-                    <td><?php echo $escapeCustomOrder($formatCustomOrderStatus($customDesignOrder['status'] ?? 'new')); ?></td>
-                    <td><?php echo $escapeCustomOrder($formatCustomOrderDate($customDesignOrder['created_at'] ?? '')); ?></td>
-                    <td><a class="admin-button admin-button-soft admin-custom-view-link" href="<?php echo $escapeCustomOrder($viewHref); ?>">View</a></td>
+                    </td><?php endif; ?>
+                    <?php if ($showCustomOrderProductColumn): ?><td><?php echo $escapeCustomOrder($customDesignOrder['product_name'] ?? '-'); ?></td><?php endif; ?>
+                    <?php if ($showCustomOrderUploadCountColumn): ?><td><?php echo $escapeCustomOrder($customDesignOrder['upload_count'] ?? 0); ?></td><?php endif; ?>
+                    <?php if ($showCustomOrderTextCountColumn): ?><td><?php echo $escapeCustomOrder($customDesignOrder['text_count'] ?? 0); ?></td><?php endif; ?>
+                    <?php if ($showCustomOrderStatusColumn): ?><td><?php echo $escapeCustomOrder($formatCustomOrderStatus($customDesignOrder['status'] ?? 'new')); ?></td><?php endif; ?>
+                    <?php if ($showCustomOrderDateColumn): ?><td><?php echo $escapeCustomOrder($formatCustomOrderDate($customDesignOrder['created_at'] ?? '')); ?></td><?php endif; ?>
+                    <?php if ($showCustomOrderViewAction): ?><td><a class="admin-button admin-button-soft admin-custom-view-link" href="<?php echo $escapeCustomOrder($viewHref); ?>">View</a></td><?php endif; ?>
                   </tr>
                 <?php endforeach; ?>
               </tbody>
             </table>
           </div>
         </article>
+        <?php endif; ?>
       </section>
     </main>
   </div>

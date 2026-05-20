@@ -1,6 +1,31 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 
+function girffonCommunicationTableColumns(PDO $pdo, string $table): array
+{
+    static $cache = [];
+
+    if (isset($cache[$table])) {
+        return $cache[$table];
+    }
+
+    $cache[$table] = [];
+
+    try {
+        $statement = $pdo->query('SHOW COLUMNS FROM `' . str_replace('`', '``', $table) . '`');
+        foreach (($statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : []) as $column) {
+            $name = strtolower(trim((string) ($column['Field'] ?? '')));
+            if ($name !== '') {
+                $cache[$table][$name] = true;
+            }
+        }
+    } catch (PDOException $exception) {
+        $cache[$table] = [];
+    }
+
+    return $cache[$table];
+}
+
 function girffonCommunicationTableExists(PDO $pdo, string $table): bool
 {
     try {
@@ -46,6 +71,8 @@ function girffonEnsureNewsletterSubscribersTable(PDO $pdo): bool
                 email VARCHAR(190) NOT NULL,
                 status VARCHAR(30) NOT NULL DEFAULT 'subscribed',
                 source VARCHAR(60) NOT NULL DEFAULT 'profile',
+                accepts_promotional_emails TINYINT(1) NOT NULL DEFAULT 0,
+                accepts_catalog_emails TINYINT(1) NOT NULL DEFAULT 1,
                 subscribed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY (id),
@@ -53,6 +80,15 @@ function girffonEnsureNewsletterSubscribersTable(PDO $pdo): bool
                 KEY idx_newsletter_user (user_id)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
         );
+
+        $columns = girffonCommunicationTableColumns($pdo, 'newsletter_subscribers');
+        if (!isset($columns['accepts_promotional_emails'])) {
+            $pdo->exec("ALTER TABLE newsletter_subscribers ADD COLUMN accepts_promotional_emails TINYINT(1) NOT NULL DEFAULT 0 AFTER source");
+        }
+        if (!isset($columns['accepts_catalog_emails'])) {
+            $pdo->exec("ALTER TABLE newsletter_subscribers ADD COLUMN accepts_catalog_emails TINYINT(1) NOT NULL DEFAULT 1 AFTER accepts_promotional_emails");
+        }
+
         return true;
     } catch (PDOException $exception) {
         return false;
@@ -125,28 +161,71 @@ function girffonCommunicationLogAdminMessage(PDO $pdo, string $name, string $ema
     }
 }
 
-function girffonCommunicationSaveNewsletterSubscriber(PDO $pdo, int $userId, string $email, string $source = 'profile'): bool
+function girffonCommunicationSaveNewsletterSubscriber(PDO $pdo, int $userId, string $email, string $source = 'profile', ?array $preferences = null): bool
 {
     if (!girffonEnsureNewsletterSubscribersTable($pdo)) {
         return false;
     }
 
+    $normalizedEmail = strtolower(trim($email));
+    if ($normalizedEmail === '') {
+        return false;
+    }
+
+    $columns = girffonCommunicationTableColumns($pdo, 'newsletter_subscribers');
+    $hasPromotionalColumn = isset($columns['accepts_promotional_emails']);
+    $hasCatalogColumn = isset($columns['accepts_catalog_emails']);
+
+    $promotionalPreference = is_array($preferences) && array_key_exists('accepts_promotional_emails', $preferences)
+        ? (filter_var($preferences['accepts_promotional_emails'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0)
+        : null;
+    $catalogPreference = is_array($preferences) && array_key_exists('accepts_catalog_emails', $preferences)
+        ? (filter_var($preferences['accepts_catalog_emails'], FILTER_VALIDATE_BOOLEAN) ? 1 : 0)
+        : null;
+
+    $status = 'subscribed';
+    if ($promotionalPreference !== null || $catalogPreference !== null) {
+        $hasAnyConsent = ($promotionalPreference === 1) || ($catalogPreference === 1);
+        $status = $hasAnyConsent ? 'subscribed' : 'unsubscribed';
+    }
+
     try {
-        $statement = $pdo->prepare(
-            'INSERT INTO newsletter_subscribers (user_id, email, status, source)
-             VALUES (:user_id, :email, :status, :source)
-             ON DUPLICATE KEY UPDATE
-                user_id = VALUES(user_id),
-                status = VALUES(status),
-                source = VALUES(source),
-                updated_at = CURRENT_TIMESTAMP'
-        );
-        return $statement->execute([
+        $fields = ['user_id', 'email', 'status', 'source'];
+        $placeholders = [':user_id', ':email', ':status', ':source'];
+        $updates = [
+            'user_id = VALUES(user_id)',
+            'status = VALUES(status)',
+            'source = VALUES(source)',
+            'updated_at = CURRENT_TIMESTAMP',
+        ];
+        $params = [
             ':user_id' => $userId > 0 ? $userId : null,
-            ':email' => strtolower(trim($email)),
-            ':status' => 'subscribed',
+            ':email' => $normalizedEmail,
+            ':status' => $status,
             ':source' => $source,
-        ]);
+        ];
+
+        if ($hasPromotionalColumn) {
+            $fields[] = 'accepts_promotional_emails';
+            $placeholders[] = ':accepts_promotional_emails';
+            $params[':accepts_promotional_emails'] = $promotionalPreference;
+            $updates[] = 'accepts_promotional_emails = COALESCE(VALUES(accepts_promotional_emails), accepts_promotional_emails)';
+        }
+
+        if ($hasCatalogColumn) {
+            $fields[] = 'accepts_catalog_emails';
+            $placeholders[] = ':accepts_catalog_emails';
+            $params[':accepts_catalog_emails'] = $catalogPreference;
+            $updates[] = 'accepts_catalog_emails = COALESCE(VALUES(accepts_catalog_emails), accepts_catalog_emails)';
+        }
+
+        $statement = $pdo->prepare(
+            'INSERT INTO newsletter_subscribers (' . implode(', ', $fields) . ')
+             VALUES (' . implode(', ', $placeholders) . ')
+             ON DUPLICATE KEY UPDATE ' . implode(', ', $updates)
+        );
+
+        return $statement->execute($params);
     } catch (PDOException $exception) {
         return false;
     }
@@ -204,7 +283,7 @@ function girffonCommunicationFetchNewsletterSubscriber(PDO $pdo, string $email):
 
     try {
         $statement = $pdo->prepare(
-            'SELECT email, status, source, subscribed_at, updated_at
+            'SELECT email, status, source, accepts_promotional_emails, accepts_catalog_emails, subscribed_at, updated_at
              FROM newsletter_subscribers
              WHERE email = :email
              LIMIT 1'

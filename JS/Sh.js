@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const HOMEPAGE_CART_FALLBACK_IMAGE = "Cart/products/tshirt-men/Men france/Bk/400.jpg";
   const track = document.getElementById("gx25Track");
   const outerPrev = document.getElementById("gx25OuterPrev");
   const outerNext = document.getElementById("gx25OuterNext");
@@ -202,6 +203,14 @@ document.addEventListener("DOMContentLoaded", function () {
     safeWriteArray("girffon_cart", cartItems);
   }
 
+  function resolveImageList(product, images) {
+    const fallbackList = Array.isArray(images) && images.length ? images : [HOMEPAGE_CART_FALLBACK_IMAGE];
+    return fallbackList.map(function (entry) {
+      const value = String(entry || "").trim();
+      return value !== "" ? value : HOMEPAGE_CART_FALLBACK_IMAGE;
+    });
+  }
+
   function createColorDots(colorCodes, activeColor) {
     return colorCodes.map((code, index) => {
       const hex = colorMap[code] || "#cccccc";
@@ -329,7 +338,18 @@ document.addEventListener("DOMContentLoaded", function () {
       ];
     }
 
-    let currentImages = getImagesByColor(currentColor);
+    let currentImages = resolveImageList(product, getImagesByColor(currentColor));
+    let addInFlight = false;
+
+    img.addEventListener("error", function () {
+      const fallbackImage = currentImages[0] || product.images[0] || HOMEPAGE_CART_FALLBACK_IMAGE;
+      if (img.getAttribute("src") !== fallbackImage) {
+        img.src = fallbackImage;
+        return;
+      }
+
+      img.src = HOMEPAGE_CART_FALLBACK_IMAGE;
+    });
 
     favBtn.addEventListener("click", function () {
       this.classList.toggle("active");
@@ -373,7 +393,7 @@ document.addEventListener("DOMContentLoaded", function () {
         this.classList.add("active");
 
         currentColor = this.dataset.color;
-        currentImages = getImagesByColor(currentColor);
+        currentImages = resolveImageList(product, getImagesByColor(currentColor));
         imageIndex = 0;
 
         img.style.opacity = "0.35";
@@ -386,10 +406,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     enterBtn.addEventListener("click", async function () {
+      if (addInFlight) {
+        return;
+      }
+
+      addInFlight = true;
+      enterBtn.disabled = true;
       try {
-        await addToCart(product, currentColor, currentImages[0]);
+        await addToCart(product, currentColor, currentImages[imageIndex] || currentImages[0] || HOMEPAGE_CART_FALLBACK_IMAGE);
       } catch (_error) {
         // Keep the page usable if cart sync fails.
+      } finally {
+        window.setTimeout(function () {
+          addInFlight = false;
+          enterBtn.disabled = false;
+        }, 250);
       }
     });
   });

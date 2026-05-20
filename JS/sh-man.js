@@ -1,4 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const HOMEPAGE_IMAGE_FALLBACKS = {
+    men: "Cart/products/tshirt-men/Men france/Bk/400.jpg",
+    women: "Cart/products/tshirt-women/Women italy/Bk/400.jpg",
+    kids: "Cart/products/tshirt-men/47/400.png"
+  };
+
   function safeReadArray(key) {
     try {
       const raw = localStorage.getItem(key);
@@ -79,6 +85,23 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     safeWriteArray("girffon_cart", cartItems);
+  }
+
+  function getCategoryFallbackImage(category) {
+    return HOMEPAGE_IMAGE_FALLBACKS[String(category || "").trim().toLowerCase()] || HOMEPAGE_IMAGE_FALLBACKS.men;
+  }
+
+  function resolveProductImages(category, product) {
+    const fallback = getCategoryFallbackImage(category);
+    const images = Array.isArray(product && product.images) ? product.images : [];
+    if (!images.length) {
+      return [fallback];
+    }
+
+    return images.map(function (entry) {
+      const value = String(entry || "").trim();
+      return value !== "" ? value : fallback;
+    });
   }
 
   const colorSet = [
@@ -207,7 +230,8 @@ const productData = {
     }
   ]
 };
-  function createCard(product) {
+  function createCard(product, category) {
+    const images = resolveProductImages(category, product);
     const colorsHtml = colorSet.map((color, index) => `
       <span class="gx25-color ${index === 0 ? "active" : ""}" style="background:${color};"></span>
     `).join("");
@@ -225,7 +249,7 @@ const productData = {
             <span>&#10094;</span>
           </button>
 
-          <img class="gx25-main-image" src="${product.images[0]}" alt="${product.title}">
+          <img class="gx25-main-image" src="${images[0]}" alt="${product.title}">
 
           <button class="gx25-inner-nav gx25-inner-next" aria-label="Next image">
             <span>&#10095;</span>
@@ -251,7 +275,9 @@ const productData = {
 
     if (!track || !prevBtn || !nextBtn) return;
 
-    track.innerHTML = products.map(createCard).join("");
+    track.innerHTML = products.map(function (product) {
+      return createCard(product, category);
+    }).join("");
 
     let outerIndex = 0;
     const gap = 24;
@@ -311,6 +337,18 @@ const productData = {
       const innerNext = card.querySelector(".gx25-inner-next");
       const colorDots = card.querySelectorAll(".gx25-color");
       const enterBtn = card.querySelector(".gx25-enter");
+      const resolvedImages = resolveProductImages(category, product);
+      let addInFlight = false;
+
+      img.addEventListener("error", function () {
+        const fallbackImage = resolvedImages[0] || getCategoryFallbackImage(category);
+        if (img.getAttribute("src") !== fallbackImage) {
+          img.src = fallbackImage;
+          return;
+        }
+
+        img.src = getCategoryFallbackImage(category);
+      });
 
       let imageIndex = 0;
       let activeColor = colorSet[0] || "";
@@ -328,20 +366,20 @@ const productData = {
 
       innerPrev.addEventListener("click", function (e) {
         e.preventDefault();
-        imageIndex = (imageIndex - 1 + product.images.length) % product.images.length;
+        imageIndex = (imageIndex - 1 + resolvedImages.length) % resolvedImages.length;
         img.style.opacity = "0.35";
         setTimeout(() => {
-          img.src = product.images[imageIndex];
+          img.src = resolvedImages[imageIndex];
           img.style.opacity = "1";
         }, 120);
       });
 
       innerNext.addEventListener("click", function (e) {
         e.preventDefault();
-        imageIndex = (imageIndex + 1) % product.images.length;
+        imageIndex = (imageIndex + 1) % resolvedImages.length;
         img.style.opacity = "0.35";
         setTimeout(() => {
-          img.src = product.images[imageIndex];
+          img.src = resolvedImages[imageIndex];
           img.style.opacity = "1";
         }, 120);
       });
@@ -356,10 +394,21 @@ const productData = {
 
       if (enterBtn) {
         enterBtn.addEventListener("click", async function () {
+          if (addInFlight) {
+            return;
+          }
+
+          addInFlight = true;
+          enterBtn.disabled = true;
           try {
-            await addToCart(category, product, activeColor, product.images[imageIndex] || product.images[0] || "");
+            await addToCart(category, product, activeColor, resolvedImages[imageIndex] || resolvedImages[0] || getCategoryFallbackImage(category));
           } catch (_error) {
             // Keep the page usable if cart sync fails.
+          } finally {
+            window.setTimeout(function () {
+              addInFlight = false;
+              enterBtn.disabled = false;
+            }, 250);
           }
         });
       }
