@@ -56,7 +56,16 @@
         quantity: quantity,
         qty: quantity,
         total_price: Number(item.total_price != null ? item.total_price : item.line_total) || (price * quantity),
-        line_total: Number(item.line_total != null ? item.line_total : item.total_price) || (price * quantity)
+        line_total: Number(item.line_total != null ? item.line_total : item.total_price) || (price * quantity),
+        item_type: String(item.item_type || 'product').trim(),
+        delivery_type: String(item.delivery_type || '').trim(),
+        gift_card_amount: Number(item.gift_card_amount != null ? item.gift_card_amount : price) || 0,
+        buyer_name: String(item.buyer_name || '').trim(),
+        buyer_email: String(item.buyer_email || '').trim(),
+        recipient_name: String(item.recipient_name || '').trim(),
+        recipient_email: String(item.recipient_email || '').trim(),
+        gift_message: String(item.gift_message || '').trim(),
+        expires_at: String(item.expires_at || '').trim()
       };
     });
 
@@ -139,6 +148,15 @@
       color: String(item && item.color || '').trim(),
       quantity: quantity,
       qty: quantity
+      ,item_type: String(item && item.item_type || 'product').trim()
+      ,delivery_type: String(item && item.delivery_type || '').trim()
+      ,gift_card_amount: toNumber(item && (item.gift_card_amount != null ? item.gift_card_amount : item.priceNumber != null ? item.priceNumber : item.price))
+      ,buyer_name: String(item && item.buyer_name || '').trim()
+      ,buyer_email: String(item && item.buyer_email || '').trim()
+      ,recipient_name: String(item && item.recipient_name || '').trim()
+      ,recipient_email: String(item && item.recipient_email || '').trim()
+      ,gift_message: String(item && item.gift_message || '').trim()
+      ,expires_at: String(item && item.expires_at || '').trim()
     };
   }
 
@@ -191,7 +209,16 @@
         size: String(item && item.size || '').trim(),
         color: String(item && item.color || '').trim(),
         quantity: quantity,
-        qty: quantity
+        qty: quantity,
+        item_type: String(item && item.item_type || 'product').trim(),
+        delivery_type: String(item && item.delivery_type || '').trim(),
+        gift_card_amount: toNumber(item && (item.gift_card_amount != null ? item.gift_card_amount : item.priceNumber != null ? item.priceNumber : item.price)),
+        buyer_name: String(item && item.buyer_name || '').trim(),
+        buyer_email: String(item && item.buyer_email || '').trim(),
+        recipient_name: String(item && item.recipient_name || '').trim(),
+        recipient_email: String(item && item.recipient_email || '').trim(),
+        gift_message: String(item && item.gift_message || '').trim(),
+        expires_at: String(item && item.expires_at || '').trim()
       };
     }));
     clearLegacyCartStorage();

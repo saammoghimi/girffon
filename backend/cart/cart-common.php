@@ -68,9 +68,25 @@ function girffonCartParsePrice($value): float
     return max(0, (float) $normalized);
 }
 
-function girffonCartLineKey(string $sku, string $size, string $color): string
+function girffonCartLineKey(string $sku, string $size, string $color, string $metaSignature = ''): string
 {
-    return sha1(strtolower(trim($sku)) . '|' . strtolower(trim($size)) . '|' . strtolower(trim($color)));
+    return sha1(strtolower(trim($sku)) . '|' . strtolower(trim($size)) . '|' . strtolower(trim($color)) . '|' . strtolower(trim($metaSignature)));
+}
+
+function girffonCartMetadataSignature(array $input): string
+{
+    $parts = [
+        trim((string) ($input['item_type'] ?? 'product')),
+        trim((string) ($input['delivery_type'] ?? '')),
+        trim((string) ($input['recipient_email'] ?? '')),
+        trim((string) ($input['recipient_name'] ?? '')),
+        trim((string) ($input['buyer_email'] ?? '')),
+        trim((string) ($input['gift_message'] ?? '')),
+        trim((string) ($input['expires_at'] ?? '')),
+        trim((string) ($input['gift_card_amount'] ?? '')),
+    ];
+
+    return sha1(implode('|', $parts));
 }
 
 function girffonCartNormalizeItem(array $input): ?array
@@ -82,9 +98,27 @@ function girffonCartNormalizeItem(array $input): ?array
     $color = trim((string) ($input['color'] ?? ''));
     $quantity = max(1, (int) ($input['quantity'] ?? $input['qty'] ?? 1));
     $price = girffonCartParsePrice($input['price'] ?? $input['priceNumber'] ?? 0);
+    $itemType = strtolower(trim((string) ($input['item_type'] ?? 'product')));
+    if (!in_array($itemType, ['product', 'gift_card'], true)) {
+        $itemType = 'product';
+    }
+
+    $deliveryType = strtolower(trim((string) ($input['delivery_type'] ?? '')));
+    $giftCardAmount = girffonCartParsePrice($input['gift_card_amount'] ?? 0);
+    $lineKey = trim((string) ($input['line_key'] ?? ''));
 
     if ($sku === '' || $name === '' || $price <= 0) {
         return null;
+    }
+
+    if ($itemType === 'gift_card' && $giftCardAmount > 0) {
+        $price = $giftCardAmount;
+        $size = $size !== '' ? $size : 'Gift Card';
+        $color = $color !== '' ? $color : '#c9a56a';
+    }
+
+    if ($lineKey === '') {
+        $lineKey = girffonCartLineKey($sku, $size, $color, girffonCartMetadataSignature($input));
     }
 
     return [
@@ -96,7 +130,16 @@ function girffonCartNormalizeItem(array $input): ?array
         'size' => $size,
         'color' => $color,
         'quantity' => $quantity,
-        'line_key' => girffonCartLineKey($sku, $size, $color),
+        'line_key' => $lineKey,
+        'item_type' => $itemType,
+        'delivery_type' => $deliveryType,
+        'gift_card_amount' => $giftCardAmount,
+        'buyer_name' => trim((string) ($input['buyer_name'] ?? '')),
+        'buyer_email' => strtolower(trim((string) ($input['buyer_email'] ?? ''))),
+        'recipient_name' => trim((string) ($input['recipient_name'] ?? '')),
+        'recipient_email' => strtolower(trim((string) ($input['recipient_email'] ?? ''))),
+        'gift_message' => trim((string) ($input['gift_message'] ?? '')),
+        'expires_at' => trim((string) ($input['expires_at'] ?? '')),
     ];
 }
 
@@ -108,6 +151,8 @@ function girffonCartFormatItems(array $items): array
         $sku = trim((string) ($item['sku'] ?? $item['id'] ?? ''));
         $size = trim((string) ($item['size'] ?? ''));
         $color = trim((string) ($item['color'] ?? ''));
+
+        $lineKey = trim((string) ($item['line_key'] ?? girffonCartLineKey($sku, $size, $color, girffonCartMetadataSignature($item))));
 
         return [
             'id' => $sku,
@@ -122,9 +167,18 @@ function girffonCartFormatItems(array $items): array
             'color' => $color,
             'quantity' => $quantity,
             'qty' => $quantity,
-            'line_key' => trim((string) ($item['line_key'] ?? girffonCartLineKey($sku, $size, $color))),
+            'line_key' => $lineKey,
             'total_price' => round($price * $quantity, 2),
             'code' => $sku,
+            'item_type' => trim((string) ($item['item_type'] ?? 'product')),
+            'delivery_type' => trim((string) ($item['delivery_type'] ?? '')),
+            'gift_card_amount' => girffonCartParsePrice($item['gift_card_amount'] ?? 0),
+            'buyer_name' => trim((string) ($item['buyer_name'] ?? '')),
+            'buyer_email' => strtolower(trim((string) ($item['buyer_email'] ?? ''))),
+            'recipient_name' => trim((string) ($item['recipient_name'] ?? '')),
+            'recipient_email' => strtolower(trim((string) ($item['recipient_email'] ?? ''))),
+            'gift_message' => trim((string) ($item['gift_message'] ?? '')),
+            'expires_at' => trim((string) ($item['expires_at'] ?? '')),
         ];
     }, $items));
 }

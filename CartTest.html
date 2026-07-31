@@ -137,6 +137,17 @@
       <span class="cart-total-label" id="gfCartTotalLabel">Total:</span>
       <span class="cart-total-value" id="cart-total">$0.00</span>
     </div>
+    <div class="cart-summary" style="display:block;text-align:left;padding:18px 20px;">
+      <label for="gfCheckoutGiftCardCode" style="display:block;font-weight:700;color:#2b241b;margin-bottom:10px;">Gift Card Code / Codice carta regalo</label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <input type="text" id="gfCheckoutGiftCardCode" placeholder="GF-7K4P-92MX-5Q8A" style="flex:1 1 260px;padding:12px 14px;border-radius:12px;border:1px solid #d8c7a1;background:#fffaf4;">
+        <button type="button" class="cart-btn cart-btn-checkout" id="gfApplyGiftCardBtn" style="min-width:140px;">Apply</button>
+        <button type="button" class="cart-btn cart-btn-continue" id="gfRemoveGiftCardBtn" style="display:none;min-width:140px;">Remove</button>
+      </div>
+      <p id="gfCheckoutGiftCardStatus" style="margin:12px 0 0;color:#7a6a58;font-weight:600;">Apply a valid gift card to preview the available balance before checkout.</p>
+      <p id="gfCheckoutGiftCardBalance" style="margin:8px 0 0;color:#255f36;font-weight:700;display:none;"></p>
+    </div>
+    <p style="margin:10px 4px 0;color:#7a6a58;font-size:0.95rem;">Physical gift card purchases add the configured shipping charge during checkout. Digital gift cards keep shipping at zero.</p>
     <div class="cart-actions">
       <button class="cart-btn cart-btn-continue" id="gfContinueShoppingBtn" onclick="window.location.href='catalog.html'">
         <i class="fa-solid fa-arrow-left"></i> <span>Continue Shopping</span>
@@ -649,22 +660,85 @@
     }
 
     const cartData = [];
+    const GIFT_CARD_VALIDATE_URL = '/GirffoN/backend/gift-cards/validate-gift-card.php';
+    const CSRF_TOKEN_URL = '/GirffoN/backend/auth/csrf-token.php';
+    let checkoutCsrfToken = '';
+    let appliedGiftCard = null;
+
+    async function readCsrfToken(forceRefresh) {
+      if (!forceRefresh && checkoutCsrfToken) {
+        return checkoutCsrfToken;
+      }
+
+      const response = await fetch(CSRF_TOKEN_URL, {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store'
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok || !payload.csrf_token) {
+        throw new Error('Unable to prepare a secure checkout session.');
+      }
+
+      checkoutCsrfToken = String(payload.csrf_token || '');
+      return checkoutCsrfToken;
+    }
+
+    function setAppliedGiftCardState(nextState) {
+      appliedGiftCard = nextState;
+      const statusNode = document.getElementById('gfCheckoutGiftCardStatus');
+      const balanceNode = document.getElementById('gfCheckoutGiftCardBalance');
+      const removeButton = document.getElementById('gfRemoveGiftCardBtn');
+
+      if (!statusNode || !balanceNode || !removeButton) {
+        return;
+      }
+
+      if (!nextState) {
+        statusNode.textContent = 'Apply a valid gift card to preview the available balance before checkout.';
+        statusNode.style.color = '#7a6a58';
+        balanceNode.textContent = '';
+        balanceNode.style.display = 'none';
+        removeButton.style.display = 'none';
+        return;
+      }
+
+      statusNode.textContent = 'Gift card applied successfully.';
+      statusNode.style.color = '#255f36';
+      balanceNode.textContent = 'Available balance: ' + formatCartCurrency(Number(nextState.remaining_balance) || 0);
+      balanceNode.style.display = 'block';
+      removeButton.style.display = 'inline-flex';
+    }
 
     function mapCartItem(item) {
+      const isGiftCard = String(item.item_type || '').toLowerCase() === 'gift_card';
+      const deliveryType = String(item.delivery_type || '').trim().toLowerCase();
+      const recipientName = String(item.recipient_name || '').trim();
+      const baseName = item.name || item.title || 'GirffoN Product';
+      const displayName = isGiftCard
+        ? 'GIRFFON Gift Card' + (recipientName ? ' • ' + recipientName : '')
+        : baseName;
+
       return {
         ...item,
         line_key: item.line_key || item.line_id || '',
         img: item.img || item.image || 'Cart/products/tshirt-men/Men france/Bk/160.jpg',
         image: item.img || item.image || 'Cart/products/tshirt-men/Men france/Bk/160.jpg',
-        name: item.name || item.title || 'GirffoN Product',
-        size: item.size || 'One Size',
-        color: item.color || '#222222',
+        name: displayName,
+        size: isGiftCard ? 'Gift Card' : (item.size || 'One Size'),
+        color: isGiftCard ? '#c9a56a' : (item.color || '#222222'),
         colorName: getColorLabel(item.colorName || item.color),
         qty: Number(item.qty != null ? item.qty : item.quantity) || 1,
         quantity: Number(item.quantity != null ? item.quantity : item.qty) || 1,
         price: Number(item.priceNumber || item.price || 0),
         priceNumber: Number(item.priceNumber || item.price || 0),
-        code: buildCodeFromItem(item)
+        code: isGiftCard ? String(item.sku || 'GIFT-CARD') : buildCodeFromItem(item),
+        item_type: isGiftCard ? 'gift_card' : String(item.item_type || 'product'),
+        delivery_type: deliveryType,
+        gift_card_amount: Number(item.gift_card_amount != null ? item.gift_card_amount : item.priceNumber || item.price || 0),
+        recipient_name: recipientName,
+        recipient_email: String(item.recipient_email || '').trim(),
+        gift_message: String(item.gift_message || '').trim()
       };
     }
 
@@ -766,11 +840,18 @@
       }
       cartData.forEach((item) => {
         total += item.price * item.qty;
-        const itemName = texts.products[item.productKey] || item.name;
-        const colorName = texts.colors[item.colorName] || item.colorName;
+        const itemName = item.item_type === 'gift_card' ? item.name : (texts.products[item.productKey] || item.name);
+        const colorName = item.item_type === 'gift_card'
+          ? (item.delivery_type === 'physical' ? 'Physical Gift Card' : 'Digital Gift Card')
+          : (texts.colors[item.colorName] || item.colorName);
         const decreaseQty = Math.max(1, item.qty - 1);
         const increaseQty = item.qty + 1;
         const lineKeyJson = JSON.stringify(item.line_key || '');
+        const quantityCell = item.item_type === 'gift_card'
+          ? `<span class="cart-qty-value">1</span>`
+          : `<button onclick='changeQty(${lineKeyJson}, ${decreaseQty})' class="cart-qty-btn">-</button>
+              <span class="cart-qty-value">${item.qty}</span>
+              <button onclick='changeQty(${lineKeyJson}, ${increaseQty})' class="cart-qty-btn">+</button>`;
         tbody.innerHTML += `
           <tr>
             <td>
@@ -788,9 +869,7 @@
               </div>
             </td>
             <td>
-              <button onclick='changeQty(${lineKeyJson}, ${decreaseQty})' class="cart-qty-btn">-</button>
-              <span class="cart-qty-value">${item.qty}</span>
-              <button onclick='changeQty(${lineKeyJson}, ${increaseQty})' class="cart-qty-btn">+</button>
+              ${quantityCell}
             </td>
             <td style='font-weight:600;color:#ff4c60;'>${formatCartCurrency(item.price * item.qty)}</td>
             <td style='text-align:center;vertical-align:middle;'>
@@ -1454,6 +1533,68 @@
     const PLACE_ORDER_URL = '/GirffoN/backend/checkout/create-order.php';
     let checkoutSessionCache = null;
 
+    async function applyGiftCardCode() {
+      const input = document.getElementById('gfCheckoutGiftCardCode');
+      const statusNode = document.getElementById('gfCheckoutGiftCardStatus');
+      if (!input || !statusNode) {
+        return;
+      }
+
+      const giftCardCode = String(input.value || '').trim().toUpperCase();
+      if (!giftCardCode) {
+        setAppliedGiftCardState(null);
+        statusNode.textContent = 'Enter a gift card code before applying it.';
+        statusNode.style.color = '#8a2626';
+        return;
+      }
+
+      try {
+        const csrfToken = await readCsrfToken(false);
+        const response = await fetch(GIFT_CARD_VALIDATE_URL, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Girffon-Csrf': csrfToken
+          },
+          body: JSON.stringify({ gift_card_code: giftCardCode })
+        });
+        const payload = await response.json();
+
+        if (!response.ok || !payload.ok) {
+          throw new Error(payload.message || 'Unable to validate the gift card code.');
+        }
+
+        input.value = giftCardCode;
+        setAppliedGiftCardState({
+          code: giftCardCode,
+          remaining_balance: Number(payload.gift_card && payload.gift_card.remaining_balance) || 0,
+          expires_at: String(payload.gift_card && payload.gift_card.expires_at || '')
+        });
+      } catch (error) {
+        setAppliedGiftCardState(null);
+        statusNode.textContent = error instanceof Error ? error.message : 'Unable to validate the gift card code.';
+        statusNode.style.color = '#8a2626';
+      }
+    }
+
+    const applyGiftCardButton = document.getElementById('gfApplyGiftCardBtn');
+    const removeGiftCardButton = document.getElementById('gfRemoveGiftCardBtn');
+    if (applyGiftCardButton) {
+      applyGiftCardButton.addEventListener('click', function () {
+        applyGiftCardCode();
+      });
+    }
+    if (removeGiftCardButton) {
+      removeGiftCardButton.addEventListener('click', function () {
+        const input = document.getElementById('gfCheckoutGiftCardCode');
+        if (input) {
+          input.value = '';
+        }
+        setAppliedGiftCardState(null);
+      });
+    }
+
     async function readCheckoutSession(forceRefresh) {
       if (!forceRefresh && checkoutSessionCache) {
         return checkoutSessionCache;
@@ -1602,9 +1743,11 @@
         return;
       }
       const payNowButton = document.getElementById('gfPayNowBtn');
+      const csrfToken = await readCsrfToken(false);
       const checkoutPayload = {
         shipping: readShippingDetails(),
-        payment_method: 'bank_transfer'
+        payment_method: 'bank_transfer',
+        gift_card_code: appliedGiftCard && appliedGiftCard.code ? appliedGiftCard.code : ''
       };
 
       if (payNowButton) {
@@ -1616,7 +1759,8 @@
           method: 'POST',
           credentials: 'same-origin',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Girffon-Csrf': csrfToken
           },
           body: JSON.stringify(checkoutPayload)
         });
@@ -1634,6 +1778,7 @@
           }
         }
         cartData.length = 0;
+        setAppliedGiftCardState(null);
         saveCart();
         renderCart();
         resetCheckoutModal();

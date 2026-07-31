@@ -2,6 +2,8 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../cart/cart-common.php';
 require_once __DIR__ . '/../utils/order-confirmation-mailer.php';
+require_once __DIR__ . '/../utils/gift-card-service.php';
+require_once __DIR__ . '/../utils/csrf.php';
 
 function girffonCheckoutJson(int $statusCode, array $payload): void
 {
@@ -147,12 +149,53 @@ function girffonCheckoutField(array $shipping, ?array $user, string $shippingKey
     return '';
 }
 
+function girffonCheckoutRequiresShipping(array $items): bool
+{
+    foreach ($items as $item) {
+        $itemType = strtolower(trim((string) ($item['item_type'] ?? 'product')));
+        $deliveryType = strtolower(trim((string) ($item['delivery_type'] ?? '')));
+        if ($itemType !== 'gift_card' || $deliveryType === 'physical') {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function girffonCheckoutShippingAmount(array $items): float
+{
+    $shipping = 0.0;
+    $physicalShipping = (float) (girffonGiftCardConfig()['physical_shipping'] ?? 0);
+    foreach ($items as $item) {
+        if (strtolower(trim((string) ($item['item_type'] ?? 'product'))) === 'gift_card' && strtolower(trim((string) ($item['delivery_type'] ?? ''))) === 'physical') {
+            $shipping += $physicalShipping * max(1, (int) ($item['quantity'] ?? 1));
+        }
+    }
+
+    return round($shipping, 2);
+}
+
+function girffonCheckoutFingerprint(array $items, array $shipping, string $giftCardCode): string
+{
+    return hash('sha256', json_encode([
+        'items' => $items,
+        'shipping' => $shipping,
+        'gift_card_code' => strtoupper(trim($giftCardCode)),
+        'user_id' => (int) ($_SESSION['user_id'] ?? $_SESSION['girffon_user_id'] ?? 0),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     girffonCheckoutJson(405, ['ok' => false, 'message' => 'Method not allowed.']);
 }
 
+if (!girffonCsrfValidate(girffonCsrfRequestToken())) {
+    girffonCheckoutJson(419, ['ok' => false, 'message' => 'Security token mismatch.']);
+}
+
 $payload = girffonCheckoutRequestData();
 $shipping = is_array($payload['shipping'] ?? null) ? $payload['shipping'] : [];
+$giftCardCode = strtoupper(trim((string) ($payload['gift_card_code'] ?? '')));
 $userId = (int) ($_SESSION['user_id'] ?? $_SESSION['girffon_user_id'] ?? 0);
 $user = girffonCheckoutUser($pdo, $userId);
 
@@ -179,6 +222,7 @@ $customerAddress = girffonCheckoutField($shipping, $user, 'address', 'address');
 $customerCity = girffonCheckoutField($shipping, $user, 'city', 'city');
 $customerCountry = girffonCheckoutField($shipping, $user, 'country', 'country');
 $customerPostcode = trim((string) ($shipping['postalCode'] ?? ''));
+$requiresShipping = girffonCheckoutRequiresShipping($normalizedItems);
 
 if ($customerName === '') {
     girffonCheckoutJson(422, ['ok' => false, 'message' => 'Customer name is required.']);
@@ -188,18 +232,31 @@ if ($customerEmail === '' || !filter_var($customerEmail, FILTER_VALIDATE_EMAIL))
     girffonCheckoutJson(422, ['ok' => false, 'message' => 'A valid email is required.']);
 }
 
-if ($customerPhone === '' || $customerAddress === '' || $customerCity === '' || $customerCountry === '') {
+if ($requiresShipping && ($customerPhone === '' || $customerAddress === '' || $customerCity === '' || $customerCountry === '')) {
     girffonCheckoutJson(422, ['ok' => false, 'message' => 'Phone, address, city, and country are required.']);
 }
 
 $subtotal = round(array_reduce($normalizedItems, static function (float $sum, array $item): float {
     return $sum + $item['line_total'];
 }, 0.0), 2);
-$shippingAmount = 0.0;
+$shippingAmount = girffonCheckoutShippingAmount($normalizedItems);
 $taxAmount = 0.0;
-$total = round($subtotal + $shippingAmount + $taxAmount, 2);
+$grossTotal = round($subtotal + $shippingAmount + $taxAmount, 2);
 
-if ($total <= 0) {
+$checkoutFingerprint = girffonCheckoutFingerprint($normalizedItems, $shipping, $giftCardCode);
+$lastCheckout = $_SESSION['girffon_last_checkout'] ?? null;
+if (is_array($lastCheckout)
+    && ($lastCheckout['fingerprint'] ?? '') === $checkoutFingerprint
+    && !empty($lastCheckout['response'])
+    && (time() - (int) ($lastCheckout['created_at'] ?? 0)) <= 120
+) {
+    girffonCheckoutJson(200, $lastCheckout['response']);
+}
+
+$giftCardAppliedAmount = 0.0;
+$amountDue = $grossTotal;
+
+if ($grossTotal <= 0) {
     girffonCheckoutJson(422, ['ok' => false, 'message' => 'Order total must be greater than zero.']);
 }
 
@@ -212,12 +269,25 @@ $invoiceStatus = 'pending';
 
 try {
     girffonCheckoutEnsureSchema($pdo);
+    girffonGiftCardEnsureSchema($pdo);
     $pdo->beginTransaction();
 
     $orderNumber = girffonNextSequenceNumber($pdo, 'orders', 'order_number', 'GF', $year);
+    if ($giftCardCode !== '') {
+        girffonGiftCardCheckRateLimit((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown') . '|' . $giftCardCode);
+        $giftCardPreview = girffonGiftCardValidateForUse($pdo, $giftCardCode);
+        $giftCardAppliedAmount = min($grossTotal, (float) ($giftCardPreview['remaining_balance'] ?? 0));
+        $amountDue = round(max(0, $grossTotal - $giftCardAppliedAmount), 2);
+        if ($amountDue <= 0) {
+            $paymentMethod = 'gift_card';
+            $paymentStatus = 'paid';
+            $invoiceStatus = 'paid';
+        }
+    }
+
     $insertOrder = $pdo->prepare(
-        'INSERT INTO orders (user_id, order_number, customer_name, customer_email, phone, address, city, country, postcode, subtotal, shipping, total, payment_method, payment_status, order_status, tracking_code)
-         VALUES (:user_id, :order_number, :customer_name, :customer_email, :phone, :address, :city, :country, :postcode, :subtotal, :shipping, :total, :payment_method, :payment_status, :order_status, :tracking_code)'
+        'INSERT INTO orders (user_id, order_number, customer_name, customer_email, phone, address, city, country, postcode, subtotal, shipping, total, payment_method, payment_status, order_status, tracking_code, gift_card_code, gift_card_amount, amount_due)
+         VALUES (:user_id, :order_number, :customer_name, :customer_email, :phone, :address, :city, :country, :postcode, :subtotal, :shipping, :total, :payment_method, :payment_status, :order_status, :tracking_code, :gift_card_code, :gift_card_amount, :amount_due)'
     );
     $insertOrder->execute([
         ':user_id' => $user ? (int) $user['id'] : null,
@@ -231,24 +301,62 @@ try {
         ':postcode' => $customerPostcode !== '' ? $customerPostcode : null,
         ':subtotal' => $subtotal,
         ':shipping' => $shippingAmount,
-        ':total' => $total,
+        ':total' => $amountDue,
         ':payment_method' => $paymentMethod,
         ':payment_status' => $paymentStatus,
         ':order_status' => $orderStatus,
         ':tracking_code' => $trackingCode,
+        ':gift_card_code' => $giftCardCode !== '' ? $giftCardCode : null,
+        ':gift_card_amount' => $giftCardAppliedAmount,
+        ':amount_due' => $amountDue,
     ]);
 
     $orderId = (int) $pdo->lastInsertId();
+    $giftCardOrdersToSend = [];
+
+    if ($giftCardCode !== '' && $giftCardAppliedAmount > 0) {
+        $fingerprint = hash('sha256', $checkoutFingerprint . '|order|' . $orderId);
+        $giftCardRedemption = girffonGiftCardApplyRedemption($pdo, $giftCardCode, $orderId, $grossTotal, $fingerprint);
+        $giftCardAppliedAmount = (float) ($giftCardRedemption['applied_amount'] ?? $giftCardAppliedAmount);
+        $amountDue = round(max(0, $grossTotal - $giftCardAppliedAmount), 2);
+        if ($amountDue <= 0) {
+            $paymentMethod = 'gift_card';
+            $paymentStatus = 'paid';
+        }
+        $updateOrderGiftCard = $pdo->prepare('UPDATE orders SET total = :total, payment_method = :payment_method, payment_status = :payment_status, gift_card_amount = :gift_card_amount, amount_due = :amount_due WHERE id = :id LIMIT 1');
+        $updateOrderGiftCard->execute([
+            ':total' => $amountDue,
+            ':payment_method' => $amountDue <= 0 ? 'gift_card' : $paymentMethod,
+            ':payment_status' => $amountDue <= 0 ? 'paid' : $paymentStatus,
+            ':gift_card_amount' => $giftCardAppliedAmount,
+            ':amount_due' => $amountDue,
+            ':id' => $orderId,
+        ]);
+        if ($amountDue <= 0) {
+            $invoiceStatus = 'paid';
+        }
+    }
 
     $insertItem = $pdo->prepare(
-        'INSERT INTO order_items (order_id, product_id, name, product_name, sku, size, color, quantity, price, line_total, image)
-         VALUES (:order_id, :product_id, :name, :product_name, :sku, :size, :color, :quantity, :price, :line_total, :image)'
+        'INSERT INTO order_items (order_id, product_id, item_type, name, product_name, sku, size, color, quantity, price, line_total, image, metadata_json)
+         VALUES (:order_id, :product_id, :item_type, :name, :product_name, :sku, :size, :color, :quantity, :price, :line_total, :image, :metadata_json)'
     );
 
     foreach ($normalizedItems as $item) {
+        $itemMetadata = [
+            'delivery_type' => $item['delivery_type'] ?? '',
+            'gift_card_amount' => $item['gift_card_amount'] ?? 0,
+            'buyer_name' => $item['buyer_name'] ?? '',
+            'buyer_email' => $item['buyer_email'] ?? '',
+            'recipient_name' => $item['recipient_name'] ?? '',
+            'recipient_email' => $item['recipient_email'] ?? '',
+            'gift_message' => $item['gift_message'] ?? '',
+            'expires_at' => $item['expires_at'] ?? '',
+        ];
         $insertItem->execute([
             ':order_id' => $orderId,
             ':product_id' => $item['product_id'] !== '' ? $item['product_id'] : null,
+            ':item_type' => $item['item_type'] ?? 'product',
             ':name' => $item['name'],
             ':product_name' => $item['name'],
             ':sku' => $item['sku'] !== '' ? $item['sku'] : null,
@@ -258,13 +366,33 @@ try {
             ':price' => $item['price'],
             ':line_total' => $item['line_total'],
             ':image' => $item['image'] !== '' ? $item['image'] : null,
+            ':metadata_json' => json_encode($itemMetadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
         ]);
+
+        if (($item['item_type'] ?? 'product') === 'gift_card') {
+            $giftCardOrder = girffonGiftCardCreate($pdo, [
+                'initial_amount' => $item['gift_card_amount'] ?? $item['price'] ?? 0,
+                'delivery_type' => $item['delivery_type'] ?? 'digital',
+                'buyer_name' => $item['buyer_name'] ?? $customerName,
+                'buyer_email' => $item['buyer_email'] ?? $customerEmail,
+                'recipient_name' => $item['recipient_name'] ?? '',
+                'recipient_email' => $item['recipient_email'] ?? '',
+                'gift_message' => $item['gift_message'] ?? '',
+                'expires_at' => $item['expires_at'] ?? '',
+                'status' => 'active',
+                'order_id' => $orderId,
+            ]);
+
+            if (($giftCardOrder['delivery_type'] ?? '') === 'digital') {
+                $giftCardOrdersToSend[] = $giftCardOrder;
+            }
+        }
     }
 
     $invoiceNumber = girffonNextSequenceNumber($pdo, 'invoices', 'invoice_number', 'INV', $year);
     $insertInvoice = $pdo->prepare(
-        'INSERT INTO invoices (order_id, user_id, invoice_number, subtotal, tax, shipping, total, status, invoice_status, invoice_total)
-         VALUES (:order_id, :user_id, :invoice_number, :subtotal, :tax, :shipping, :total, :status, :invoice_status, :invoice_total)'
+        'INSERT INTO invoices (order_id, user_id, invoice_number, subtotal, tax, shipping, gift_card_amount, total, status, invoice_status, invoice_total)
+         VALUES (:order_id, :user_id, :invoice_number, :subtotal, :tax, :shipping, :gift_card_amount, :total, :status, :invoice_status, :invoice_total)'
     );
     $insertInvoice->execute([
         ':order_id' => $orderId,
@@ -273,10 +401,11 @@ try {
         ':subtotal' => $subtotal,
         ':tax' => $taxAmount,
         ':shipping' => $shippingAmount,
-        ':total' => $total,
+        ':gift_card_amount' => $giftCardAppliedAmount,
+        ':total' => $amountDue,
         ':status' => $invoiceStatus,
         ':invoice_status' => $invoiceStatus,
-        ':invoice_total' => $total,
+        ':invoice_total' => $amountDue,
     ]);
 
     $invoiceId = (int) $pdo->lastInsertId();
@@ -303,7 +432,7 @@ try {
             'invoice_id' => $invoiceId,
             'tracking_code' => $trackingCode,
             'items' => $normalizedItems,
-            'total' => $total,
+            'total' => $amountDue,
             'shipping_address' => implode(", ", $shippingAddressParts),
         ]);
     } catch (Throwable $throwable) {
@@ -312,7 +441,15 @@ try {
         error_log('[GirffoN Checkout Mail] ' . $emailError);
     }
 
-    girffonCheckoutJson(200, [
+    foreach ($giftCardOrdersToSend as $giftCardOrder) {
+        try {
+            girffonSendGiftCardEmail($giftCardOrder);
+        } catch (Throwable $throwable) {
+            error_log('[GirffoN Gift Card Mail] ' . $throwable->getMessage());
+        }
+    }
+
+    $response = [
         'ok' => true,
         'message' => 'Order placed successfully.',
         'redirectUrl' => '/GirffoN/CartTest.html?checkout=success',
@@ -329,12 +466,15 @@ try {
             'postcode' => $customerPostcode,
             'subtotal' => $subtotal,
             'shipping' => $shippingAmount,
-            'total' => $total,
+            'gift_card_amount' => $giftCardAppliedAmount,
+            'total' => $amountDue,
+            'gross_total' => $grossTotal,
             'payment_method' => $paymentMethod,
             'payment_status' => $paymentStatus,
             'order_status' => $orderStatus,
             'created_at' => date('Y-m-d H:i:s'),
             'tracking_code' => $trackingCode,
+            'gift_card_code' => $giftCardCode,
         ],
         'invoice' => [
             'id' => $invoiceId,
@@ -344,15 +484,29 @@ try {
             'subtotal' => $subtotal,
             'tax' => $taxAmount,
             'shipping' => $shippingAmount,
-            'total' => $total,
+            'gift_card_amount' => $giftCardAppliedAmount,
+            'total' => $amountDue,
             'status' => $invoiceStatus,
             'created_at' => date('Y-m-d H:i:s'),
+        ],
+        'gift_card' => [
+            'applied_amount' => $giftCardAppliedAmount,
+            'code' => $giftCardCode,
+            'amount_due' => $amountDue,
         ],
         'email_confirmation' => [
             'sent' => $emailSent,
             'error' => $emailError,
         ],
-    ]);
+    ];
+
+    $_SESSION['girffon_last_checkout'] = [
+        'fingerprint' => $checkoutFingerprint,
+        'created_at' => time(),
+        'response' => $response,
+    ];
+
+    girffonCheckoutJson(200, $response);
 } catch (Throwable $throwable) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
