@@ -234,6 +234,7 @@
 
   function initDashboardPage() {
     initDashboardAnalyticsExplorer();
+    initDashboardVisitorAnalytics();
     initDashboardWeatherWidget();
     initDashboardWorldClock();
     if (document.body.dataset.adminDashboardSource === "database") {
@@ -420,6 +421,408 @@
     downloadButton && downloadButton.addEventListener("click", downloadPdfReport);
 
     render();
+  }
+
+  function initDashboardVisitorAnalytics() {
+    const root = document.querySelector("[data-admin-visitor-analytics-root]");
+    if (!root) {
+      return;
+    }
+
+    let initialAnalytics = null;
+    try {
+      initialAnalytics = JSON.parse(root.dataset.adminVisitorAnalytics || "null");
+    } catch (_error) {
+      initialAnalytics = null;
+    }
+
+    if (!initialAnalytics) {
+      return;
+    }
+
+    const endpoint = String(root.dataset.adminVisitorAnalyticsEndpoint || "").trim();
+    const liveNodes = Array.from(root.querySelectorAll("[data-visitor-live]"));
+    const summaryNodes = Array.from(root.querySelectorAll("[data-visitor-summary]"));
+    const listNodes = Array.from(root.querySelectorAll("[data-visitor-list]"));
+    const rangeButtons = Array.from(root.querySelectorAll("[data-visitor-range]"));
+    const customWrap = root.querySelector("[data-visitor-custom-wrap]");
+    const startInput = root.querySelector("[data-visitor-start]");
+    const endInput = root.querySelector("[data-visitor-end]");
+    const applyRangeButton = root.querySelector("[data-visitor-apply-range]");
+    const exportButtons = Array.from(root.querySelectorAll("[data-visitor-export]"));
+    const rangeLabelNode = root.querySelector("[data-visitor-range-label]");
+    const lastUpdatedNode = root.querySelector("[data-visitor-last-updated]");
+    const refreshIntervalMs = 60 * 1000;
+
+    const state = {
+      range: String(initialAnalytics.range_key || "30days"),
+      startDate: String(initialAnalytics.range_start || ""),
+      endDate: String(initialAnalytics.range_end || ""),
+      analytics: initialAnalytics,
+      loading: false
+    };
+
+    const summaryFormatters = {
+      conversion_rate: function (value) {
+        return Number(value || 0).toFixed(1) + "%";
+      },
+      bounce_rate: function (value) {
+        return Number(value || 0).toFixed(1) + "%";
+      },
+      average_session_duration_label: function (value) {
+        return String(value || "0s");
+      },
+      average_time_per_page_label: function (value) {
+        return String(value || "0s");
+      }
+    };
+
+    const formatSummaryValue = function (key, value) {
+      if (summaryFormatters[key]) {
+        return summaryFormatters[key](value);
+      }
+      return String(value == null ? 0 : value);
+    };
+
+    const toListArray = function (value) {
+      return Array.isArray(value) ? value : [];
+    };
+
+    const formatPageLabel = function (value) {
+      let label = String(value || "/").trim();
+      if (!label) {
+        return "/";
+      }
+
+      try {
+        if (/^https?:\/\//i.test(label)) {
+          label = String(new URL(label).pathname || "/");
+        }
+      } catch (_error) {
+      }
+
+      const girffonIndex = label.indexOf("/GirffoN");
+      if (girffonIndex > 0) {
+        label = label.slice(girffonIndex);
+      }
+
+      label = label.replace(/\s+/g, "");
+      if (!label.startsWith("/")) {
+        label = "/" + label.replace(/^\/+/, "");
+      }
+
+      return label || "/";
+    };
+
+    const formatPercent = function (value) {
+      return Number(value || 0).toFixed(0) + "%";
+    };
+
+    const formatVisitCount = function (value, singular, plural) {
+      const count = Number(value || 0);
+      return count + " " + (count === 1 ? singular : plural);
+    };
+
+    const listMax = function (rows) {
+      return Math.max.apply(null, rows.map(function (row) {
+        return Number(row && row.count || 0);
+      }).concat([1]));
+    };
+
+    const renderBarList = function (node, rows, emptyMessage) {
+      if (!node) {
+        return;
+      }
+
+      const items = toListArray(rows);
+      if (!items.length) {
+        node.innerHTML = '<p class="admin-empty">' + escapeHtml(emptyMessage) + '</p>';
+        return;
+      }
+
+      const maxValue = listMax(items);
+      node.innerHTML = items.map(function (item) {
+        const count = Number(item && item.count || 0);
+        const percentage = count <= 0 ? 0 : Math.round((count / maxValue) * 100);
+        const width = count <= 0 ? 0 : Math.max(8, percentage);
+        return '<div class="admin-visitor-bar-row">' +
+          '<span class="admin-visitor-bar-label">' + escapeHtml(String(item && item.label || '-')) + '</span>' +
+          '<div class="admin-visitor-bar-track"><span class="admin-visitor-bar-fill" style="width:' + width + '%"></span></div>' +
+          '<strong class="admin-visitor-bar-value">' + escapeHtml(String(count)) + '</strong>' +
+          '<span class="admin-visitor-bar-percent">' + escapeHtml(formatPercent(percentage)) + '</span>' +
+          '</div>';
+      }).join("");
+    };
+
+    const renderRankedList = function (node, rows, emptyMessage, options) {
+      if (!node) {
+        return;
+      }
+
+      const items = toListArray(rows);
+      if (!items.length) {
+        node.innerHTML = '<p class="admin-empty">' + escapeHtml(emptyMessage) + '</p>';
+        return;
+      }
+
+      const mode = options && options.mode ? options.mode : "count";
+      node.innerHTML = items.map(function (item, index) {
+        const label = formatPageLabel(item && item.label || "/");
+        let valueHtml = '<strong class="admin-visitor-page-count">' + escapeHtml(formatVisitCount(item && item.count || 0, "visit", "visits")) + '</strong>';
+        if (mode === "duration") {
+          const exits = Number(item && item.count || 0);
+          const averageLabel = String(item && item.average_label || "0s");
+          valueHtml = '<strong class="admin-visitor-page-count">' + escapeHtml(averageLabel + ' avg') + '</strong><span class="admin-visitor-page-meta">' + escapeHtml(formatVisitCount(exits, "exit", "exits")) + '</span>';
+        } else if (mode === "keyword") {
+          valueHtml = '<strong class="admin-visitor-page-count">' + escapeHtml(formatVisitCount(item && item.count || 0, "hit", "hits")) + '</strong>';
+        }
+
+        return '<div class="admin-visitor-page-item">' +
+          '<span class="admin-visitor-page-path" title="' + escapeHtml(label) + '">' + escapeHtml(label) + '</span>' +
+          '<span class="admin-visitor-page-value-wrap">' + valueHtml + '</span>' +
+          '</div>';
+      }).join("");
+    };
+
+    const renderLists = function (analytics) {
+      listNodes.forEach(function (node) {
+        const key = String(node.dataset.visitorList || "");
+        switch (key) {
+          case "countries":
+          case "referrers":
+          case "browsers":
+          case "devices":
+            renderBarList(node, analytics[key], "No analytics captured yet.");
+            break;
+          case "page_durations":
+            renderRankedList(node, analytics[key], "No page duration analytics yet.", { mode: "duration" });
+            break;
+          case "keywords":
+            renderRankedList(node, analytics[key], "No search keywords available for this range.", { mode: "keyword" });
+            break;
+          default:
+            renderRankedList(node, analytics[key], "No analytics captured yet.");
+            break;
+        }
+      });
+    };
+
+    const syncControls = function () {
+      rangeButtons.forEach(function (button) {
+        button.classList.toggle("is-active", button.dataset.visitorRange === state.range);
+      });
+      if (customWrap) {
+        customWrap.hidden = state.range !== "custom";
+      }
+      if (startInput) {
+        startInput.value = state.startDate;
+      }
+      if (endInput) {
+        endInput.value = state.endDate;
+      }
+    };
+
+    const render = function () {
+      const analytics = state.analytics || initialAnalytics;
+
+      liveNodes.forEach(function (node) {
+        const key = String(node.dataset.visitorLive || "");
+        node.textContent = formatSummaryValue(key, analytics[key]);
+      });
+      summaryNodes.forEach(function (node) {
+        const key = String(node.dataset.visitorSummary || "");
+        node.textContent = formatSummaryValue(key, analytics[key]);
+      });
+
+      if (rangeLabelNode) {
+        rangeLabelNode.textContent = String(analytics.range_label || "Last 30 Days");
+      }
+      if (lastUpdatedNode) {
+        const generatedAt = String(analytics.generated_at || "");
+        const renderedTime = generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString();
+        lastUpdatedNode.textContent = "Updated " + renderedTime;
+      }
+
+      renderLists(analytics);
+      syncControls();
+    };
+
+    const buildRequestUrl = function () {
+      const url = new URL(endpoint, window.location.origin);
+      url.searchParams.set("range", state.range);
+      if (state.range === "custom") {
+        if (state.startDate) {
+          url.searchParams.set("start_date", state.startDate);
+        }
+        if (state.endDate) {
+          url.searchParams.set("end_date", state.endDate);
+        }
+      }
+      return url.toString();
+    };
+
+    const loadAnalytics = function () {
+      if (!endpoint || state.loading) {
+        return Promise.resolve();
+      }
+
+      state.loading = true;
+      root.classList.add("is-loading");
+
+      return fetch(buildRequestUrl(), {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+      }).then(function (response) {
+        return response.json().then(function (payload) {
+          if (!response.ok || !payload || !payload.ok || !payload.analytics) {
+            throw new Error("Unable to load visitor analytics.");
+          }
+          state.analytics = payload.analytics;
+          render();
+        });
+      }).catch(function () {
+        render();
+      }).finally(function () {
+        state.loading = false;
+        root.classList.remove("is-loading");
+      });
+    };
+
+    const buildCsvRows = function (analytics) {
+      const rows = [
+        ["Section", "Label", "Value", "Extra"]
+      ];
+
+      [
+        ["Live", "Online", analytics.online, ""],
+        ["Live", "Today", analytics.today, ""],
+        ["Live", "This Week", analytics.week, ""],
+        ["Live", "This Month", analytics.month, ""],
+        ["Range", analytics.range_label, analytics.visitors, "visitors"],
+        ["Range", "Conversion Rate", analytics.conversion_rate, "%"],
+        ["Range", "Bounce Rate", analytics.bounce_rate, "%"],
+        ["Range", "Average Session", analytics.average_session_duration_label, ""],
+        ["Range", "Average Time Per Page", analytics.average_time_per_page_label, ""],
+        ["Range", "Completed Orders", analytics.completed_orders, ""]
+      ].forEach(function (row) {
+        rows.push(row);
+      });
+
+      ["countries", "referrers", "browsers", "devices", "pages", "landing_pages", "exit_pages", "keywords"].forEach(function (sectionKey) {
+        toListArray(analytics[sectionKey]).forEach(function (item) {
+          rows.push([sectionKey, item.label || "", item.count || 0, ""]);
+        });
+      });
+
+      toListArray(analytics.page_durations).forEach(function (item) {
+        rows.push(["page_durations", item.label || "", item.average_label || "0s", String(item.count || 0) + " exits"]);
+      });
+
+      return rows;
+    };
+
+    const exportCsv = function () {
+      const rows = buildCsvRows(state.analytics || initialAnalytics);
+      const csv = rows.map(function (row) {
+        return row.map(function (cell) {
+          const value = String(cell == null ? "" : cell).replace(/"/g, '""');
+          return '"' + value + '"';
+        }).join(",");
+      }).join("\r\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "girffon-visitor-analytics-" + String((state.analytics || initialAnalytics).range_key || "range") + ".csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    };
+
+    const exportPdf = function () {
+      const analytics = state.analytics || initialAnalytics;
+      const reportWindow = window.open("", "_blank", "width=1180,height=860");
+      if (!reportWindow) {
+        return;
+      }
+
+      const summaryCards = [
+        ["Range", analytics.range_label || "Last 30 Days"],
+        ["Visitors", analytics.visitors || 0],
+        ["Conversion", formatSummaryValue("conversion_rate", analytics.conversion_rate)],
+        ["Avg Time/Page", analytics.average_time_per_page_label || "0s"],
+        ["Bounce", formatSummaryValue("bounce_rate", analytics.bounce_rate)],
+        ["Completed Orders", analytics.completed_orders || 0]
+      ].map(function (item) {
+        return "<div class='card'><span>" + escapeHtml(item[0]) + "</span><strong>" + escapeHtml(String(item[1])) + "</strong></div>";
+      }).join("");
+
+      const tableSections = [
+        ["Top Pages", analytics.pages || []],
+        ["Landing Pages", analytics.landing_pages || []],
+        ["Exit Pages", analytics.exit_pages || []],
+        ["Referrers", analytics.referrers || []],
+        ["Countries", analytics.countries || []],
+        ["Keywords", analytics.keywords || []]
+      ].map(function (section) {
+        const rows = toListArray(section[1]).map(function (item) {
+          return "<tr><td>" + escapeHtml(String(item.label || "-")) + "</td><td>" + escapeHtml(String(item.count || 0)) + "</td></tr>";
+        }).join("");
+        return "<section><h2>" + escapeHtml(section[0]) + "</h2><table><thead><tr><th>Label</th><th>Count</th></tr></thead><tbody>" + rows + "</tbody></table></section>";
+      }).join("");
+
+      reportWindow.document.open();
+      reportWindow.document.write(
+        "<!DOCTYPE html><html><head><title>Visitor Analytics Report</title><style>body{font-family:Georgia,serif;padding:32px;color:#2b241b}h1{margin:0 0 12px;font-size:30px}h2{margin:28px 0 10px;font-size:18px}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:18px 0 24px}.card{border:1px solid #e7d7ad;border-radius:16px;padding:14px;background:#fffaf0}.card span{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a7753}.card strong{display:block;margin-top:8px;font-size:22px}table{width:100%;border-collapse:collapse}th,td{padding:10px 12px;border-bottom:1px solid #eadfca;text-align:left}th{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6b5a3b}@media print{button{display:none}}</style></head><body>" +
+        "<h1>GIRFFON Visitor Analytics</h1>" +
+        "<p>Generated for " + escapeHtml(String(analytics.range_label || "Last 30 Days")) + ".</p>" +
+        "<div class='summary'>" + summaryCards + "</div>" +
+        tableSections +
+        "<script>window.onload=function(){window.print();};</script></body></html>"
+      );
+      reportWindow.document.close();
+    };
+
+    rangeButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        state.range = String(button.dataset.visitorRange || "30days");
+        syncControls();
+        if (state.range !== "custom") {
+          loadAnalytics();
+        }
+      });
+    });
+
+    startInput && startInput.addEventListener("change", function () {
+      state.startDate = String(startInput.value || "");
+    });
+    endInput && endInput.addEventListener("change", function () {
+      state.endDate = String(endInput.value || "");
+    });
+
+    applyRangeButton && applyRangeButton.addEventListener("click", function () {
+      state.range = "custom";
+      state.startDate = String(startInput && startInput.value || "");
+      state.endDate = String(endInput && endInput.value || "");
+      loadAnalytics();
+    });
+
+    exportButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        const type = String(button.dataset.visitorExport || "csv");
+        if (type === "pdf") {
+          exportPdf();
+          return;
+        }
+        exportCsv();
+      });
+    });
+
+    render();
+    window.setInterval(loadAnalytics, refreshIntervalMs);
   }
 
   function initDashboardWeatherWidget() {

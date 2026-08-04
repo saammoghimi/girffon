@@ -65,7 +65,7 @@ $dashboardSettingToggles = [
   'show_weather_widget' => ['label' => 'Weather Widget', 'note' => 'Live weather and forecast cards for your dashboard only.'],
   'show_world_clock' => ['label' => 'World Clock', 'note' => 'Clock, timezone status, and quick city comparison.'],
   'show_active_admins' => ['label' => 'Active Admins', 'note' => 'Admins active in the last 30 minutes.'],
-  'show_visitor_analytics' => ['label' => 'Visitors Analytics', 'note' => 'Today, month, year visit stats and recent visits.'],
+  'show_visitor_analytics' => ['label' => 'Visitors Analytics', 'note' => 'Public website visitor, source, page, cart, checkout, browser, and device analytics.'],
 ];
 ?>
 <!DOCTYPE html>
@@ -169,7 +169,7 @@ $dashboardSettingToggles = [
           <h1 class="admin-page-title">Dashboard Settings</h1>
         </div>
         <div class="admin-topbar-actions">
-          <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="admin-dashboard.php" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
           <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
@@ -222,6 +222,6 @@ $dashboardSettingToggles = [
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260518r12"></script>
+  <script src="JS/admin-girffon.js?v=20260804r13"></script>
 </body>
 </html>

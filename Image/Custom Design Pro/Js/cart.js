@@ -9,6 +9,16 @@
   const PROJECT_STORAGE_PREFIX = "cdpProject_";
   const CUSTOM_ORDER_SUBMIT_URL = "../../backend/custom-design/submit-order.php";
   const PROFILE_PAGE_URL = "../../ProfilePage.php";
+  const ANALYTICS_ENDPOINT = "../../backend/analytics/track.php";
+  const ANALYTICS_VISITOR_KEY = "girffon_analytics_visitor_id";
+  const ANALYTICS_SESSION_KEY = "girffon_analytics_session_id";
+  const ANALYTICS_LAST_TOUCH_KEY = "girffon_analytics_last_touch";
+  const ANALYTICS_ONCE_PREFIX = "girffon_analytics_once_";
+  const ANALYTICS_SESSION_TTL_MS = 30 * 60 * 1000;
+  const ANALYTICS_HEARTBEAT_MS = 60 * 1000;
+  const ANALYTICS_EXIT_ONCE_PREFIX = "girffon_analytics_exit_";
+  const pageStartedAt = Date.now();
+  const pageInstanceId = cdpAnalyticsId("page");
   const CART_STRINGS = {
     us: {
       orderSummary: "Order summary",
@@ -129,6 +139,185 @@
       openTutorials: "Apri tutorial"
     },
     de: {
+
+  function cdpAnalyticsId(prefix) {
+    return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function cdpStorageGet(storage, key) {
+    try {
+      return storage.getItem(key) || "";
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function cdpStorageSet(storage, key, value) {
+    try {
+      storage.setItem(key, value);
+    } catch (_error) {
+      // Ignore storage failures.
+    }
+  }
+
+  function cdpAnalyticsContext() {
+    const now = Date.now();
+    let visitorId = cdpStorageGet(window.localStorage, ANALYTICS_VISITOR_KEY);
+    if (!visitorId) {
+      visitorId = cdpAnalyticsId("visitor");
+      cdpStorageSet(window.localStorage, ANALYTICS_VISITOR_KEY, visitorId);
+    }
+
+    let sessionId = cdpStorageGet(window.sessionStorage, ANALYTICS_SESSION_KEY);
+    const lastTouch = Number.parseInt(cdpStorageGet(window.sessionStorage, ANALYTICS_LAST_TOUCH_KEY) || "0", 10) || 0;
+    if (!sessionId || !lastTouch || (now - lastTouch) > ANALYTICS_SESSION_TTL_MS) {
+      sessionId = cdpAnalyticsId("session");
+      cdpStorageSet(window.sessionStorage, ANALYTICS_SESSION_KEY, sessionId);
+    }
+
+    cdpStorageSet(window.sessionStorage, ANALYTICS_LAST_TOUCH_KEY, String(now));
+
+    return {
+      visitor_id: visitorId,
+      session_id: sessionId
+    };
+  }
+
+  function cdpExtractSearchKeyword() {
+    const candidates = [];
+
+    try {
+      const currentUrl = new URL(window.location.href);
+      ["utm_term", "q", "query", "search", "keyword", "k", "s", "text"].forEach(function (key) {
+        const value = currentUrl.searchParams.get(key);
+        if (value) {
+          candidates.push(value);
+        }
+      });
+    } catch (_error) {
+    }
+
+    try {
+      if (document.referrer) {
+        const referrerUrl = new URL(document.referrer);
+        ["q", "p", "query", "search", "keyword", "k", "s", "text", "utm_term"].forEach(function (key) {
+          const value = referrerUrl.searchParams.get(key);
+          if (value) {
+            candidates.push(value);
+          }
+        });
+      }
+    } catch (_error) {
+    }
+
+    return String(candidates.find(Boolean) || "").trim();
+  }
+
+  function cdpBuildPayload(eventType, meta) {
+    const context = cdpAnalyticsContext();
+    const safeMeta = meta && typeof meta === "object" ? Object.assign({}, meta) : {};
+    if (!safeMeta.search_keyword) {
+      const searchKeyword = cdpExtractSearchKeyword();
+      if (searchKeyword) {
+        safeMeta.search_keyword = searchKeyword;
+      }
+    }
+
+    const payload = {
+      visitor_id: context.visitor_id,
+      session_id: context.session_id,
+      event_type: eventType,
+      page_path: String(window.location.pathname || "/"),
+      page_title: String(document.title || ""),
+      referrer: String(document.referrer || ""),
+      meta: safeMeta
+    };
+
+    if (safeMeta.duration_seconds != null) {
+      payload.duration_seconds = Number(safeMeta.duration_seconds) || 0;
+    }
+
+    return payload;
+  }
+
+  function cdpSendExitAnalytics() {
+    const exitKey = ANALYTICS_EXIT_ONCE_PREFIX + pageInstanceId;
+    if (cdpStorageGet(window.sessionStorage, exitKey) === "1") {
+      return false;
+    }
+
+    cdpStorageSet(window.sessionStorage, exitKey, "1");
+    cdpSendPayload(cdpBuildPayload("page_exit", {
+      duration_seconds: Math.max(1, Math.round((Date.now() - pageStartedAt) / 1000)),
+      search_keyword: cdpExtractSearchKeyword()
+    }), true);
+    return true;
+  }
+
+  function cdpSendPayload(payload, preferBeacon) {
+    if (preferBeacon && navigator.sendBeacon) {
+      try {
+        const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+        return Promise.resolve(navigator.sendBeacon(ANALYTICS_ENDPOINT, blob));
+      } catch (_error) {
+      }
+    }
+
+    return fetch(ANALYTICS_ENDPOINT, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(function () {
+      return false;
+    });
+  }
+
+  function cdpTrack(eventType, meta) {
+    return cdpSendPayload(cdpBuildPayload(eventType, meta), false);
+  }
+
+  function cdpTrackOnce(eventType, onceKey, meta) {
+    const storageKey = ANALYTICS_ONCE_PREFIX + String(onceKey || eventType || "event");
+    if (cdpStorageGet(window.sessionStorage, storageKey) === "1") {
+      return;
+    }
+
+    cdpStorageSet(window.sessionStorage, storageKey, "1");
+    cdpTrack(eventType, meta);
+  }
+
+  window.GirffonAnalytics = window.GirffonAnalytics || {
+    track: cdpTrack,
+    trackOnce: cdpTrackOnce,
+    getContext: cdpAnalyticsContext
+  };
+
+  window.addEventListener("load", function () {
+    cdpTrack("page_view", { section: "custom_design" });
+    cdpTrackOnce("custom_design_open", "custom-design-open", {
+      product: String(window.cdpProductConfig && window.cdpProductConfig.productName || "Custom Product")
+    });
+  }, { once: true });
+
+  window.setInterval(function () {
+    cdpTrack("heartbeat", {
+      active_seconds: Math.max(1, Math.round((Date.now() - pageStartedAt) / 1000))
+    });
+  }, ANALYTICS_HEARTBEAT_MS);
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState !== "hidden") {
+      return;
+    }
+
+    cdpSendExitAnalytics();
+  });
+
+  window.addEventListener("pagehide", function () {
+    cdpSendExitAnalytics();
+  });
       orderSummary: "Bestellübersicht",
       cartInvoice: "Warenkorb & Rechnung",
       closeCartPanel: "Warenkorb schließen",
@@ -2059,6 +2248,12 @@
         await renderCart();
         const snapshot = await buildSnapshot();
         const customOrderPayload = await buildCustomOrderPayload(snapshot);
+        const analyticsContext = window.GirffonAnalytics && typeof window.GirffonAnalytics.getContext === "function"
+          ? window.GirffonAnalytics.getContext()
+          : null;
+        if (analyticsContext) {
+          customOrderPayload.analytics = analyticsContext;
+        }
         cartState.lastSnapshot = snapshot;
         updateScanArea(snapshot);
         cachePayload(snapshot);

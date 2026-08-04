@@ -907,6 +907,169 @@ body.admin-page {
   margin-top: 14px;
 }
 
+.admin-panel-head-compact {
+  margin-bottom: 14px;
+}
+
+.admin-panel-head-compact h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.admin-panel.is-loading {
+  opacity: 0.82;
+}
+
+.admin-visitor-controls {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-visitor-filter-group,
+.admin-visitor-export-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-visitor-custom-range {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-visitor-range-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.admin-visitor-range-meta strong {
+  font-size: 1rem;
+  color: var(--admin-text-main);
+}
+
+.admin-visitor-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-visitor-overview-grid--secondary {
+  margin-top: 14px;
+}
+
+.admin-visitor-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.admin-visitor-chart-card,
+.admin-visitor-pages-card {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(199, 165, 75, 0.16);
+  background: linear-gradient(180deg, rgba(255, 253, 247, 0.98) 0%, rgba(248, 239, 221, 0.9) 100%);
+}
+
+.admin-visitor-pages-card {
+  margin-top: 18px;
+}
+
+.admin-visitor-bar-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-visitor-bar-row {
+  display: grid;
+  grid-template-columns: minmax(112px, 1.1fr) minmax(0, 1fr) minmax(40px, auto) minmax(46px, auto);
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-visitor-bar-label,
+.admin-visitor-bar-value,
+.admin-visitor-page-count {
+  font-size: 0.92rem;
+  color: var(--admin-text-main);
+}
+
+.admin-visitor-bar-label,
+.admin-visitor-page-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-visitor-bar-track {
+  position: relative;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(199, 165, 75, 0.14);
+  overflow: hidden;
+}
+
+.admin-visitor-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #c9931e 0%, #f1ca63 100%);
+}
+
+.admin-visitor-page-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-visitor-page-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, auto);
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(199, 165, 75, 0.1);
+}
+
+.admin-visitor-page-path {
+  font-size: 0.94rem;
+  color: var(--admin-text-main);
+  font-family: var(--admin-font-body);
+}
+
+.admin-visitor-page-value-wrap {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+.admin-visitor-page-meta {
+  font-size: 0.76rem;
+  color: var(--admin-text-soft);
+}
+
+.admin-visitor-bar-percent {
+  font-size: 0.78rem;
+  color: var(--admin-text-soft);
+  justify-self: end;
+}
+
+.admin-visitor-page-count,
+.admin-visitor-bar-value {
+  font-family: var(--admin-font-display);
+  font-size: 1.05rem;
+  justify-self: end;
+}
+
 .admin-weather-shell {
   display: grid;
   gap: 18px;
@@ -2179,6 +2342,19 @@ body.admin-page {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .admin-visitor-overview-grid,
+  .admin-visitor-chart-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-visitor-overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .admin-visitor-custom-range {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .admin-content-grid {
     grid-template-columns: 1fr;
   }
@@ -2207,6 +2383,10 @@ body.admin-page {
     grid-template-columns: 36px minmax(0, 1fr) 32px;
   }
 
+  .admin-visitor-bar-row {
+    grid-template-columns: minmax(86px, 1fr) minmax(0, 1fr) minmax(38px, auto) minmax(42px, auto);
+  }
+
   .admin-weather-meta {
     grid-template-columns: 1fr;
   }
@@ -2225,11 +2405,22 @@ body.admin-page {
     padding: 18px 14px 20px;
   }
 
+  .admin-visitor-overview-grid,
+  .admin-visitor-chart-grid,
+  .admin-visitor-custom-range {
+    grid-template-columns: 1fr;
+  }
+
   .admin-topbar {
     padding-left: 56px;
     flex-direction: column;
     align-items: stretch;
     gap: 14px;
+  }
+
+  .admin-visitor-page-item {
+    grid-template-columns: minmax(0, 1fr) minmax(96px, auto);
+    gap: 10px;
   }
 
   .admin-page-title {

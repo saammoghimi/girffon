@@ -6,7 +6,7 @@ require_once __DIR__ . '/order-confirmation-mailer.php';
 function girffonGiftCardConfig(): array
 {
     return [
-        'default_expiry_days' => max(30, (int) (getenv('GIRFFON_GIFT_CARD_EXPIRY_DAYS') ?: 365)),
+        'default_expiry_months' => max(1, (int) (getenv('GIRFFON_GIFT_CARD_EXPIRY_MONTHS') ?: 12)),
         'physical_shipping' => round((float) (getenv('GIRFFON_GIFT_CARD_PHYSICAL_SHIPPING') ?: 7.50), 2),
         'custom_amount_min' => 10.0,
         'custom_amount_max' => 1000.0,
@@ -18,7 +18,7 @@ function girffonGiftCardConfig(): array
 
 function girffonGiftCardStatuses(): array
 {
-    return ['active', 'used', 'expired', 'cancelled'];
+    return ['pending', 'active', 'used', 'expired', 'cancelled'];
 }
 
 function girffonGiftCardDeliveryTypes(): array
@@ -30,6 +30,13 @@ function girffonGiftCardColumnExists(PDO $pdo, string $table, string $column): b
 {
     $statement = $pdo->prepare("SHOW COLUMNS FROM {$table} LIKE :column");
     $statement->execute([':column' => $column]);
+    return (bool) $statement->fetch(PDO::FETCH_ASSOC);
+}
+
+function girffonGiftCardIndexExists(PDO $pdo, string $table, string $indexName): bool
+{
+    $statement = $pdo->prepare("SHOW INDEX FROM {$table} WHERE Key_name = :index_name");
+    $statement->execute([':index_name' => $indexName]);
     return (bool) $statement->fetch(PDO::FETCH_ASSOC);
 }
 
@@ -54,6 +61,7 @@ function girffonGiftCardEnsureSchema(PDO $pdo): void
             delivery_type VARCHAR(20) NOT NULL DEFAULT 'digital',
             status VARCHAR(20) NOT NULL DEFAULT 'active',
             order_id INT NULL,
+            source_line_key CHAR(40) NULL,
             qr_payload TEXT NULL,
             barcode_value VARCHAR(64) NULL,
             public_reference CHAR(32) NOT NULL,
@@ -62,6 +70,7 @@ function girffonGiftCardEnsureSchema(PDO $pdo): void
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY uq_gift_cards_gift_code (gift_code),
             UNIQUE KEY uq_gift_cards_public_reference (public_reference),
+            UNIQUE KEY uq_gift_cards_order_line (order_id, source_line_key),
             KEY idx_gift_cards_status (status),
             KEY idx_gift_cards_order_id (order_id),
             KEY idx_gift_cards_recipient_email (recipient_email),
@@ -120,6 +129,14 @@ function girffonGiftCardEnsureSchema(PDO $pdo): void
         if (!girffonGiftCardColumnExists($pdo, 'order_items', $column)) {
             $pdo->exec($sql);
         }
+    }
+
+    if (!girffonGiftCardColumnExists($pdo, 'gift_cards', 'source_line_key')) {
+        $pdo->exec("ALTER TABLE gift_cards ADD source_line_key CHAR(40) NULL AFTER order_id");
+    }
+
+    if (!girffonGiftCardIndexExists($pdo, 'gift_cards', 'uq_gift_cards_order_line')) {
+        $pdo->exec("ALTER TABLE gift_cards ADD UNIQUE KEY uq_gift_cards_order_line (order_id, source_line_key)");
     }
 
     $checked = true;
@@ -203,8 +220,9 @@ function girffonGiftCardExpiryValue(?string $value): ?string
 {
     $trimmed = trim((string) $value);
     if ($trimmed === '') {
-        $days = (int) girffonGiftCardConfig()['default_expiry_days'];
-        return gmdate('Y-m-d H:i:s', time() + ($days * 86400));
+        $months = (int) girffonGiftCardConfig()['default_expiry_months'];
+        $expiry = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        return $expiry->modify('+' . $months . ' months')->format('Y-m-d H:i:s');
     }
 
     $timestamp = strtotime($trimmed);
@@ -246,6 +264,23 @@ function girffonGiftCardCreate(PDO $pdo, array $input): array
         throw new InvalidArgumentException('Recipient email is invalid.');
     }
 
+    $orderId = !empty($input['order_id']) ? (int) $input['order_id'] : null;
+    $sourceLineKey = trim((string) ($input['source_line_key'] ?? ''));
+    if ($orderId && $sourceLineKey !== '') {
+        $existingStatement = $pdo->prepare('SELECT id FROM gift_cards WHERE order_id = :order_id AND source_line_key = :source_line_key LIMIT 1');
+        $existingStatement->execute([
+            ':order_id' => $orderId,
+            ':source_line_key' => $sourceLineKey,
+        ]);
+        $existingId = (int) ($existingStatement->fetchColumn() ?: 0);
+        if ($existingId > 0) {
+            $existingGiftCard = girffonGiftCardFetchById($pdo, $existingId);
+            if ($existingGiftCard) {
+                return $existingGiftCard;
+            }
+        }
+    }
+
     $giftCode = '';
     do {
         $giftCode = girffonGiftCardGenerateCode();
@@ -264,7 +299,8 @@ function girffonGiftCardCreate(PDO $pdo, array $input): array
         'gift_message' => trim((string) ($input['gift_message'] ?? '')),
         'delivery_type' => $deliveryType,
         'status' => $status,
-        'order_id' => !empty($input['order_id']) ? (int) $input['order_id'] : null,
+        'order_id' => $orderId,
+        'source_line_key' => $sourceLineKey !== '' ? $sourceLineKey : null,
         'expires_at' => $expiresAt,
     ];
 
@@ -276,11 +312,11 @@ function girffonGiftCardCreate(PDO $pdo, array $input): array
         'INSERT INTO gift_cards (
             gift_code, initial_amount, remaining_balance, buyer_name, buyer_email,
             recipient_name, recipient_email, gift_message, delivery_type, status,
-            order_id, qr_payload, barcode_value, public_reference, expires_at
+            order_id, source_line_key, qr_payload, barcode_value, public_reference, expires_at
          ) VALUES (
             :gift_code, :initial_amount, :remaining_balance, :buyer_name, :buyer_email,
             :recipient_name, :recipient_email, :gift_message, :delivery_type, :status,
-            :order_id, :qr_payload, :barcode_value, :public_reference, :expires_at
+            :order_id, :source_line_key, :qr_payload, :barcode_value, :public_reference, :expires_at
          )'
     );
     $statement->execute([
@@ -295,6 +331,7 @@ function girffonGiftCardCreate(PDO $pdo, array $input): array
         ':delivery_type' => $giftCard['delivery_type'],
         ':status' => $giftCard['status'],
         ':order_id' => $giftCard['order_id'],
+        ':source_line_key' => $giftCard['source_line_key'],
         ':qr_payload' => $giftCard['qr_payload'] !== '' ? $giftCard['qr_payload'] : null,
         ':barcode_value' => $giftCard['barcode_value'] !== '' ? $giftCard['barcode_value'] : null,
         ':public_reference' => $giftCard['public_reference'],

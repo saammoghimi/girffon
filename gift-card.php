@@ -84,6 +84,41 @@
         <div class="gift-card-pill">Gift Card Code / Codice carta regalo</div>
       </div>
 
+      <section class="gift-card-shop-strip" aria-label="Gift card values">
+        <article class="gift-card-shop-card is-selected" data-gift-card-select="25" tabindex="0" role="button" aria-label="Select GIRFFON 25 euro gift card">
+          <div class="gift-card-shop-image">
+            <img src="Image/Gift/gift-25.png" alt="GIRFFON €25 Gift Card">
+          </div>
+          <div class="gift-card-shop-copy">
+            <h3>€25 Gift Card</h3>
+            <p>A refined entry gift for personal surprises and premium gestures.</p>
+          </div>
+          <button class="gift-card-shop-button" type="button" data-gift-card-select="25">Buy Gift Card</button>
+        </article>
+
+        <article class="gift-card-shop-card" data-gift-card-select="50" tabindex="0" role="button" aria-label="Select GIRFFON 50 euro gift card">
+          <div class="gift-card-shop-image">
+            <img src="Image/Gift/gift-50.png" alt="GIRFFON €50 Gift Card">
+          </div>
+          <div class="gift-card-shop-copy">
+            <h3>€50 Gift Card</h3>
+            <p>A balanced premium option for birthdays, celebrations, and thank-you gifts.</p>
+          </div>
+          <button class="gift-card-shop-button" type="button" data-gift-card-select="50">Buy Gift Card</button>
+        </article>
+
+        <article class="gift-card-shop-card" data-gift-card-select="100" tabindex="0" role="button" aria-label="Select GIRFFON 100 euro gift card">
+          <div class="gift-card-shop-image">
+            <img src="Image/Gift/gift-100.png" alt="GIRFFON €100 Gift Card">
+          </div>
+          <div class="gift-card-shop-copy">
+            <h3>€100 Gift Card</h3>
+            <p>A standout luxury gift for milestone moments and elevated gifting.</p>
+          </div>
+          <button class="gift-card-shop-button" type="button" data-gift-card-select="100">Buy Gift Card</button>
+        </article>
+      </section>
+
       <form id="gfGiftCardForm" class="gift-card-form-grid" novalidate>
         <div class="gift-card-field gift-card-field-wide">
           <label>Amount / Importo</label>
@@ -131,18 +166,6 @@
         <div class="gift-card-field gift-card-field-wide">
           <label for="gfGiftMessage">Personal Gift Message / Messaggio regalo</label>
           <textarea id="gfGiftMessage" name="gift_message" placeholder="Write a premium message for the recipient"></textarea>
-        </div>
-
-        <div class="gift-card-field">
-          <label for="gfGiftExpiresAt">Expiration Date / Scadenza</label>
-          <input id="gfGiftExpiresAt" name="expires_at" type="date" required>
-        </div>
-
-        <div class="gift-card-field">
-          <label>Checkout Notes / Note checkout</label>
-          <select disabled>
-            <option>Server validates amount, status, expiry, and remaining balance</option>
-          </select>
         </div>
 
         <div class="gift-card-field gift-card-field-wide" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;">

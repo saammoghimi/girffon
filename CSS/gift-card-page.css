@@ -118,6 +118,80 @@
   padding: 32px;
 }
 
+.gift-card-shop-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0 0 28px;
+}
+
+.gift-card-shop-card {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(70, 52, 36, 0.1);
+  background: linear-gradient(180deg, rgba(255, 253, 249, 0.98), rgba(249, 241, 229, 0.82));
+  box-shadow: 0 18px 34px rgba(41, 29, 18, 0.06);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+}
+
+.gift-card-shop-card:hover,
+.gift-card-shop-card:focus-visible,
+.gift-card-shop-card.is-selected {
+  transform: translateY(-3px);
+  border-color: rgba(201, 165, 106, 0.9);
+  box-shadow: 0 24px 40px rgba(201, 165, 106, 0.18);
+}
+
+.gift-card-shop-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+
+.gift-card-shop-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.gift-card-shop-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.gift-card-shop-copy h3 {
+  margin: 0;
+  color: #1f1812;
+  font-size: 1.18rem;
+}
+
+.gift-card-shop-copy p {
+  margin: 0;
+  color: #6d5a48;
+  line-height: 1.7;
+}
+
+.gift-card-shop-button {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1f1812, #c9a56a);
+  color: #fff7ec;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .gift-card-form-head {
   display: flex;
   justify-content: space-between;
@@ -290,6 +364,10 @@
   .gift-card-benefits-grid {
     grid-template-columns: 1fr;
   }
+
+  .gift-card-shop-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
@@ -308,6 +386,10 @@
   .gift-card-form-grid,
   .gift-card-amount-grid,
   .gift-card-delivery-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gift-card-shop-strip {
     grid-template-columns: 1fr;
   }
 

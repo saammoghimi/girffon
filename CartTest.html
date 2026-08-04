@@ -1292,7 +1292,7 @@
     <div class="footer-social">
       <a href="https://www.instagram.com/Girffonstudio" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram profile" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
       <a href="https://www.tiktok.com/@Girffon" target="_blank" rel="noopener noreferrer" aria-label="Open TikTok profile" title="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-      <a href="https://www.facebook.com/GirffonStudio" target="_blank" rel="noopener noreferrer" aria-label="Open Facebook page" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+      <a href="https://www.facebook.com/girffon.shop" target="_blank" rel="noopener noreferrer" aria-label="Open Facebook page" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
       <a href="https://x.com/GirffoN2025" target="_blank" rel="noopener noreferrer" aria-label="Open X profile" title="X"><i class="fa-brands fa-twitter"></i></a>
       <a href="https://www.youtube.com/@GirffoNStudio" target="_blank" rel="noopener noreferrer" aria-label="Open YouTube" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
       <a href="https://t.me/GirffoNStudio" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
@@ -1648,6 +1648,12 @@
         return;
       }
 
+      if (window.GirffonAnalytics && typeof window.GirffonAnalytics.trackOnce === 'function') {
+        window.GirffonAnalytics.trackOnce('checkout_started', 'checkout-started', {
+          cart_lines: cartData.length
+        });
+      }
+
       try {
         const sessionPayload = await readCheckoutSession(true);
         clearCheckoutCustomerFields();
@@ -1747,7 +1753,14 @@
       const checkoutPayload = {
         shipping: readShippingDetails(),
         payment_method: 'bank_transfer',
-        gift_card_code: appliedGiftCard && appliedGiftCard.code ? appliedGiftCard.code : ''
+        payment_status: 'paid',
+        gift_card_code: appliedGiftCard && appliedGiftCard.code ? appliedGiftCard.code : '',
+        analytics: window.GirffonAnalytics && typeof window.GirffonAnalytics.getContext === 'function'
+          ? Object.assign({}, window.GirffonAnalytics.getContext(), {
+              referrer: String(document.referrer || ''),
+              traffic_source: ''
+            })
+          : null
       };
 
       if (payNowButton) {

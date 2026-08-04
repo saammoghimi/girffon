@@ -19,7 +19,6 @@ $recipientEmail = strtolower(trim((string) ($data['recipient_email'] ?? '')));
 $buyerName = trim((string) ($data['buyer_name'] ?? ''));
 $buyerEmail = strtolower(trim((string) ($data['buyer_email'] ?? '')));
 $giftMessage = trim((string) ($data['gift_message'] ?? ''));
-$expiresAt = trim((string) ($data['expires_at'] ?? ''));
 
 if (!girffonGiftCardAmountAllowed($amount)) {
     girffonCartSendJson(422, ['success' => false, 'message' => 'Gift card amount is invalid.']);
@@ -42,6 +41,7 @@ $giftCardItem = girffonCartNormalizeItem([
     'quantity' => 1,
     'price' => $amount,
     'priceNumber' => $amount,
+    'line_total' => $amount,
     'item_type' => 'gift_card',
     'delivery_type' => $deliveryType,
     'gift_card_amount' => $amount,
@@ -50,7 +50,6 @@ $giftCardItem = girffonCartNormalizeItem([
     'recipient_name' => $recipientName,
     'recipient_email' => $recipientEmail,
     'gift_message' => $giftMessage,
-    'expires_at' => $expiresAt,
     'line_key' => sha1('gift-card|' . microtime(true) . '|' . random_int(1000, 999999)),
 ]);
 

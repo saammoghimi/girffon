@@ -124,7 +124,7 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
           <h1 class="admin-page-title" id="adminCurrentPage">Custom Design Order Detail</h1>
         </div>
         <div class="admin-topbar-actions">
-          <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="admin-dashboard.php" aria-label="View Shop" title="View Shop">View Shop</a>
           <a class="admin-button admin-button-soft admin-refresh-button" href="admin-custom-orders.php" aria-label="Back to Orders" title="Back to Orders">Orders</a>
           <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>

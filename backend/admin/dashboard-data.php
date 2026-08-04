@@ -687,44 +687,926 @@ function girffonAdminRevenueThisMonth(PDO $pdo): float
     return girffonAdminSumRevenueForDateRange($pdo, $range['start'], $range['end']);
 }
 
-function girffonAdminFetchVisitorAnalytics(): array
+function girffonAdminEnsureWebsiteAnalyticsTables(PDO $pdo): bool
 {
-    $entries = girffonAdminDashboardReadJsonLog('admin-dashboard-visits.json');
-    $romeNow = girffonAdminDashboardRomeNow();
-    $today = $romeNow->format('Y-m-d');
-    $month = $romeNow->format('Y-m');
-    $year = $romeNow->format('Y');
+    static $ready = null;
 
-    $analytics = [
-        'today' => 0,
-        'month' => 0,
-        'year' => 0,
-        'recent' => [],
+    if ($ready !== null) {
+        return $ready;
+    }
+
+    try {
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS website_visitor_sessions (
+                session_id VARCHAR(128) NOT NULL PRIMARY KEY,
+                visitor_id VARCHAR(128) NOT NULL,
+                ip_address VARCHAR(45) NOT NULL DEFAULT '',
+                country_code VARCHAR(8) NOT NULL DEFAULT '',
+                country_name VARCHAR(120) NOT NULL DEFAULT 'Unknown',
+                browser_name VARCHAR(32) NOT NULL DEFAULT 'Other',
+                device_type VARCHAR(16) NOT NULL DEFAULT 'Desktop',
+                traffic_source VARCHAR(32) NOT NULL DEFAULT 'Direct',
+                landing_page VARCHAR(255) NOT NULL DEFAULT '/',
+                first_page VARCHAR(255) NOT NULL DEFAULT '/',
+                last_page VARCHAR(255) NOT NULL DEFAULT '/',
+                first_seen_at DATETIME NOT NULL,
+                last_seen_at DATETIME NOT NULL,
+                page_views INT NOT NULL DEFAULT 0,
+                add_to_cart_count INT NOT NULL DEFAULT 0,
+                wishlist_add_count INT NOT NULL DEFAULT 0,
+                custom_design_open_count INT NOT NULL DEFAULT 0,
+                gift_card_view_count INT NOT NULL DEFAULT 0,
+                checkout_started_count INT NOT NULL DEFAULT 0,
+                completed_orders_count INT NOT NULL DEFAULT 0,
+                is_bounce TINYINT(1) NOT NULL DEFAULT 1,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                KEY idx_visitor_id (visitor_id),
+                KEY idx_last_seen_at (last_seen_at),
+                KEY idx_country_name (country_name),
+                KEY idx_traffic_source (traffic_source),
+                KEY idx_browser_name (browser_name),
+                KEY idx_device_type (device_type)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        );
+
+        $pdo->exec(
+            "CREATE TABLE IF NOT EXISTS website_visitor_events (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                session_id VARCHAR(128) NOT NULL,
+                visitor_id VARCHAR(128) NOT NULL,
+                event_type VARCHAR(64) NOT NULL,
+                page_path VARCHAR(255) NOT NULL DEFAULT '/',
+                page_title VARCHAR(255) NOT NULL DEFAULT '',
+                referrer_host VARCHAR(191) NOT NULL DEFAULT '',
+                traffic_source VARCHAR(32) NOT NULL DEFAULT 'Direct',
+                country_code VARCHAR(8) NOT NULL DEFAULT '',
+                country_name VARCHAR(120) NOT NULL DEFAULT 'Unknown',
+                browser_name VARCHAR(32) NOT NULL DEFAULT 'Other',
+                device_type VARCHAR(16) NOT NULL DEFAULT 'Desktop',
+                duration_seconds INT NOT NULL DEFAULT 0,
+                metadata_json LONGTEXT NULL,
+                created_at DATETIME NOT NULL,
+                KEY idx_session_id (session_id),
+                KEY idx_visitor_id (visitor_id),
+                KEY idx_event_type (event_type),
+                KEY idx_page_path (page_path),
+                KEY idx_created_at (created_at)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+        );
+
+        $ready = true;
+    } catch (PDOException $exception) {
+        $ready = false;
+    }
+
+    return $ready;
+}
+
+function girffonAdminAnalyticsSanitizeText($value, int $maxLength = 191): string
+{
+    $text = trim((string) $value);
+    if ($text === '') {
+        return '';
+    }
+
+    $text = preg_replace('/\s+/', ' ', $text);
+    if (!is_string($text)) {
+        return '';
+    }
+
+    if (function_exists('mb_substr')) {
+        return mb_substr($text, 0, $maxLength, 'UTF-8');
+    }
+
+    return substr($text, 0, $maxLength);
+}
+
+function girffonAdminAnalyticsNormalizePagePath($value): string
+{
+    $raw = trim((string) $value);
+    if ($raw === '') {
+        $raw = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+    }
+
+    $path = parse_url($raw, PHP_URL_PATH);
+    if (!is_string($path) || trim($path) === '') {
+        $path = '/';
+    }
+
+    $path = '/' . ltrim($path, '/');
+    return girffonAdminAnalyticsSanitizeText($path, 255);
+}
+
+function girffonAdminAnalyticsNormalizeHost($value): string
+{
+    $raw = trim((string) $value);
+    if ($raw === '') {
+        return '';
+    }
+
+    $host = parse_url($raw, PHP_URL_HOST);
+    if (!is_string($host) || $host === '') {
+        $host = $raw;
+    }
+
+    $host = strtolower(trim($host));
+    $host = preg_replace('/^www\./', '', $host);
+    return girffonAdminAnalyticsSanitizeText($host, 191);
+}
+
+function girffonAdminAnalyticsCountryName(string $countryCode): string
+{
+    static $countries = [
+        'IT' => 'Italy',
+        'IR' => 'Iran',
+        'US' => 'United States',
+        'GB' => 'United Kingdom',
+        'DE' => 'Germany',
+        'FR' => 'France',
+        'ES' => 'Spain',
+        'NL' => 'Netherlands',
+        'PL' => 'Poland',
+        'SE' => 'Sweden',
+        'TR' => 'Turkey',
+        'AE' => 'United Arab Emirates',
+        'CA' => 'Canada',
+        'AU' => 'Australia',
+        'CH' => 'Switzerland',
+        'AT' => 'Austria',
     ];
 
-    foreach (girffonAdminDashboardTrimLogEntries($entries, 300) as $entry) {
-        $createdAt = (string) ($entry['created_at'] ?? '');
-        if ($createdAt === '') {
-            continue;
-        }
+    $countryCode = strtoupper(trim($countryCode));
+    if ($countryCode === '') {
+        return 'Unknown';
+    }
 
-        $romeCreatedAt = girffonAdminDashboardFormatRome($createdAt, 'Y-m-d H:i:s');
-        if ($romeCreatedAt === '-') {
-            continue;
-        }
+    return $countries[$countryCode] ?? $countryCode;
+}
 
-        if (strpos($romeCreatedAt, $today) === 0) {
-            $analytics['today']++;
-        }
-        if (strpos($romeCreatedAt, $month) === 0) {
-            $analytics['month']++;
-        }
-        if (strpos($romeCreatedAt, $year) === 0) {
-            $analytics['year']++;
+function girffonAdminAnalyticsDetectCountry(array $payload = []): array
+{
+    $candidateCode = strtoupper(trim((string) ($payload['country_code'] ?? $_SERVER['HTTP_CF_IPCOUNTRY'] ?? $_SERVER['GEOIP_COUNTRY_CODE'] ?? '')));
+
+    if ($candidateCode === '' || $candidateCode === 'XX') {
+        $acceptLanguage = trim((string) ($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''));
+        if (preg_match('/[-_]([A-Za-z]{2})(?:,|;|$)/', $acceptLanguage, $matches)) {
+            $candidateCode = strtoupper($matches[1]);
         }
     }
 
-    $analytics['recent'] = array_slice(girffonAdminDashboardTrimLogEntries($entries, 12), 0, 5);
+    $candidateCode = preg_match('/^[A-Z]{2}$/', $candidateCode) ? $candidateCode : '';
+    $candidateName = girffonAdminAnalyticsSanitizeText($payload['country_name'] ?? '', 120);
+
+    if ($candidateName === '') {
+        $candidateName = girffonAdminAnalyticsCountryName($candidateCode);
+    }
+
+    return [
+        'code' => $candidateCode,
+        'name' => $candidateName !== '' ? $candidateName : 'Unknown',
+    ];
+}
+
+function girffonAdminAnalyticsDetectBrowser(string $userAgent = ''): string
+{
+    $userAgent = strtolower(trim($userAgent !== '' ? $userAgent : (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')));
+    if ($userAgent === '') {
+        return 'Other';
+    }
+
+    if (strpos($userAgent, 'edg/') !== false) {
+        return 'Edge';
+    }
+    if (strpos($userAgent, 'firefox/') !== false) {
+        return 'Firefox';
+    }
+    if (strpos($userAgent, 'chrome/') !== false || strpos($userAgent, 'crios/') !== false) {
+        return 'Chrome';
+    }
+    if ((strpos($userAgent, 'safari/') !== false || strpos($userAgent, 'applewebkit/') !== false) && strpos($userAgent, 'chrome/') === false && strpos($userAgent, 'crios/') === false && strpos($userAgent, 'edg/') === false) {
+        return 'Safari';
+    }
+
+    return 'Other';
+}
+
+function girffonAdminAnalyticsDetectDevice(string $userAgent = ''): string
+{
+    $userAgent = strtolower(trim($userAgent !== '' ? $userAgent : (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')));
+    if ($userAgent === '') {
+        return 'Desktop';
+    }
+
+    if (strpos($userAgent, 'ipad') !== false || strpos($userAgent, 'tablet') !== false) {
+        return 'Tablet';
+    }
+    if (strpos($userAgent, 'mobi') !== false || strpos($userAgent, 'android') !== false || strpos($userAgent, 'iphone') !== false) {
+        return 'Mobile';
+    }
+
+    return 'Desktop';
+}
+
+function girffonAdminAnalyticsTrafficSource(string $referrerHost = '', string $explicitSource = ''): string
+{
+    $explicitSource = strtolower(trim($explicitSource));
+    if ($explicitSource !== '') {
+        return ucfirst($explicitSource);
+    }
+
+    $referrerHost = strtolower(trim($referrerHost));
+    if ($referrerHost === '') {
+        return 'Direct';
+    }
+    if (strpos($referrerHost, 'google.') !== false) {
+        return 'Google';
+    }
+    if (strpos($referrerHost, 'instagram.') !== false) {
+        return 'Instagram';
+    }
+    if (strpos($referrerHost, 'facebook.') !== false || strpos($referrerHost, 'fb.') !== false || strpos($referrerHost, 'm.facebook.') !== false) {
+        return 'Facebook';
+    }
+    if (strpos($referrerHost, 'bing.') !== false) {
+        return 'Bing';
+    }
+
+    return 'Other';
+}
+
+function girffonAdminFormatDurationLabel(int $seconds): string
+{
+    $seconds = max(0, $seconds);
+    $hours = intdiv($seconds, 3600);
+    $minutes = intdiv($seconds % 3600, 60);
+    $remainingSeconds = $seconds % 60;
+
+    if ($hours > 0) {
+        return sprintf('%dh %02dm', $hours, $minutes);
+    }
+    if ($minutes > 0) {
+        return sprintf('%dm %02ds', $minutes, $remainingSeconds);
+    }
+
+    return sprintf('%ds', $remainingSeconds);
+}
+
+function girffonAdminTrackWebsiteVisitor(PDO $pdo, array $payload): bool
+{
+    if (!girffonAdminEnsureWebsiteAnalyticsTables($pdo)) {
+        return false;
+    }
+
+    $visitorId = girffonAdminAnalyticsSanitizeText($payload['visitor_id'] ?? '', 128);
+    $sessionId = girffonAdminAnalyticsSanitizeText($payload['session_id'] ?? '', 128);
+    if ($visitorId === '' || $sessionId === '') {
+        return false;
+    }
+
+    $eventType = strtolower(girffonAdminAnalyticsSanitizeText($payload['event_type'] ?? 'page_view', 64));
+    if (!preg_match('/^[a-z0-9_]+$/', $eventType)) {
+        $eventType = 'page_view';
+    }
+
+    $pagePath = girffonAdminAnalyticsNormalizePagePath($payload['page_path'] ?? '');
+    $pageTitle = girffonAdminAnalyticsSanitizeText($payload['page_title'] ?? '', 255);
+    $referrerHost = girffonAdminAnalyticsNormalizeHost($payload['referrer'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
+    $country = girffonAdminAnalyticsDetectCountry($payload);
+    $browserName = girffonAdminAnalyticsSanitizeText($payload['browser_name'] ?? girffonAdminAnalyticsDetectBrowser((string) ($payload['user_agent'] ?? '')), 32) ?: 'Other';
+    $deviceType = girffonAdminAnalyticsSanitizeText($payload['device_type'] ?? girffonAdminAnalyticsDetectDevice((string) ($payload['user_agent'] ?? '')), 16) ?: 'Desktop';
+    $trafficSource = girffonAdminAnalyticsTrafficSource($referrerHost, (string) ($payload['traffic_source'] ?? ''));
+    $ipAddress = girffonAdminAnalyticsSanitizeText($_SERVER['REMOTE_ADDR'] ?? '', 45);
+    $metadata = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
+    $durationSeconds = max(0, min(86400, (int) ($payload['duration_seconds'] ?? ($metadata['duration_seconds'] ?? 0))));
+    $metadataJson = $metadata ? json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
+    $createdAt = gmdate('Y-m-d H:i:s');
+
+    try {
+        $insertEvent = $pdo->prepare(
+            'INSERT INTO website_visitor_events (
+                session_id, visitor_id, event_type, page_path, page_title, referrer_host, traffic_source, country_code, country_name, browser_name, device_type, duration_seconds, metadata_json, created_at
+            ) VALUES (
+                :session_id, :visitor_id, :event_type, :page_path, :page_title, :referrer_host, :traffic_source, :country_code, :country_name, :browser_name, :device_type, :duration_seconds, :metadata_json, :created_at
+            )'
+        );
+        $insertEvent->execute([
+            ':session_id' => $sessionId,
+            ':visitor_id' => $visitorId,
+            ':event_type' => $eventType,
+            ':page_path' => $pagePath,
+            ':page_title' => $pageTitle,
+            ':referrer_host' => $referrerHost,
+            ':traffic_source' => $trafficSource,
+            ':country_code' => $country['code'],
+            ':country_name' => $country['name'],
+            ':browser_name' => $browserName,
+            ':device_type' => $deviceType,
+            ':duration_seconds' => $durationSeconds,
+            ':metadata_json' => $metadataJson,
+            ':created_at' => $createdAt,
+        ]);
+
+        $readSession = $pdo->prepare('SELECT * FROM website_visitor_sessions WHERE session_id = :session_id LIMIT 1');
+        $readSession->execute([':session_id' => $sessionId]);
+        $sessionRow = $readSession->fetch(PDO::FETCH_ASSOC) ?: null;
+
+        $pageViews = (int) ($sessionRow['page_views'] ?? 0) + ($eventType === 'page_view' ? 1 : 0);
+        $addToCartCount = (int) ($sessionRow['add_to_cart_count'] ?? 0) + ($eventType === 'add_to_cart' ? 1 : 0);
+        $wishlistAddCount = (int) ($sessionRow['wishlist_add_count'] ?? 0) + ($eventType === 'wishlist_add' ? 1 : 0);
+        $customDesignOpenCount = (int) ($sessionRow['custom_design_open_count'] ?? 0) + ($eventType === 'custom_design_open' ? 1 : 0);
+        $giftCardViewCount = (int) ($sessionRow['gift_card_view_count'] ?? 0) + ($eventType === 'gift_card_view' ? 1 : 0);
+        $checkoutStartedCount = (int) ($sessionRow['checkout_started_count'] ?? 0) + ($eventType === 'checkout_started' ? 1 : 0);
+        $completedOrdersCount = (int) ($sessionRow['completed_orders_count'] ?? 0) + ($eventType === 'completed_order' ? 1 : 0);
+        $isBounce = $pageViews <= 1 ? 1 : 0;
+
+        if ($sessionRow) {
+            $updateSession = $pdo->prepare(
+                'UPDATE website_visitor_sessions
+                 SET visitor_id = :visitor_id,
+                     ip_address = :ip_address,
+                     country_code = CASE WHEN (country_code = "" OR country_name = "Unknown") AND :country_code <> "" THEN :country_code ELSE country_code END,
+                     country_name = CASE WHEN country_name = "Unknown" AND :country_name <> "Unknown" THEN :country_name ELSE country_name END,
+                     browser_name = CASE WHEN browser_name = "Other" AND :browser_name <> "Other" THEN :browser_name ELSE browser_name END,
+                     device_type = CASE WHEN device_type = "Desktop" AND :device_type <> "Desktop" THEN :device_type ELSE device_type END,
+                     traffic_source = CASE WHEN traffic_source = "Direct" AND :traffic_source <> "Direct" THEN :traffic_source ELSE traffic_source END,
+                     last_page = :last_page,
+                     last_seen_at = :last_seen_at,
+                     page_views = :page_views,
+                     add_to_cart_count = :add_to_cart_count,
+                     wishlist_add_count = :wishlist_add_count,
+                     custom_design_open_count = :custom_design_open_count,
+                     gift_card_view_count = :gift_card_view_count,
+                     checkout_started_count = :checkout_started_count,
+                     completed_orders_count = :completed_orders_count,
+                     is_bounce = :is_bounce
+                 WHERE session_id = :session_id'
+            );
+            $updateSession->execute([
+                ':visitor_id' => $visitorId,
+                ':ip_address' => $ipAddress,
+                ':country_code' => $country['code'],
+                ':country_name' => $country['name'],
+                ':browser_name' => $browserName,
+                ':device_type' => $deviceType,
+                ':traffic_source' => $trafficSource,
+                ':last_page' => $pagePath,
+                ':last_seen_at' => $createdAt,
+                ':page_views' => $pageViews,
+                ':add_to_cart_count' => $addToCartCount,
+                ':wishlist_add_count' => $wishlistAddCount,
+                ':custom_design_open_count' => $customDesignOpenCount,
+                ':gift_card_view_count' => $giftCardViewCount,
+                ':checkout_started_count' => $checkoutStartedCount,
+                ':completed_orders_count' => $completedOrdersCount,
+                ':is_bounce' => $isBounce,
+                ':session_id' => $sessionId,
+            ]);
+        } else {
+            $insertSession = $pdo->prepare(
+                'INSERT INTO website_visitor_sessions (
+                    session_id, visitor_id, ip_address, country_code, country_name, browser_name, device_type, traffic_source, landing_page, first_page, last_page, first_seen_at, last_seen_at, page_views, add_to_cart_count, wishlist_add_count, custom_design_open_count, gift_card_view_count, checkout_started_count, completed_orders_count, is_bounce
+                ) VALUES (
+                    :session_id, :visitor_id, :ip_address, :country_code, :country_name, :browser_name, :device_type, :traffic_source, :landing_page, :first_page, :last_page, :first_seen_at, :last_seen_at, :page_views, :add_to_cart_count, :wishlist_add_count, :custom_design_open_count, :gift_card_view_count, :checkout_started_count, :completed_orders_count, :is_bounce
+                )'
+            );
+            $insertSession->execute([
+                ':session_id' => $sessionId,
+                ':visitor_id' => $visitorId,
+                ':ip_address' => $ipAddress,
+                ':country_code' => $country['code'],
+                ':country_name' => $country['name'],
+                ':browser_name' => $browserName,
+                ':device_type' => $deviceType,
+                ':traffic_source' => $trafficSource,
+                ':landing_page' => $pagePath,
+                ':first_page' => $pagePath,
+                ':last_page' => $pagePath,
+                ':first_seen_at' => $createdAt,
+                ':last_seen_at' => $createdAt,
+                ':page_views' => $pageViews,
+                ':add_to_cart_count' => $addToCartCount,
+                ':wishlist_add_count' => $wishlistAddCount,
+                ':custom_design_open_count' => $customDesignOpenCount,
+                ':gift_card_view_count' => $giftCardViewCount,
+                ':checkout_started_count' => $checkoutStartedCount,
+                ':completed_orders_count' => $completedOrdersCount,
+                ':is_bounce' => $isBounce,
+            ]);
+        }
+    } catch (PDOException $exception) {
+        return false;
+    }
+
+    return true;
+}
+
+function girffonAdminWebsiteAnalyticsBreakdown(PDO $pdo, string $sql, array $params = [], int $limit = 10): array
+{
+    try {
+        $statement = $pdo->prepare($sql . ' LIMIT ' . max(1, $limit));
+        $statement->execute($params);
+        return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $exception) {
+        return [];
+    }
+}
+
+function girffonAdminWebsiteAnalyticsCount(PDO $pdo, string $sql, array $params = []): int
+{
+    try {
+        $statement = $pdo->prepare($sql);
+        $statement->execute($params);
+        return (int) $statement->fetchColumn();
+    } catch (PDOException $exception) {
+        return 0;
+    }
+}
+
+function girffonAdminWebsiteAnalyticsAverage(PDO $pdo, string $sql, array $params = []): float
+{
+    try {
+        $statement = $pdo->prepare($sql);
+        $statement->execute($params);
+        return (float) $statement->fetchColumn();
+    } catch (PDOException $exception) {
+        return 0.0;
+    }
+}
+
+function girffonAdminWebsiteAnalyticsFetchAll(PDO $pdo, string $sql, array $params = []): array
+{
+    try {
+        $statement = $pdo->prepare($sql);
+        $statement->execute($params);
+        return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (PDOException $exception) {
+        return [];
+    }
+}
+
+function girffonAdminVisitorAnalyticsDefault(): array
+{
+    return [
+        'range_key' => '30days',
+        'range_label' => 'Last 30 Days',
+        'range_start' => '',
+        'range_end' => '',
+        'generated_at' => gmdate('c'),
+        'online' => 0,
+        'today' => 0,
+        'week' => 0,
+        'month' => 0,
+        'total' => 0,
+        'visitors' => 0,
+        'new' => 0,
+        'returning' => 0,
+        'average_session_duration_seconds' => 0,
+        'average_session_duration_label' => '0s',
+        'average_time_per_page_seconds' => 0,
+        'average_time_per_page_label' => '0s',
+        'bounce_rate' => 0.0,
+        'conversion_rate' => 0.0,
+        'add_to_cart' => 0,
+        'wishlist_adds' => 0,
+        'custom_design_opens' => 0,
+        'gift_card_views' => 0,
+        'checkout_started' => 0,
+        'completed_orders' => 0,
+        'abandoned_carts' => 0,
+        'countries' => [],
+        'pages' => [],
+        'landing_pages' => [],
+        'exit_pages' => [],
+        'page_durations' => [],
+        'sources' => [],
+        'referrers' => [],
+        'referrer_hosts' => [],
+        'browsers' => [],
+        'devices' => [],
+        'keywords' => [],
+    ];
+}
+
+function girffonAdminResolveVisitorAnalyticsRange(array $options = []): array
+{
+    $romeNow = girffonAdminDashboardRomeNow();
+    $rangeKey = strtolower(trim((string) ($options['range'] ?? '30days')));
+    $start = null;
+    $end = $romeNow->modify('+1 day')->setTime(0, 0, 0);
+    $label = 'Last 30 Days';
+
+    switch ($rangeKey) {
+        case 'today':
+            $start = $romeNow->setTime(0, 0, 0);
+            $end = $start->modify('+1 day');
+            $label = 'Today';
+            break;
+        case '7days':
+            $start = $romeNow->modify('-6 days')->setTime(0, 0, 0);
+            $label = 'Last 7 Days';
+            break;
+        case '30days':
+            $start = $romeNow->modify('-29 days')->setTime(0, 0, 0);
+            $label = 'Last 30 Days';
+            break;
+        case 'this_year':
+            $start = $romeNow->setDate((int) $romeNow->format('Y'), 1, 1)->setTime(0, 0, 0);
+            $end = $start->modify('+1 year');
+            $label = 'This Year';
+            break;
+        case 'custom':
+            $startDate = trim((string) ($options['start_date'] ?? ''));
+            $endDate = trim((string) ($options['end_date'] ?? ''));
+            try {
+                $start = $startDate !== ''
+                    ? (new DateTimeImmutable($startDate, girffonAdminDashboardRomeTimezone()))->setTime(0, 0, 0)
+                    : $romeNow->modify('-29 days')->setTime(0, 0, 0);
+                $end = $endDate !== ''
+                    ? (new DateTimeImmutable($endDate, girffonAdminDashboardRomeTimezone()))->modify('+1 day')->setTime(0, 0, 0)
+                    : $romeNow->modify('+1 day')->setTime(0, 0, 0);
+            } catch (Throwable $exception) {
+                $rangeKey = '30days';
+                $start = $romeNow->modify('-29 days')->setTime(0, 0, 0);
+                $end = $romeNow->modify('+1 day')->setTime(0, 0, 0);
+            }
+            if ($end <= $start) {
+                $end = $start->modify('+1 day');
+            }
+            $label = $start->format('d M Y') . ' - ' . $end->modify('-1 day')->format('d M Y');
+            break;
+        default:
+            $rangeKey = '30days';
+            $start = $romeNow->modify('-29 days')->setTime(0, 0, 0);
+            $label = 'Last 30 Days';
+            break;
+    }
+
+    if (!$start instanceof DateTimeImmutable) {
+        $start = $romeNow->modify('-29 days')->setTime(0, 0, 0);
+    }
+
+    return [
+        'key' => $rangeKey,
+        'label' => $label,
+        'start_rome' => $start,
+        'end_rome' => $end,
+        'start_utc' => $start->setTimezone(girffonAdminDashboardUtcTimezone())->format('Y-m-d H:i:s'),
+        'end_utc' => $end->setTimezone(girffonAdminDashboardUtcTimezone())->format('Y-m-d H:i:s'),
+    ];
+}
+
+function girffonAdminNormalizeVisitorAnalyticsRows(array $rows, array $allLabels = []): array
+{
+    $counts = [];
+    foreach ($rows as $row) {
+        $counts[(string) ($row['label'] ?? '')] = (int) ($row['count'] ?? 0);
+    }
+
+    if (!$allLabels) {
+        $normalized = [];
+        foreach ($rows as $row) {
+            $normalized[] = [
+                'label' => (string) ($row['label'] ?? ''),
+                'count' => (int) ($row['count'] ?? 0),
+            ];
+        }
+        return $normalized;
+    }
+
+    $normalized = [];
+    foreach ($allLabels as $label) {
+        $normalized[] = [
+            'label' => $label,
+            'count' => (int) ($counts[$label] ?? 0),
+        ];
+    }
+    return $normalized;
+}
+
+function girffonAdminDecodeAnalyticsMetadata($value): array
+{
+    if (!is_string($value) || trim($value) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($value, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function girffonAdminKeywordLabel($value): string
+{
+    $value = strtolower(trim((string) $value));
+    $value = preg_replace('/\s+/', ' ', $value);
+    return is_string($value) ? $value : '';
+}
+
+function girffonAdminTopKeywordRows(array $eventRows, int $limit = 10): array
+{
+    $counts = [];
+    foreach ($eventRows as $row) {
+        $metadata = girffonAdminDecodeAnalyticsMetadata($row['metadata_json'] ?? null);
+        $keyword = girffonAdminKeywordLabel($metadata['search_keyword'] ?? '');
+        if ($keyword === '') {
+            continue;
+        }
+
+        $counts[$keyword] = (int) ($counts[$keyword] ?? 0) + 1;
+    }
+
+    arsort($counts);
+    $rows = [];
+    foreach (array_slice($counts, 0, max(1, $limit), true) as $keyword => $count) {
+        $rows[] = [
+            'label' => $keyword,
+            'count' => (int) $count,
+        ];
+    }
+    return $rows;
+}
+
+function girffonAdminFetchVisitorAnalytics(PDO $pdo, array $options = []): array
+{
+    $analytics = girffonAdminVisitorAnalyticsDefault();
+
+    if (!girffonAdminEnsureWebsiteAnalyticsTables($pdo)) {
+        return $analytics;
+    }
+
+    $range = girffonAdminResolveVisitorAnalyticsRange($options);
+    $analytics['range_key'] = $range['key'];
+    $analytics['range_label'] = $range['label'];
+    $analytics['range_start'] = $range['start_rome']->format('Y-m-d');
+    $analytics['range_end'] = $range['end_rome']->modify('-1 day')->format('Y-m-d');
+    $analytics['generated_at'] = gmdate('c');
+
+    $utcNow = new DateTimeImmutable('now', girffonAdminDashboardUtcTimezone());
+    $onlineCutoff = $utcNow->modify('-5 minutes')->format('Y-m-d H:i:s');
+    $abandonedCutoff = min($utcNow->modify('-1 hour')->format('Y-m-d H:i:s'), $range['end_utc']);
+    $rangeParams = [
+        ':range_start' => $range['start_utc'],
+        ':range_end' => $range['end_utc'],
+    ];
+
+    $todayRange = girffonAdminDashboardRomePeriodRange('daily');
+    $monthRange = girffonAdminDashboardRomePeriodRange('monthly');
+    $romeNow = girffonAdminDashboardRomeNow();
+    $weekStartRome = $romeNow->modify('monday this week')->setTime(0, 0, 0);
+    $weekRange = girffonAdminDashboardRomeUtcRange($weekStartRome, $weekStartRome->modify('+1 week'));
+
+    $analytics['online'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT visitor_id) FROM website_visitor_sessions WHERE last_seen_at >= :cutoff',
+        [':cutoff' => $onlineCutoff]
+    );
+    $analytics['today'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT visitor_id) FROM website_visitor_sessions WHERE last_seen_at >= :start_at AND last_seen_at < :end_at',
+        [':start_at' => $todayRange['start'], ':end_at' => $todayRange['end']]
+    );
+    $analytics['week'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT visitor_id) FROM website_visitor_sessions WHERE last_seen_at >= :start_at AND last_seen_at < :end_at',
+        [':start_at' => $weekRange['start'], ':end_at' => $weekRange['end']]
+    );
+    $analytics['month'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT visitor_id) FROM website_visitor_sessions WHERE last_seen_at >= :start_at AND last_seen_at < :end_at',
+        [':start_at' => $monthRange['start'], ':end_at' => $monthRange['end']]
+    );
+    $analytics['total'] = girffonAdminWebsiteAnalyticsCount($pdo, 'SELECT COUNT(DISTINCT visitor_id) FROM website_visitor_sessions');
+
+    $analytics['visitors'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT visitor_id)
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start AND first_seen_at < :range_end',
+        $rangeParams
+    );
+    $analytics['new'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT visitor_id)
+         FROM website_visitor_sessions
+         WHERE first_seen_at >= :range_start AND first_seen_at < :range_end',
+        $rangeParams
+    );
+    $analytics['returning'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(DISTINCT current_sessions.visitor_id)
+         FROM website_visitor_sessions current_sessions
+         WHERE current_sessions.last_seen_at >= :range_start
+           AND current_sessions.first_seen_at < :range_end
+           AND EXISTS (
+             SELECT 1
+             FROM website_visitor_sessions previous_sessions
+             WHERE previous_sessions.visitor_id = current_sessions.visitor_id
+               AND previous_sessions.first_seen_at < :range_start
+             LIMIT 1
+           )',
+        $rangeParams
+    );
+
+    $averageDurationSeconds = (int) round(girffonAdminWebsiteAnalyticsAverage(
+        $pdo,
+        'SELECT AVG(GREATEST(TIMESTAMPDIFF(SECOND, first_seen_at, last_seen_at), 0))
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start AND first_seen_at < :range_end',
+        $rangeParams
+    ));
+    $analytics['average_session_duration_seconds'] = $averageDurationSeconds;
+    $analytics['average_session_duration_label'] = girffonAdminFormatDurationLabel($averageDurationSeconds);
+
+    $averageTimePerPageSeconds = (int) round(girffonAdminWebsiteAnalyticsAverage(
+        $pdo,
+        'SELECT AVG(duration_seconds)
+         FROM website_visitor_events
+         WHERE event_type = "page_exit"
+           AND duration_seconds > 0
+           AND created_at >= :range_start
+           AND created_at < :range_end',
+        $rangeParams
+    ));
+    $analytics['average_time_per_page_seconds'] = $averageTimePerPageSeconds;
+    $analytics['average_time_per_page_label'] = girffonAdminFormatDurationLabel($averageTimePerPageSeconds);
+
+    $bounceRate = girffonAdminWebsiteAnalyticsAverage(
+        $pdo,
+        'SELECT AVG(CASE WHEN page_views <= 1 THEN 100 ELSE 0 END)
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start AND first_seen_at < :range_end',
+        $rangeParams
+    );
+    $analytics['bounce_rate'] = round($bounceRate, 1);
+
+    foreach ([
+        'add_to_cart' => 'add_to_cart',
+        'wishlist_adds' => 'wishlist_add',
+        'custom_design_opens' => 'custom_design_open',
+        'gift_card_views' => 'gift_card_view',
+        'checkout_started' => 'checkout_started',
+        'completed_orders' => 'completed_order',
+    ] as $resultKey => $eventType) {
+        $analytics[$resultKey] = girffonAdminWebsiteAnalyticsCount(
+            $pdo,
+            'SELECT COUNT(*) FROM website_visitor_events WHERE event_type = :event_type AND created_at >= :range_start AND created_at < :range_end',
+            array_merge($rangeParams, [':event_type' => $eventType])
+        );
+    }
+
+    $analytics['conversion_rate'] = $analytics['visitors'] > 0
+        ? round(((float) $analytics['completed_orders'] / (float) $analytics['visitors']) * 100, 1)
+        : 0.0;
+
+    $analytics['abandoned_carts'] = girffonAdminWebsiteAnalyticsCount(
+        $pdo,
+        'SELECT COUNT(*)
+         FROM website_visitor_sessions
+         WHERE completed_orders_count = 0
+           AND (add_to_cart_count > 0 OR checkout_started_count > 0)
+           AND last_seen_at >= :range_start
+           AND last_seen_at < :abandoned_cutoff',
+        [':range_start' => $range['start_utc'], ':abandoned_cutoff' => $abandonedCutoff]
+    );
+
+    $analytics['countries'] = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT country_name AS label, COUNT(*) AS count
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start
+           AND first_seen_at < :range_end
+           AND country_name <> "" AND country_name <> "Unknown"
+         GROUP BY country_name
+         ORDER BY count DESC',
+        $rangeParams,
+        6
+    );
+
+    $analytics['pages'] = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT page_path AS label, COUNT(*) AS count
+         FROM website_visitor_events
+         WHERE event_type = "page_view"
+           AND created_at >= :range_start
+           AND created_at < :range_end
+         GROUP BY page_path
+         ORDER BY count DESC',
+        $rangeParams,
+        10
+    );
+
+    $analytics['landing_pages'] = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT landing_page AS label, COUNT(*) AS count
+         FROM website_visitor_sessions
+         WHERE first_seen_at >= :range_start
+           AND first_seen_at < :range_end
+         GROUP BY landing_page
+         ORDER BY count DESC',
+        $rangeParams,
+        10
+    );
+
+    $analytics['exit_pages'] = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT last_page AS label, COUNT(*) AS count
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start
+           AND last_seen_at < :range_end
+         GROUP BY last_page
+         ORDER BY count DESC',
+        $rangeParams,
+        10
+    );
+
+    $pageDurationRows = girffonAdminWebsiteAnalyticsFetchAll(
+        $pdo,
+        'SELECT page_path AS label, AVG(duration_seconds) AS average_seconds, COUNT(*) AS count
+         FROM website_visitor_events
+         WHERE event_type = "page_exit"
+           AND duration_seconds > 0
+           AND created_at >= :range_start
+           AND created_at < :range_end
+         GROUP BY page_path
+         ORDER BY average_seconds DESC, count DESC
+         LIMIT 10',
+        $rangeParams
+    );
+    foreach ($pageDurationRows as $pageDurationRow) {
+        $seconds = (int) round((float) ($pageDurationRow['average_seconds'] ?? 0));
+        $analytics['page_durations'][] = [
+            'label' => (string) ($pageDurationRow['label'] ?? '/'),
+            'count' => (int) ($pageDurationRow['count'] ?? 0),
+            'average_seconds' => $seconds,
+            'average_label' => girffonAdminFormatDurationLabel($seconds),
+        ];
+    }
+
+    $sourceRows = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT traffic_source AS label, COUNT(*) AS count
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start
+           AND first_seen_at < :range_end
+         GROUP BY traffic_source
+         ORDER BY count DESC',
+        $rangeParams,
+        12
+    );
+    $analytics['sources'] = girffonAdminNormalizeVisitorAnalyticsRows($sourceRows, ['Google', 'Direct', 'Instagram', 'Facebook', 'Bing', 'Other']);
+    $analytics['referrers'] = $analytics['sources'];
+
+    $analytics['referrer_hosts'] = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT referrer_host AS label, COUNT(*) AS count
+         FROM website_visitor_events
+         WHERE event_type = "page_view"
+           AND created_at >= :range_start
+           AND created_at < :range_end
+           AND referrer_host <> ""
+         GROUP BY referrer_host
+         ORDER BY count DESC',
+        $rangeParams,
+        8
+    );
+
+    $browserRows = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT browser_name AS label, COUNT(*) AS count
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start
+           AND first_seen_at < :range_end
+         GROUP BY browser_name
+         ORDER BY count DESC',
+        $rangeParams,
+        8
+    );
+    $analytics['browsers'] = girffonAdminNormalizeVisitorAnalyticsRows($browserRows, ['Chrome', 'Edge', 'Firefox', 'Safari']);
+
+    $deviceRows = girffonAdminWebsiteAnalyticsBreakdown(
+        $pdo,
+        'SELECT device_type AS label, COUNT(*) AS count
+         FROM website_visitor_sessions
+         WHERE last_seen_at >= :range_start
+           AND first_seen_at < :range_end
+         GROUP BY device_type
+         ORDER BY count DESC',
+        $rangeParams,
+        6
+    );
+    $analytics['devices'] = girffonAdminNormalizeVisitorAnalyticsRows($deviceRows, ['Desktop', 'Mobile', 'Tablet']);
+
+    $keywordRows = girffonAdminWebsiteAnalyticsFetchAll(
+        $pdo,
+        'SELECT metadata_json
+         FROM website_visitor_events
+         WHERE event_type = "page_view"
+           AND created_at >= :range_start
+           AND created_at < :range_end
+           AND metadata_json IS NOT NULL',
+        $rangeParams
+    );
+    $analytics['keywords'] = girffonAdminTopKeywordRows($keywordRows, 10);
+
     return $analytics;
 }
 

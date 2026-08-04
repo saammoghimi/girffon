@@ -192,6 +192,58 @@ $giftCardAmountOptions = girffonGiftCardConfig()['amounts'];
       vertical-align: top;
     }
 
+    .admin-gift-table th:last-child,
+    .admin-gift-table td:last-child {
+      width: 84px;
+      min-width: 84px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .admin-gift-row-actions {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .admin-gift-row-actions .admin-actions-dropdown {
+      right: 0;
+      left: auto;
+      min-width: 188px;
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="view"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="edit"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z'/%3E%3C/svg%3E");
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="print"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 8V4.5h10V8'/%3E%3Crect x='5' y='9' width='14' height='7' rx='2'/%3E%3Cpath d='M8 14h8v5.5H8z'/%3E%3C/svg%3E");
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="history"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12a9 9 0 1 0 2.64-6.36'/%3E%3Cpath d='M3 4v5h5'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/svg%3E");
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="resend"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4.5' y='7' width='15' height='10' rx='1.5'/%3E%3Cpath d='m5.5 8 6.5 5 6.5-5'/%3E%3Cpath d='M19 5v4M17 7h4'/%3E%3C/svg%3E");
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="cancel"] {
+      color: #8f3c2d;
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="cancel"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b63a3a' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='m9 9 6 6M15 9l-6 6'/%3E%3C/svg%3E");
+    }
+
+    .admin-gift-row-actions .admin-actions-menu-link[data-gift-action="delete"]::before {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b63a3a' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v6M14 11v6'/%3E%3C/svg%3E");
+    }
+
     .admin-gift-status {
       display: inline-flex;
       padding: 6px 10px;
@@ -230,6 +282,10 @@ $giftCardAmountOptions = girffonGiftCardConfig()['amounts'];
       .admin-gift-form-grid,
       .admin-gift-mini-grid {
         grid-template-columns: 1fr;
+      }
+
+      .admin-gift-row-actions .admin-actions-dropdown {
+        right: -12px;
       }
     }
   </style>
@@ -273,9 +329,9 @@ $giftCardAmountOptions = girffonGiftCardConfig()['amounts'];
           <h1 class="admin-page-title">Gift Cards</h1>
         </div>
         <div class="admin-topbar-actions">
-          <a class="admin-button admin-button-soft admin-view-shop-button" href="gift-card.php" aria-label="View Gift Card Page" title="View Gift Card Page">View Shop</a>
-          <button class="admin-button admin-button-soft admin-refresh-button" type="button" onclick="window.location.reload();">Refresh</button>
-          <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout>Logout</button>
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="admin-dashboard.php" aria-label="View Admin Dashboard" title="View Admin Dashboard">Home</a>
+          <button class="admin-button admin-button-soft admin-refresh-button" type="button" onclick="window.location.reload();" aria-label="Refresh" title="Refresh">Refresh</button>
+          <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" aria-label="Logout" data-admin-logout title="Logout">Logout</button>
         </div>
       </header>
 
@@ -524,29 +580,37 @@ $giftCardAmountOptions = girffonGiftCardConfig()['amounts'];
                       <td><?php echo $formatAdminGiftCardDate($giftCard['created_at'] ?? ''); ?></td>
                       <td><?php echo $formatAdminGiftCardDate($giftCard['expires_at'] ?? ''); ?></td>
                       <td>
-                        <div class="admin-gift-actions">
-                          <a class="admin-button admin-button-soft" href="admin-gift-cards.php?view=<?php echo rawurlencode((string) ($giftCard['gift_code'] ?? '')); ?>">View</a>
-                          <a class="admin-button admin-button-soft" href="admin-gift-cards.php?edit=<?php echo $escapeAdminGiftCard($giftCard['id'] ?? 0); ?>">Edit</a>
-                          <a class="admin-button admin-button-soft" href="backend/admin/print-gift-card.php?code=<?php echo rawurlencode((string) ($giftCard['gift_code'] ?? '')); ?>" target="_blank" rel="noopener noreferrer">Print</a>
-                          <form action="backend/admin/resend-gift-card.php" method="POST">
-                            <input type="hidden" name="_csrf" value="<?php echo $escapeAdminGiftCard($adminGiftCardCsrf); ?>">
-                            <input type="hidden" name="gift_code" value="<?php echo $escapeAdminGiftCard($giftCard['gift_code'] ?? ''); ?>">
-                            <button class="admin-button admin-button-soft" type="submit">Resend</button>
-                          </form>
-                          <form action="backend/admin/cancel-gift-card.php" method="POST">
-                            <input type="hidden" name="_csrf" value="<?php echo $escapeAdminGiftCard($adminGiftCardCsrf); ?>">
-                            <input type="hidden" name="id" value="<?php echo $escapeAdminGiftCard($giftCard['id'] ?? 0); ?>">
-                            <input type="hidden" name="gift_code" value="<?php echo $escapeAdminGiftCard($giftCard['gift_code'] ?? ''); ?>">
-                            <button class="admin-button admin-button-danger" type="submit">Cancel</button>
-                          </form>
-                          <?php if ($adminCanDeleteGiftCard): ?>
-                            <form action="backend/admin/delete-gift-card.php" method="POST" onsubmit="return confirm('Delete this unused gift card?');">
+                        <div class="admin-table-actions admin-table-actions-menu admin-gift-row-actions" data-admin-gift-menu>
+                          <button class="admin-action-button admin-actions-toggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Open gift card actions" title="Actions">
+                            <svg class="admin-actions-toggle-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <circle cx="12" cy="12" r="2.4"></circle>
+                              <path d="M19.4 15a1 1 0 0 0 .2 1.1l.1.1a1.2 1.2 0 0 1 0 1.7l-1 1a1.2 1.2 0 0 1-1.7 0l-.1-.1a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.9v.2A1.2 1.2 0 0 1 14 21h-4a1.2 1.2 0 0 1-1.2-1.2v-.2a1 1 0 0 0-.6-.9 1 1 0 0 0-1.1.2l-.1.1a1.2 1.2 0 0 1-1.7 0l-1-1a1.2 1.2 0 0 1 0-1.7l.1-.1a1 1 0 0 0 .2-1.1 1 1 0 0 0-.9-.6h-.2A1.2 1.2 0 0 1 2 14v-4a1.2 1.2 0 0 1 1.2-1.2h.2a1 1 0 0 0 .9-.6 1 1 0 0 0-.2-1.1L4 7a1.2 1.2 0 0 1 0-1.7l1-1a1.2 1.2 0 0 1 1.7 0l.1.1a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.9v-.2A1.2 1.2 0 0 1 10 2h4a1.2 1.2 0 0 1 1.2 1.2v.2a1 1 0 0 0 .6.9 1 1 0 0 0 1.1-.2l.1-.1a1.2 1.2 0 0 1 1.7 0l1 1a1.2 1.2 0 0 1 0 1.7l-.1.1a1 1 0 0 0-.2 1.1 1 1 0 0 0 .9.6h.2A1.2 1.2 0 0 1 22 10v4a1.2 1.2 0 0 1-1.2 1.2h-.2a1 1 0 0 0-.9.6Z"></path>
+                            </svg>
+                          </button>
+                          <div class="admin-actions-dropdown" hidden>
+                            <a class="admin-actions-menu-link" data-gift-action="view" href="admin-gift-cards.php?view=<?php echo rawurlencode((string) ($giftCard['gift_code'] ?? '')); ?>">View</a>
+                            <a class="admin-actions-menu-link" data-gift-action="edit" href="admin-gift-cards.php?edit=<?php echo $escapeAdminGiftCard($giftCard['id'] ?? 0); ?>">Edit</a>
+                            <a class="admin-actions-menu-link" data-gift-action="print" href="backend/admin/print-gift-card.php?code=<?php echo rawurlencode((string) ($giftCard['gift_code'] ?? '')); ?>" target="_blank" rel="noopener noreferrer">Print</a>
+                            <a class="admin-actions-menu-link" data-gift-action="history" href="admin-gift-cards.php?history=<?php echo rawurlencode((string) ($giftCard['gift_code'] ?? '')); ?>">History</a>
+                            <form class="admin-actions-delete-form" action="backend/admin/resend-gift-card.php" method="POST">
+                              <input type="hidden" name="_csrf" value="<?php echo $escapeAdminGiftCard($adminGiftCardCsrf); ?>">
+                              <input type="hidden" name="gift_code" value="<?php echo $escapeAdminGiftCard($giftCard['gift_code'] ?? ''); ?>">
+                              <button class="admin-actions-menu-link" data-gift-action="resend" type="submit">Resend</button>
+                            </form>
+                            <form class="admin-actions-delete-form" action="backend/admin/cancel-gift-card.php" method="POST">
                               <input type="hidden" name="_csrf" value="<?php echo $escapeAdminGiftCard($adminGiftCardCsrf); ?>">
                               <input type="hidden" name="id" value="<?php echo $escapeAdminGiftCard($giftCard['id'] ?? 0); ?>">
-                              <button class="admin-button admin-button-danger" type="submit">Delete</button>
+                              <input type="hidden" name="gift_code" value="<?php echo $escapeAdminGiftCard($giftCard['gift_code'] ?? ''); ?>">
+                              <button class="admin-actions-menu-link is-danger" data-gift-action="cancel" type="submit">Cancel</button>
                             </form>
-                          <?php endif; ?>
-                          <a class="admin-button admin-button-soft" href="admin-gift-cards.php?history=<?php echo rawurlencode((string) ($giftCard['gift_code'] ?? '')); ?>">History</a>
+                            <?php if ($adminCanDeleteGiftCard): ?>
+                              <form class="admin-actions-delete-form" action="backend/admin/delete-gift-card.php" method="POST" onsubmit="return confirm('Delete this unused gift card?');">
+                                <input type="hidden" name="_csrf" value="<?php echo $escapeAdminGiftCard($adminGiftCardCsrf); ?>">
+                                <input type="hidden" name="id" value="<?php echo $escapeAdminGiftCard($giftCard['id'] ?? 0); ?>">
+                                <button class="admin-actions-menu-link is-danger" data-gift-action="delete" type="submit">Delete</button>
+                              </form>
+                            <?php endif; ?>
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -565,6 +629,87 @@ $giftCardAmountOptions = girffonGiftCardConfig()['amounts'];
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script>
     (function () {
+      function wireGiftCardActionMenus() {
+        var actionMenus = Array.prototype.slice.call(document.querySelectorAll('[data-admin-gift-menu]'));
+
+        if (!actionMenus.length) {
+          return;
+        }
+
+        function closeMenu(menuWrap) {
+          var toggle = menuWrap.querySelector('.admin-actions-toggle');
+          var dropdown = menuWrap.querySelector('.admin-actions-dropdown');
+
+          if (!toggle || !dropdown) {
+            return;
+          }
+
+          toggle.setAttribute('aria-expanded', 'false');
+          menuWrap.classList.remove('is-open');
+          dropdown.hidden = true;
+        }
+
+        function openMenu(menuWrap) {
+          actionMenus.forEach(function (item) {
+            if (item !== menuWrap) {
+              closeMenu(item);
+            }
+          });
+
+          var toggle = menuWrap.querySelector('.admin-actions-toggle');
+          var dropdown = menuWrap.querySelector('.admin-actions-dropdown');
+
+          if (!toggle || !dropdown) {
+            return;
+          }
+
+          toggle.setAttribute('aria-expanded', 'true');
+          menuWrap.classList.add('is-open');
+          dropdown.hidden = false;
+        }
+
+        actionMenus.forEach(function (menuWrap) {
+          var toggle = menuWrap.querySelector('.admin-actions-toggle');
+          var dropdown = menuWrap.querySelector('.admin-actions-dropdown');
+
+          if (!toggle || !dropdown) {
+            return;
+          }
+
+          toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            if (menuWrap.classList.contains('is-open')) {
+              closeMenu(menuWrap);
+              return;
+            }
+
+            openMenu(menuWrap);
+          });
+
+          dropdown.addEventListener('click', function () {
+            closeMenu(menuWrap);
+          });
+        });
+
+        document.addEventListener('click', function (event) {
+          actionMenus.forEach(function (menuWrap) {
+            if (!menuWrap.contains(event.target)) {
+              closeMenu(menuWrap);
+            }
+          });
+        });
+
+        document.addEventListener('keydown', function (event) {
+          if (event.key !== 'Escape') {
+            return;
+          }
+
+          actionMenus.forEach(closeMenu);
+        });
+      }
+
       function renderBarcode(svg) {
         if (!svg || !window.JsBarcode) {
           return;
@@ -586,6 +731,7 @@ $giftCardAmountOptions = girffonGiftCardConfig()['amounts'];
         });
       }
 
+      wireGiftCardActionMenus();
       Array.prototype.forEach.call(document.querySelectorAll('[data-gift-card-barcode]'), renderBarcode);
     }());
   </script>

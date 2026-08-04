@@ -44,7 +44,7 @@ $adminLastLoginTime = girffonAdminFetchLastLoginTime($adminCurrentId, $adminCurr
 $adminPeriodStats = girffonAdminFetchPeriodStats($pdo);
 $adminLoginActivity = girffonAdminFetchRecentLoginActivity(6);
 $adminActiveAdmins = girffonAdminFetchActiveAdmins(30, 2);
-$adminVisitorAnalytics = girffonAdminFetchVisitorAnalytics();
+$adminVisitorAnalytics = girffonAdminFetchVisitorAnalytics($pdo, ['range' => '30days']);
 $adminCurrentAdminProfile = girffonAdminFetchAdminProfile($pdo, $adminCurrentId);
 $adminWeatherCity = trim((string) ($adminCurrentAdminProfile['city'] ?? '')) ?: 'Milan';
 $adminWeatherCountry = trim((string) ($adminCurrentAdminProfile['country'] ?? '')) ?: 'Italy';
@@ -94,6 +94,9 @@ $formatAdminDashboardCurrency = static function ($value) {
 $formatAdminDashboardLabel = static function ($value) use ($escapeAdminDashboard) {
   return $escapeAdminDashboard(ucwords(str_replace("_", " ", (string) $value)));
 };
+$formatAdminDashboardPercent = static function ($value) {
+  return number_format((float) $value, 1, ".", ",") . "%";
+};
 $formatAdminDashboardDate = static function ($value) {
   return girffonAdminDashboardFormatRome((string) $value, 'Y-m-d');
 };
@@ -113,6 +116,22 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
   }
   return $text;
 };
+$computeAdminAnalyticsMax = static function (array $rows): int {
+  $max = 0;
+  foreach ($rows as $row) {
+    $max = max($max, (int) ($row['count'] ?? 0));
+  }
+  return max(1, $max);
+};
+$adminVisitorCountries = is_array($adminVisitorAnalytics['countries'] ?? null) ? $adminVisitorAnalytics['countries'] : [];
+$adminVisitorPages = is_array($adminVisitorAnalytics['pages'] ?? null) ? $adminVisitorAnalytics['pages'] : [];
+$adminVisitorSources = is_array($adminVisitorAnalytics['sources'] ?? null) ? $adminVisitorAnalytics['sources'] : [];
+$adminVisitorBrowsers = is_array($adminVisitorAnalytics['browsers'] ?? null) ? $adminVisitorAnalytics['browsers'] : [];
+$adminVisitorDevices = is_array($adminVisitorAnalytics['devices'] ?? null) ? $adminVisitorAnalytics['devices'] : [];
+$adminVisitorCountryMax = $computeAdminAnalyticsMax($adminVisitorCountries);
+$adminVisitorSourceMax = $computeAdminAnalyticsMax($adminVisitorSources);
+$adminVisitorBrowserMax = $computeAdminAnalyticsMax($adminVisitorBrowsers);
+$adminVisitorDeviceMax = $computeAdminAnalyticsMax($adminVisitorDevices);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -161,7 +180,7 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
           <h1 class="admin-page-title" id="adminCurrentPage">Dashboard</h1>
         </div>
         <div class="admin-topbar-actions">
-          <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <button class="admin-button admin-button-soft admin-refresh-button" type="button" aria-label="Refresh" title="Refresh" onclick="window.location.reload();">Refresh</button>
           <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="dashboard-setting.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>
@@ -599,27 +618,150 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
         <?php endif; ?>
 
         <?php if ($showAdminVisitorAnalytics): ?>
-        <article class="admin-panel">
+        <article class="admin-panel" data-admin-visitor-analytics-root data-admin-visitor-analytics-endpoint="/GirffoN/backend/admin/visitor-analytics-data.php" data-admin-visitor-analytics="<?php echo $escapeAdminDashboardJson($adminVisitorAnalytics); ?>">
           <div class="admin-panel-head">
             <div>
               <h2>Visitors Analytics</h2>
-              <p class="admin-panel-note">Dashboard visits tracked on this admin panel.</p>
+              <p class="admin-panel-note">Public website visitor analytics tracked across storefront pages, cart, checkout, gift cards, and custom design.</p>
             </div>
           </div>
-          <div class="admin-analytics-grid">
-            <div class="admin-analytics-card"><span>Today</span><strong><?php echo $escapeAdminDashboard($adminVisitorAnalytics['today'] ?? 0); ?></strong></div>
-            <div class="admin-analytics-card"><span>This Month</span><strong><?php echo $escapeAdminDashboard($adminVisitorAnalytics['month'] ?? 0); ?></strong></div>
-            <div class="admin-analytics-card"><span>This Year</span><strong><?php echo $escapeAdminDashboard($adminVisitorAnalytics['year'] ?? 0); ?></strong></div>
+          <div class="admin-visitor-controls" data-visitor-controls>
+            <div class="admin-visitor-filter-group" role="tablist" aria-label="Visitor analytics range">
+              <button type="button" class="admin-chip" data-visitor-range="today">Today</button>
+              <button type="button" class="admin-chip" data-visitor-range="7days">7 Days</button>
+              <button type="button" class="admin-chip is-active" data-visitor-range="30days">30 Days</button>
+              <button type="button" class="admin-chip" data-visitor-range="this_year">This Year</button>
+              <button type="button" class="admin-chip" data-visitor-range="custom">Custom Range</button>
+            </div>
+            <div class="admin-visitor-custom-range" data-visitor-custom-wrap hidden>
+              <label class="admin-inline-input"><span>Start Date</span><input type="date" data-visitor-start value="<?php echo $escapeAdminDashboard($adminVisitorAnalytics['range_start'] ?? ''); ?>"></label>
+              <label class="admin-inline-input"><span>End Date</span><input type="date" data-visitor-end value="<?php echo $escapeAdminDashboard($adminVisitorAnalytics['range_end'] ?? ''); ?>"></label>
+              <button type="button" class="admin-button admin-button-soft" data-visitor-apply-range>Apply Range</button>
+            </div>
+            <div class="admin-visitor-export-group">
+              <button type="button" class="admin-button admin-button-soft" data-visitor-export="csv">Export CSV</button>
+              <button type="button" class="admin-button admin-button-soft" data-visitor-export="pdf">Export PDF</button>
+            </div>
           </div>
-          <div class="admin-mini-list admin-mini-list-compact">
-            <?php if (!empty($adminVisitorAnalytics['recent'])): ?>
-              <?php foreach ($adminVisitorAnalytics['recent'] as $visit): ?>
-                <div class="admin-mini-item"><span><?php echo $escapeAdminDashboard($visit['username'] ?? 'Visitor'); ?></span><strong><?php echo $escapeAdminDashboard(date('m-d H:i', strtotime((string) ($visit['created_at'] ?? 'now')))); ?></strong></div>
-              <?php endforeach; ?>
-            <?php else: ?>
-              <p class="admin-empty">No visit analytics yet.</p>
-            <?php endif; ?>
+          <div class="admin-visitor-range-meta">
+            <strong data-visitor-range-label><?php echo $escapeAdminDashboard($adminVisitorAnalytics['range_label'] ?? 'Last 30 Days'); ?></strong>
+            <span class="admin-panel-note" data-visitor-last-updated>Live data updates every minute.</span>
           </div>
+          <div class="admin-visitor-overview-grid">
+            <div class="admin-analytics-card"><span>Live Online Visitors</span><strong data-visitor-live="online"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['online'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Visitors Today</span><strong data-visitor-live="today"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['today'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Visitors This Week</span><strong data-visitor-live="week"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['week'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Visitors This Month</span><strong data-visitor-live="month"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['month'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Total Visitors</span><strong data-visitor-live="total"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['total'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>New Visitors</span><strong data-visitor-summary="new"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['new'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Returning Visitors</span><strong data-visitor-summary="returning"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['returning'] ?? 0); ?></strong></div>
+          </div>
+          <div class="admin-visitor-overview-grid admin-visitor-overview-grid--secondary">
+            <div class="admin-analytics-card"><span>Visitors In Range</span><strong data-visitor-summary="visitors"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['visitors'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Average Session</span><strong data-visitor-summary="average_session_duration_label"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['average_session_duration_label'] ?? '0s'); ?></strong></div>
+            <div class="admin-analytics-card"><span>Average Time Per Page</span><strong data-visitor-summary="average_time_per_page_label"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['average_time_per_page_label'] ?? '0s'); ?></strong></div>
+            <div class="admin-analytics-card"><span>Conversion Rate</span><strong data-visitor-summary="conversion_rate"><?php echo $escapeAdminDashboard($formatAdminDashboardPercent($adminVisitorAnalytics['conversion_rate'] ?? 0)); ?></strong></div>
+            <div class="admin-analytics-card"><span>Bounce Rate</span><strong data-visitor-summary="bounce_rate"><?php echo $escapeAdminDashboard($formatAdminDashboardPercent($adminVisitorAnalytics['bounce_rate'] ?? 0)); ?></strong></div>
+            <div class="admin-analytics-card"><span>Add To Cart</span><strong data-visitor-summary="add_to_cart"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['add_to_cart'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Wishlist Adds</span><strong data-visitor-summary="wishlist_adds"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['wishlist_adds'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Custom Design Opens</span><strong data-visitor-summary="custom_design_opens"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['custom_design_opens'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Gift Card Views</span><strong data-visitor-summary="gift_card_views"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['gift_card_views'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Checkout Started</span><strong data-visitor-summary="checkout_started"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['checkout_started'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Completed Orders</span><strong data-visitor-summary="completed_orders"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['completed_orders'] ?? 0); ?></strong></div>
+            <div class="admin-analytics-card"><span>Abandoned Carts</span><strong data-visitor-summary="abandoned_carts"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['abandoned_carts'] ?? 0); ?></strong></div>
+          </div>
+
+          <div class="admin-visitor-chart-grid">
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Top Countries</h3>
+                  <p class="admin-panel-note">Where storefront visitors are coming from.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-bar-list" data-visitor-list="countries"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Referrer Details</h3>
+                  <p class="admin-panel-note">Google, Instagram, Facebook, Bing, Direct, and other traffic sources.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-bar-list" data-visitor-list="referrers"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Browser Statistics</h3>
+                  <p class="admin-panel-note">Chrome, Edge, Firefox, and Safari usage.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-bar-list" data-visitor-list="browsers"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Device Statistics</h3>
+                  <p class="admin-panel-note">Desktop, mobile, and tablet traffic split.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-bar-list" data-visitor-list="devices"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Landing Pages</h3>
+                  <p class="admin-panel-note">First pages visitors enter during the selected range.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-page-list" data-visitor-list="landing_pages"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Exit Pages</h3>
+                  <p class="admin-panel-note">Where visitor sessions most often finish.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-page-list" data-visitor-list="exit_pages"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Average Time Per Page</h3>
+                  <p class="admin-panel-note">Pages with the longest average engagement time.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-page-list" data-visitor-list="page_durations"></div>
+            </section>
+
+            <section class="admin-visitor-chart-card">
+              <div class="admin-panel-head admin-panel-head-compact">
+                <div>
+                  <h3>Search Keywords</h3>
+                  <p class="admin-panel-note">Captured search phrases when referrer data includes them.</p>
+                </div>
+              </div>
+              <div class="admin-visitor-page-list" data-visitor-list="keywords"></div>
+            </section>
+          </div>
+
+          <section class="admin-visitor-pages-card">
+            <div class="admin-panel-head admin-panel-head-compact">
+              <div>
+                <h3>Top 10 Most Visited Pages</h3>
+                <p class="admin-panel-note">Most-viewed public pages across the GIRFFON website.</p>
+              </div>
+            </div>
+            <div class="admin-visitor-page-list" data-visitor-list="pages"></div>
+          </section>
         </article>
         <?php endif; ?>
       </section>
@@ -627,6 +769,6 @@ $formatAdminDashboardPreview = static function ($value, $fallback, $limit = 88) 
     </main>
   </div>
 
-  <script src="JS/admin-girffon.js?v=20260518r12"></script>
+  <script src="JS/admin-girffon.js?v=20260804r13"></script>
 </body>
 </html>

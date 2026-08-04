@@ -70,6 +70,7 @@ function girffonOrderEmailPublicUrl(string $path, array $mailConfig): string
 function girffonOrderEmailRenderItemsHtml(array $items): string
 {
     $rows = array_map(static function (array $item): string {
+        $productName = (string) ($item['product_name'] ?? $item['name'] ?? 'GirffoN Product');
         $details = array_filter([
             $item['sku'] ? 'SKU: ' . $item['sku'] : '',
             $item['size'] ? 'Size: ' . $item['size'] : '',
@@ -77,7 +78,7 @@ function girffonOrderEmailRenderItemsHtml(array $items): string
         ]);
 
         return '<tr>'
-            . '<td style="padding:12px;border-bottom:1px solid #e5ddd0;vertical-align:top;">' . htmlspecialchars((string) $item['product_name'], ENT_QUOTES, 'UTF-8') . '<br><span style="color:#7a6a58;font-size:12px;">' . htmlspecialchars(implode(' | ', $details), ENT_QUOTES, 'UTF-8') . '</span></td>'
+            . '<td style="padding:12px;border-bottom:1px solid #e5ddd0;vertical-align:top;">' . htmlspecialchars($productName, ENT_QUOTES, 'UTF-8') . '<br><span style="color:#7a6a58;font-size:12px;">' . htmlspecialchars(implode(' | ', $details), ENT_QUOTES, 'UTF-8') . '</span></td>'
             . '<td style="padding:12px;border-bottom:1px solid #e5ddd0;text-align:center;vertical-align:top;">' . (int) $item['quantity'] . '</td>'
             . '<td style="padding:12px;border-bottom:1px solid #e5ddd0;text-align:right;vertical-align:top;">' . htmlspecialchars(girffonOrderEmailFormatCurrency((float) $item['price']), ENT_QUOTES, 'UTF-8') . '</td>'
             . '<td style="padding:12px;border-bottom:1px solid #e5ddd0;text-align:right;vertical-align:top;">' . htmlspecialchars(girffonOrderEmailFormatCurrency((float) $item['line_total']), ENT_QUOTES, 'UTF-8') . '</td>'
@@ -90,13 +91,14 @@ function girffonOrderEmailRenderItemsHtml(array $items): string
 function girffonOrderEmailRenderItemsText(array $items): string
 {
     $lines = array_map(static function (array $item): string {
+        $productName = (string) ($item['product_name'] ?? $item['name'] ?? 'GirffoN Product');
         $details = array_filter([
             $item['sku'] ? 'SKU ' . $item['sku'] : '',
             $item['size'] ? 'Size ' . $item['size'] : '',
             $item['color'] ? 'Color ' . $item['color'] : '',
         ]);
 
-        return '- ' . $item['product_name']
+        return '- ' . $productName
             . ' | Qty: ' . (int) $item['quantity']
             . ' | Price: ' . girffonOrderEmailFormatCurrency((float) $item['price'])
             . ' | Line Total: ' . girffonOrderEmailFormatCurrency((float) $item['line_total'])
