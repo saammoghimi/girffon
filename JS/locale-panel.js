@@ -28,6 +28,20 @@
     CA: { locale: "en-CA", currency: "CAD", rateFromEUR: 1.48 }
   };
 
+  const COUNTRY_NAME_FALLBACKS = {
+    IT: "Italy",
+    DE: "Germany",
+    FR: "France",
+    ES: "Spain",
+    NL: "Netherlands",
+    PL: "Poland",
+    SE: "Sweden",
+    GB: "United Kingdom",
+    US: "United States",
+    CH: "Switzerland",
+    CA: "Canada"
+  };
+
   const BASE_TEXT = {
     account: "Account",
     cart: "Cart",
@@ -1664,6 +1678,658 @@
     }
   };
 
+  const GIFT_CARD_I18N = {
+    "en-GB": {
+      pageTitle: "GIRFFON Gift Card",
+      metaDescription: "Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow.",
+      kicker: "GIRFFON Gift Card",
+      heroTitle: "Luxury gifting that moves through the same GIRFFON cart and checkout.",
+      heroText: "Choose a digital gift card with no shipping cost or a physical branded card with QR code, barcode, and premium presentation. English and Italian labels are already built into the experience.",
+      heroPillDigital: "Digital gift card",
+      heroPillPhysical: "Physical gift card",
+      heroPillRedeem: "Redeem later with partial balance support",
+      previewLabel: "Gift value",
+      previewText: "Or enter a custom amount between EUR10 and EUR1000.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "No shipping cost",
+      previewPhysicalLabel: "Physical",
+      previewPhysicalValue: "Shipping added at checkout",
+      previewCodeLabel: "Code format",
+      previewRedemptionLabel: "Redemption",
+      previewRedemptionValue: "Partial and full",
+      formTitle: "Create Your Gift Card",
+      formIntro: "Complete the buyer and recipient details, choose the delivery type, then add the card directly to the existing GIRFFON cart.",
+      formCodePill: "Gift card code",
+      valuesSectionAria: "Gift card values",
+      product25CardAria: "Select the GIRFFON 25 euro gift card",
+      product50CardAria: "Select the GIRFFON 50 euro gift card",
+      product100CardAria: "Select the GIRFFON 100 euro gift card",
+      product25ImageAlt: "GIRFFON EUR25 gift card",
+      product50ImageAlt: "GIRFFON EUR50 gift card",
+      product100ImageAlt: "GIRFFON EUR100 gift card",
+      product25Title: "EUR25 Gift Card",
+      product25Text: "A refined entry gift for personal surprises and premium gestures.",
+      product50Title: "EUR50 Gift Card",
+      product50Text: "A balanced premium option for birthdays, celebrations, and thank-you gifting.",
+      product100Title: "EUR100 Gift Card",
+      product100Text: "A standout luxury gift for milestones and elevated gifting moments.",
+      buyButton: "Buy Gift Card",
+      amountLabel: "Amount",
+      customPresetLabel: "Custom",
+      customAmountLabel: "Custom amount",
+      customAmountPlaceholder: "Optional if you select a preset amount",
+      deliveryTypeLabel: "Delivery type",
+      deliveryDigitalLabel: "Digital gift card<br>No shipping cost",
+      deliveryPhysicalLabel: "Physical gift card<br>Printed and shipped",
+      buyerNameLabel: "Buyer name",
+      buyerNamePlaceholder: "Buyer full name",
+      buyerEmailLabel: "Buyer email",
+      recipientNameLabel: "Recipient name",
+      recipientNamePlaceholder: "Recipient full name",
+      recipientEmailLabel: "Recipient email",
+      messageLabel: "Personal gift message",
+      messagePlaceholder: "Write a premium message for the recipient",
+      submitText: "Add Gift Card to Cart",
+      statusText: "Digital cards are sent by email after payment. Physical cards are created as branded shippable orders.",
+      benefitDigitalTitle: "Digital delivery",
+      benefitDigitalText: "The recipient email includes the secure code, QR code, amount, gift message, and expiry details after checkout.",
+      benefitPhysicalTitle: "Physical presentation",
+      benefitPhysicalText: "Physical cards are saved as standard orders and can be printed by the admin team with GIRFFON branding and barcode details.",
+      benefitRedeemTitle: "Flexible redemption",
+      benefitRedeemText: "Customers can redeem the gift card at checkout, spend only part of the balance, and keep the rest for future orders."
+    },
+    "en-US": {
+      pageTitle: "GIRFFON Gift Card",
+      metaDescription: "Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow.",
+      kicker: "GIRFFON Gift Card",
+      heroTitle: "Luxury gifting that moves through the same GIRFFON cart and checkout.",
+      heroText: "Choose a digital gift card with no shipping charge or a physical branded card with QR code, barcode, and premium presentation. English and Italian labels are already built into the experience.",
+      heroPillDigital: "Digital gift card",
+      heroPillPhysical: "Physical gift card",
+      heroPillRedeem: "Redeem later with partial balance support",
+      previewLabel: "Gift value",
+      previewText: "Or enter a custom amount between EUR10 and EUR1000.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "No shipping charge",
+      previewPhysicalLabel: "Physical",
+      previewPhysicalValue: "Shipping added at checkout",
+      previewCodeLabel: "Code format",
+      previewRedemptionLabel: "Redemption",
+      previewRedemptionValue: "Partial and full",
+      formTitle: "Create Your Gift Card",
+      formIntro: "Complete the buyer and recipient details, choose the delivery type, then add the card directly to the existing GIRFFON cart.",
+      formCodePill: "Gift card code",
+      valuesSectionAria: "Gift card values",
+      product25CardAria: "Select the GIRFFON 25 euro gift card",
+      product50CardAria: "Select the GIRFFON 50 euro gift card",
+      product100CardAria: "Select the GIRFFON 100 euro gift card",
+      product25ImageAlt: "GIRFFON EUR25 gift card",
+      product50ImageAlt: "GIRFFON EUR50 gift card",
+      product100ImageAlt: "GIRFFON EUR100 gift card",
+      product25Title: "EUR25 Gift Card",
+      product25Text: "A refined entry gift for personal surprises and premium gestures.",
+      product50Title: "EUR50 Gift Card",
+      product50Text: "A balanced premium option for birthdays, celebrations, and thank-you gifting.",
+      product100Title: "EUR100 Gift Card",
+      product100Text: "A standout luxury gift for milestones and elevated gifting moments.",
+      buyButton: "Buy Gift Card",
+      amountLabel: "Amount",
+      customPresetLabel: "Custom",
+      customAmountLabel: "Custom amount",
+      customAmountPlaceholder: "Optional if you select a preset amount",
+      deliveryTypeLabel: "Delivery type",
+      deliveryDigitalLabel: "Digital gift card<br>No shipping charge",
+      deliveryPhysicalLabel: "Physical gift card<br>Printed and shipped",
+      buyerNameLabel: "Buyer name",
+      buyerNamePlaceholder: "Buyer full name",
+      buyerEmailLabel: "Buyer email",
+      recipientNameLabel: "Recipient name",
+      recipientNamePlaceholder: "Recipient full name",
+      recipientEmailLabel: "Recipient email",
+      messageLabel: "Personal gift message",
+      messagePlaceholder: "Write a premium message for the recipient",
+      submitText: "Add Gift Card to Cart",
+      statusText: "Digital cards are sent by email after payment. Physical cards are created as branded shippable orders.",
+      benefitDigitalTitle: "Digital delivery",
+      benefitDigitalText: "The recipient email includes the secure code, QR code, amount, gift message, and expiration details after checkout.",
+      benefitPhysicalTitle: "Physical presentation",
+      benefitPhysicalText: "Physical cards are saved as standard orders and can be printed by the admin team with GIRFFON branding and barcode details.",
+      benefitRedeemTitle: "Flexible redemption",
+      benefitRedeemText: "Customers can redeem the gift card at checkout, spend only part of the balance, and keep the rest for future orders."
+    },
+    "en-CA": {
+      pageTitle: "GIRFFON Gift Card",
+      metaDescription: "Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow.",
+      kicker: "GIRFFON Gift Card",
+      heroTitle: "Luxury gifting that moves through the same GIRFFON cart and checkout.",
+      heroText: "Choose a digital gift card with no shipping cost or a physical branded card with QR code, barcode, and premium presentation. English and Italian labels are already built into the experience.",
+      heroPillDigital: "Digital gift card",
+      heroPillPhysical: "Physical gift card",
+      heroPillRedeem: "Redeem later with partial balance support",
+      previewLabel: "Gift value",
+      previewText: "Or enter a custom amount between EUR10 and EUR1000.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "No shipping cost",
+      previewPhysicalLabel: "Physical",
+      previewPhysicalValue: "Shipping added at checkout",
+      previewCodeLabel: "Code format",
+      previewRedemptionLabel: "Redemption",
+      previewRedemptionValue: "Partial and full",
+      formTitle: "Create Your Gift Card",
+      formIntro: "Complete the buyer and recipient details, choose the delivery type, then add the card directly to the existing GIRFFON cart.",
+      formCodePill: "Gift card code",
+      valuesSectionAria: "Gift card values",
+      product25CardAria: "Select the GIRFFON 25 euro gift card",
+      product50CardAria: "Select the GIRFFON 50 euro gift card",
+      product100CardAria: "Select the GIRFFON 100 euro gift card",
+      product25ImageAlt: "GIRFFON EUR25 gift card",
+      product50ImageAlt: "GIRFFON EUR50 gift card",
+      product100ImageAlt: "GIRFFON EUR100 gift card",
+      product25Title: "EUR25 Gift Card",
+      product25Text: "A refined entry gift for personal surprises and premium gestures.",
+      product50Title: "EUR50 Gift Card",
+      product50Text: "A balanced premium option for birthdays, celebrations, and thank-you gifting.",
+      product100Title: "EUR100 Gift Card",
+      product100Text: "A standout luxury gift for milestones and elevated gifting moments.",
+      buyButton: "Buy Gift Card",
+      amountLabel: "Amount",
+      customPresetLabel: "Custom",
+      customAmountLabel: "Custom amount",
+      customAmountPlaceholder: "Optional if you select a preset amount",
+      deliveryTypeLabel: "Delivery type",
+      deliveryDigitalLabel: "Digital gift card<br>No shipping cost",
+      deliveryPhysicalLabel: "Physical gift card<br>Printed and shipped",
+      buyerNameLabel: "Buyer name",
+      buyerNamePlaceholder: "Buyer full name",
+      buyerEmailLabel: "Buyer email",
+      recipientNameLabel: "Recipient name",
+      recipientNamePlaceholder: "Recipient full name",
+      recipientEmailLabel: "Recipient email",
+      messageLabel: "Personal gift message",
+      messagePlaceholder: "Write a premium message for the recipient",
+      submitText: "Add Gift Card to Cart",
+      statusText: "Digital cards are sent by email after payment. Physical cards are created as branded shippable orders.",
+      benefitDigitalTitle: "Digital delivery",
+      benefitDigitalText: "The recipient email includes the secure code, QR code, amount, gift message, and expiry details after checkout.",
+      benefitPhysicalTitle: "Physical presentation",
+      benefitPhysicalText: "Physical cards are saved as standard orders and can be printed by the admin team with GIRFFON branding and barcode details.",
+      benefitRedeemTitle: "Flexible redemption",
+      benefitRedeemText: "Customers can redeem the gift card at checkout, spend only part of the balance, and keep the rest for future orders."
+    },
+    "it-IT": {
+      pageTitle: "GIRFFON Carta Regalo",
+      metaDescription: "Acquista una Carta Regalo GIRFFON in formato digitale o fisico e aggiungila al checkout esistente.",
+      kicker: "Carta Regalo GIRFFON",
+      heroTitle: "Regali di lusso che passano nello stesso carrello e checkout GIRFFON.",
+      heroText: "Scegli una gift card digitale senza costi di spedizione oppure una card fisica brandizzata con codice QR, codice a barre e presentazione premium. Le etichette in inglese e italiano sono gia integrate nell'esperienza.",
+      heroPillDigital: "Carta regalo digitale",
+      heroPillPhysical: "Carta regalo fisica",
+      heroPillRedeem: "Usa il saldo in seguito con supporto parziale",
+      previewLabel: "Valore regalo",
+      previewText: "Oppure inserisci un importo personalizzato tra EUR10 e EUR1000.",
+      previewDigitalLabel: "Digitale",
+      previewDigitalValue: "Nessun costo di spedizione",
+      previewPhysicalLabel: "Fisica",
+      previewPhysicalValue: "Spedizione aggiunta al checkout",
+      previewCodeLabel: "Formato codice",
+      previewRedemptionLabel: "Riscatto",
+      previewRedemptionValue: "Parziale e totale",
+      formTitle: "Crea la tua Gift Card",
+      formIntro: "Compila i dati di acquirente e destinatario, scegli il tipo di consegna, poi aggiungi la card direttamente al carrello GIRFFON esistente.",
+      formCodePill: "Codice carta regalo",
+      valuesSectionAria: "Valori gift card",
+      product25CardAria: "Seleziona la gift card GIRFFON da 25 euro",
+      product50CardAria: "Seleziona la gift card GIRFFON da 50 euro",
+      product100CardAria: "Seleziona la gift card GIRFFON da 100 euro",
+      product25ImageAlt: "Gift Card GIRFFON da EUR25",
+      product50ImageAlt: "Gift Card GIRFFON da EUR50",
+      product100ImageAlt: "Gift Card GIRFFON da EUR100",
+      product25Title: "Carta regalo da EUR25",
+      product25Text: "Un regalo raffinato d'ingresso per sorprese personali e gesti premium.",
+      product50Title: "Carta regalo da EUR50",
+      product50Text: "Un'opzione premium equilibrata per compleanni, celebrazioni e regali di ringraziamento.",
+      product100Title: "Carta regalo da EUR100",
+      product100Text: "Un regalo di lusso ideale per occasioni importanti e gifting di livello superiore.",
+      buyButton: "Acquista carta regalo",
+      amountLabel: "Importo",
+      customPresetLabel: "Personalizzato",
+      customAmountLabel: "Importo personalizzato",
+      customAmountPlaceholder: "Opzionale se selezioni un importo predefinito",
+      deliveryTypeLabel: "Tipo di consegna",
+      deliveryDigitalLabel: "Carta regalo digitale<br>Nessun costo di spedizione",
+      deliveryPhysicalLabel: "Carta regalo fisica<br>Stampata e spedita",
+      buyerNameLabel: "Nome acquirente",
+      buyerNamePlaceholder: "Nome completo acquirente",
+      buyerEmailLabel: "Email acquirente",
+      recipientNameLabel: "Nome destinatario",
+      recipientNamePlaceholder: "Nome completo destinatario",
+      recipientEmailLabel: "Email destinatario",
+      messageLabel: "Messaggio regalo personalizzato",
+      messagePlaceholder: "Scrivi un messaggio premium per il destinatario",
+      submitText: "Aggiungi Gift Card al carrello",
+      statusText: "Le card digitali vengono inviate via email dopo il pagamento. Le card fisiche vengono create come ordini spedibili brandizzati.",
+      benefitDigitalTitle: "Consegna digitale",
+      benefitDigitalText: "L'email del destinatario include codice sicuro, QR code, importo, messaggio regalo e data di scadenza dopo il checkout.",
+      benefitPhysicalTitle: "Presentazione fisica",
+      benefitPhysicalText: "Le card fisiche vengono salvate come ordini normali e possono essere stampate dal team admin con branding GIRFFON e dettagli barcode.",
+      benefitRedeemTitle: "Riscatto flessibile",
+      benefitRedeemText: "I clienti possono usare la gift card al checkout, spendere solo una parte del saldo e conservare il resto per ordini futuri."
+    },
+    "de-DE": {
+      pageTitle: "GIRFFON Geschenkkarte",
+      metaDescription: "Kaufen Sie eine GIRFFON Geschenkkarte in digitalem oder physischem Format und fugen Sie sie dem bestehenden Checkout hinzu.",
+      kicker: "GIRFFON Geschenkkarte",
+      heroTitle: "Luxusgeschenke, die durch denselben GIRFFON Warenkorb und Checkout laufen.",
+      heroText: "Wahlen Sie eine digitale Geschenkkarte ohne Versandkosten oder eine physische Markenkarte mit QR-Code, Barcode und hochwertiger Prasentation. Englische und italienische Beschriftungen sind bereits im Erlebnis enthalten.",
+      heroPillDigital: "Digitale Geschenkkarte",
+      heroPillPhysical: "Physische Geschenkkarte",
+      heroPillRedeem: "Spater mit Teilguthaben einlosen",
+      previewLabel: "Geschenkwert",
+      previewText: "Oder geben Sie einen individuellen Betrag zwischen EUR10 und EUR1000 ein.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "Keine Versandkosten",
+      previewPhysicalLabel: "Physisch",
+      previewPhysicalValue: "Versand wird beim Checkout hinzugefugt",
+      previewCodeLabel: "Codeformat",
+      previewRedemptionLabel: "Einlosung",
+      previewRedemptionValue: "Teilweise und vollstandig",
+      formTitle: "Geschenkkarte erstellen",
+      formIntro: "Geben Sie die Daten von Kaufer und Empfanger ein, wahlen Sie die Lieferart und legen Sie die Karte dann direkt in den bestehenden GIRFFON Warenkorb.",
+      formCodePill: "Geschenkkarten-Code",
+      valuesSectionAria: "Geschenkkartenwerte",
+      product25CardAria: "GIRFFON Geschenkkarte uber 25 Euro auswahlen",
+      product50CardAria: "GIRFFON Geschenkkarte uber 50 Euro auswahlen",
+      product100CardAria: "GIRFFON Geschenkkarte uber 100 Euro auswahlen",
+      product25ImageAlt: "GIRFFON Geschenkkarte EUR25",
+      product50ImageAlt: "GIRFFON Geschenkkarte EUR50",
+      product100ImageAlt: "GIRFFON Geschenkkarte EUR100",
+      product25Title: "EUR25 Geschenkkarte",
+      product25Text: "Ein stilvoller Einstieg fur personliche Uberraschungen und hochwertige Gesten.",
+      product50Title: "EUR50 Geschenkkarte",
+      product50Text: "Eine ausgewogene Premium-Option fur Geburtstage, Feiern und Dankesgeschenke.",
+      product100Title: "EUR100 Geschenkkarte",
+      product100Text: "Ein besonderes Luxusgeschenk fur Meilensteine und gehobene Geschenkideen.",
+      buyButton: "Geschenkkarte kaufen",
+      amountLabel: "Betrag",
+      customPresetLabel: "Individuell",
+      customAmountLabel: "Individueller Betrag",
+      customAmountPlaceholder: "Optional, wenn ein fester Betrag ausgewahlt ist",
+      deliveryTypeLabel: "Lieferart",
+      deliveryDigitalLabel: "Digitale Geschenkkarte<br>Keine Versandkosten",
+      deliveryPhysicalLabel: "Physische Geschenkkarte<br>Gedruckt und versendet",
+      buyerNameLabel: "Name des Kaufers",
+      buyerNamePlaceholder: "Vollstandiger Name des Kaufers",
+      buyerEmailLabel: "E-Mail des Kaufers",
+      recipientNameLabel: "Name des Empfangers",
+      recipientNamePlaceholder: "Vollstandiger Name des Empfangers",
+      recipientEmailLabel: "E-Mail des Empfangers",
+      messageLabel: "Personliche Geschenknachricht",
+      messagePlaceholder: "Schreiben Sie eine hochwertige Nachricht fur den Empfanger",
+      submitText: "Geschenkkarte zum Warenkorb hinzufugen",
+      statusText: "Digitale Karten werden nach erfolgreicher Zahlung per E-Mail versendet. Physische Karten werden als versandfahige Markenbestellungen erstellt.",
+      benefitDigitalTitle: "Digitale Zustellung",
+      benefitDigitalText: "Die E-Mail des Empfangers enthalt nach dem Checkout den sicheren Code, QR-Code, Betrag, die Geschenknachricht und das Ablaufdatum.",
+      benefitPhysicalTitle: "Physische Prasentation",
+      benefitPhysicalText: "Physische Karten werden als normale Bestellungen gespeichert und konnen vom Admin-Team mit GIRFFON Branding und Barcode-Details gedruckt werden.",
+      benefitRedeemTitle: "Flexible Einlosung",
+      benefitRedeemText: "Kunden konnen die Geschenkkarte beim Checkout verwenden, nur einen Teil des Guthabens einlosen und den Rest fur spatere Bestellungen behalten."
+    },
+    "fr-FR": {
+      pageTitle: "Carte Cadeau GIRFFON",
+      metaDescription: "Achetez une carte cadeau GIRFFON en format numerique ou physique et ajoutez-la au checkout existant.",
+      kicker: "Carte Cadeau GIRFFON",
+      heroTitle: "Un cadeau de luxe qui passe par le meme panier et le meme checkout GIRFFON.",
+      heroText: "Choisissez une carte cadeau numerique sans frais de livraison ou une carte physique signee avec QR code, code-barres et presentation premium. Les libelles anglais et italiens sont deja integres a l'experience.",
+      heroPillDigital: "Carte cadeau numerique",
+      heroPillPhysical: "Carte cadeau physique",
+      heroPillRedeem: "Utilisation ulterieure avec solde partiel",
+      previewLabel: "Valeur du cadeau",
+      previewText: "Ou saisissez un montant personnalise entre EUR10 et EUR1000.",
+      previewDigitalLabel: "Numerique",
+      previewDigitalValue: "Aucun frais de livraison",
+      previewPhysicalLabel: "Physique",
+      previewPhysicalValue: "Livraison ajoutee au paiement",
+      previewCodeLabel: "Format du code",
+      previewRedemptionLabel: "Utilisation",
+      previewRedemptionValue: "Partielle et totale",
+      formTitle: "Creez votre carte cadeau",
+      formIntro: "Renseignez les informations de l'acheteur et du destinataire, choisissez le type de livraison, puis ajoutez la carte directement au panier GIRFFON existant.",
+      formCodePill: "Code carte cadeau",
+      valuesSectionAria: "Valeurs des cartes cadeaux",
+      product25CardAria: "Selectionner la carte cadeau GIRFFON de 25 euros",
+      product50CardAria: "Selectionner la carte cadeau GIRFFON de 50 euros",
+      product100CardAria: "Selectionner la carte cadeau GIRFFON de 100 euros",
+      product25ImageAlt: "Carte cadeau GIRFFON EUR25",
+      product50ImageAlt: "Carte cadeau GIRFFON EUR50",
+      product100ImageAlt: "Carte cadeau GIRFFON EUR100",
+      product25Title: "Carte cadeau EUR25",
+      product25Text: "Une attention raffinee pour les surprises personnelles et les gestes premium.",
+      product50Title: "Carte cadeau EUR50",
+      product50Text: "Une option premium equilibree pour les anniversaires, les celebrations et les cadeaux de remerciement.",
+      product100Title: "Carte cadeau EUR100",
+      product100Text: "Un cadeau de luxe remarquable pour les grandes occasions et un gifting plus eleve.",
+      buyButton: "Acheter la carte cadeau",
+      amountLabel: "Montant",
+      customPresetLabel: "Personnalise",
+      customAmountLabel: "Montant personnalise",
+      customAmountPlaceholder: "Optionnel si un montant predefini est selectionne",
+      deliveryTypeLabel: "Type de livraison",
+      deliveryDigitalLabel: "Carte cadeau numerique<br>Aucun frais de livraison",
+      deliveryPhysicalLabel: "Carte cadeau physique<br>Imprimee et expediee",
+      buyerNameLabel: "Nom de l'acheteur",
+      buyerNamePlaceholder: "Nom complet de l'acheteur",
+      buyerEmailLabel: "E-mail de l'acheteur",
+      recipientNameLabel: "Nom du destinataire",
+      recipientNamePlaceholder: "Nom complet du destinataire",
+      recipientEmailLabel: "E-mail du destinataire",
+      messageLabel: "Message cadeau personnalise",
+      messagePlaceholder: "Ecrivez un message premium pour le destinataire",
+      submitText: "Ajouter la carte cadeau au panier",
+      statusText: "Les cartes numeriques sont envoyees par e-mail apres le paiement. Les cartes physiques sont creees comme commandes expediables personnalisees.",
+      benefitDigitalTitle: "Livraison numerique",
+      benefitDigitalText: "L'e-mail du destinataire inclut le code securise, le QR code, le montant, le message cadeau et la date d'expiration apres le checkout.",
+      benefitPhysicalTitle: "Presentation physique",
+      benefitPhysicalText: "Les cartes physiques sont enregistrees comme commandes normales et peuvent etre imprimees par l'equipe admin avec le branding GIRFFON et les details du code-barres.",
+      benefitRedeemTitle: "Utilisation flexible",
+      benefitRedeemText: "Les clients peuvent utiliser la carte cadeau au paiement, depenser seulement une partie du solde et conserver le reste pour de futures commandes."
+    },
+    "es-ES": {
+      pageTitle: "Tarjeta Regalo GIRFFON",
+      metaDescription: "Compra una tarjeta regalo GIRFFON en formato digital o fisico y anadela al checkout existente.",
+      kicker: "Tarjeta Regalo GIRFFON",
+      heroTitle: "Regalos de lujo que pasan por el mismo carrito y checkout de GIRFFON.",
+      heroText: "Elige una tarjeta regalo digital sin coste de envio o una tarjeta fisica de marca con codigo QR, codigo de barras y presentacion premium. Las etiquetas en ingles e italiano ya estan integradas en la experiencia.",
+      heroPillDigital: "Tarjeta regalo digital",
+      heroPillPhysical: "Tarjeta regalo fisica",
+      heroPillRedeem: "Canjea despues con saldo parcial",
+      previewLabel: "Valor del regalo",
+      previewText: "O introduce un importe personalizado entre EUR10 y EUR1000.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "Sin coste de envio",
+      previewPhysicalLabel: "Fisica",
+      previewPhysicalValue: "El envio se anade en el checkout",
+      previewCodeLabel: "Formato del codigo",
+      previewRedemptionLabel: "Canje",
+      previewRedemptionValue: "Parcial y total",
+      formTitle: "Crea tu tarjeta regalo",
+      formIntro: "Completa los datos del comprador y del destinatario, elige el tipo de entrega y luego anade la tarjeta directamente al carrito actual de GIRFFON.",
+      formCodePill: "Codigo de tarjeta regalo",
+      valuesSectionAria: "Valores de la tarjeta regalo",
+      product25CardAria: "Selecciona la tarjeta regalo GIRFFON de 25 euros",
+      product50CardAria: "Selecciona la tarjeta regalo GIRFFON de 50 euros",
+      product100CardAria: "Selecciona la tarjeta regalo GIRFFON de 100 euros",
+      product25ImageAlt: "Tarjeta regalo GIRFFON EUR25",
+      product50ImageAlt: "Tarjeta regalo GIRFFON EUR50",
+      product100ImageAlt: "Tarjeta regalo GIRFFON EUR100",
+      product25Title: "Tarjeta regalo de EUR25",
+      product25Text: "Un regalo refinado de entrada para sorpresas personales y gestos premium.",
+      product50Title: "Tarjeta regalo de EUR50",
+      product50Text: "Una opcion premium equilibrada para cumpleanos, celebraciones y regalos de agradecimiento.",
+      product100Title: "Tarjeta regalo de EUR100",
+      product100Text: "Un regalo de lujo destacado para momentos importantes y obsequios elevados.",
+      buyButton: "Comprar tarjeta regalo",
+      amountLabel: "Importe",
+      customPresetLabel: "Personalizado",
+      customAmountLabel: "Importe personalizado",
+      customAmountPlaceholder: "Opcional si seleccionas un importe predefinido",
+      deliveryTypeLabel: "Tipo de entrega",
+      deliveryDigitalLabel: "Tarjeta regalo digital<br>Sin coste de envio",
+      deliveryPhysicalLabel: "Tarjeta regalo fisica<br>Impresa y enviada",
+      buyerNameLabel: "Nombre del comprador",
+      buyerNamePlaceholder: "Nombre completo del comprador",
+      buyerEmailLabel: "Correo del comprador",
+      recipientNameLabel: "Nombre del destinatario",
+      recipientNamePlaceholder: "Nombre completo del destinatario",
+      recipientEmailLabel: "Correo del destinatario",
+      messageLabel: "Mensaje de regalo personalizado",
+      messagePlaceholder: "Escribe un mensaje premium para el destinatario",
+      submitText: "Anadir tarjeta regalo al carrito",
+      statusText: "Las tarjetas digitales se envian por correo despues del pago. Las tarjetas fisicas se crean como pedidos de marca listos para envio.",
+      benefitDigitalTitle: "Entrega digital",
+      benefitDigitalText: "El correo del destinatario incluye el codigo seguro, el codigo QR, el importe, el mensaje de regalo y la fecha de caducidad despues del checkout.",
+      benefitPhysicalTitle: "Presentacion fisica",
+      benefitPhysicalText: "Las tarjetas fisicas se guardan como pedidos normales y el equipo admin puede imprimirlas con branding GIRFFON y detalles de codigo de barras.",
+      benefitRedeemTitle: "Canje flexible",
+      benefitRedeemText: "Los clientes pueden usar la tarjeta regalo en el checkout, gastar solo una parte del saldo y guardar el resto para futuros pedidos."
+    },
+    "nl-NL": {
+      pageTitle: "GIRFFON Cadeaukaart",
+      metaDescription: "Koop een GIRFFON cadeaukaart in digitale of fysieke vorm en voeg deze toe aan de bestaande checkout.",
+      kicker: "GIRFFON Cadeaukaart",
+      heroTitle: "Luxe cadeaus die via dezelfde GIRFFON winkelwagen en checkout lopen.",
+      heroText: "Kies een digitale cadeaukaart zonder verzendkosten of een fysieke merkkaart met QR-code, barcode en premium presentatie. Engelse en Italiaanse labels zijn al in de ervaring opgenomen.",
+      heroPillDigital: "Digitale cadeaukaart",
+      heroPillPhysical: "Fysieke cadeaukaart",
+      heroPillRedeem: "Later inwisselen met deelsaldo",
+      previewLabel: "Cadeauwaarde",
+      previewText: "Of voer een aangepast bedrag in tussen EUR10 en EUR1000.",
+      previewDigitalLabel: "Digitaal",
+      previewDigitalValue: "Geen verzendkosten",
+      previewPhysicalLabel: "Fysiek",
+      previewPhysicalValue: "Verzending wordt toegevoegd bij checkout",
+      previewCodeLabel: "Codeformaat",
+      previewRedemptionLabel: "Inwisseling",
+      previewRedemptionValue: "Gedeeltelijk en volledig",
+      formTitle: "Maak je cadeaukaart",
+      formIntro: "Vul de gegevens van koper en ontvanger in, kies het levertype en voeg de kaart daarna direct toe aan de bestaande GIRFFON winkelwagen.",
+      formCodePill: "Cadeaukaartcode",
+      valuesSectionAria: "Cadeaukaartwaardes",
+      product25CardAria: "Selecteer de GIRFFON cadeaukaart van 25 euro",
+      product50CardAria: "Selecteer de GIRFFON cadeaukaart van 50 euro",
+      product100CardAria: "Selecteer de GIRFFON cadeaukaart van 100 euro",
+      product25ImageAlt: "GIRFFON cadeaukaart EUR25",
+      product50ImageAlt: "GIRFFON cadeaukaart EUR50",
+      product100ImageAlt: "GIRFFON cadeaukaart EUR100",
+      product25Title: "EUR25 Cadeaukaart",
+      product25Text: "Een verfijnd instapcadeau voor persoonlijke verrassingen en premium gebaren.",
+      product50Title: "EUR50 Cadeaukaart",
+      product50Text: "Een evenwichtige premium optie voor verjaardagen, vieringen en bedankcadeaus.",
+      product100Title: "EUR100 Cadeaukaart",
+      product100Text: "Een opvallend luxe cadeau voor mijlpalen en verfijnd schenken.",
+      buyButton: "Cadeaukaart kopen",
+      amountLabel: "Bedrag",
+      customPresetLabel: "Aangepast",
+      customAmountLabel: "Aangepast bedrag",
+      customAmountPlaceholder: "Optioneel als een vast bedrag is geselecteerd",
+      deliveryTypeLabel: "Leveringstype",
+      deliveryDigitalLabel: "Digitale cadeaukaart<br>Geen verzendkosten",
+      deliveryPhysicalLabel: "Fysieke cadeaukaart<br>Geprint en verzonden",
+      buyerNameLabel: "Naam koper",
+      buyerNamePlaceholder: "Volledige naam koper",
+      buyerEmailLabel: "E-mail koper",
+      recipientNameLabel: "Naam ontvanger",
+      recipientNamePlaceholder: "Volledige naam ontvanger",
+      recipientEmailLabel: "E-mail ontvanger",
+      messageLabel: "Persoonlijk cadeaubericht",
+      messagePlaceholder: "Schrijf een premium bericht voor de ontvanger",
+      submitText: "Cadeaukaart aan winkelwagen toevoegen",
+      statusText: "Digitale kaarten worden na succesvolle betaling per e-mail verzonden. Fysieke kaarten worden aangemaakt als verzendbare merkbestellingen.",
+      benefitDigitalTitle: "Digitale levering",
+      benefitDigitalText: "De e-mail van de ontvanger bevat na de checkout de beveiligde code, QR-code, het bedrag, het cadeaubericht en de vervaldatum.",
+      benefitPhysicalTitle: "Fysieke presentatie",
+      benefitPhysicalText: "Fysieke kaarten worden als normale bestellingen opgeslagen en kunnen door het admin-team worden geprint met GIRFFON-branding en barcodegegevens.",
+      benefitRedeemTitle: "Flexibele inwisseling",
+      benefitRedeemText: "Klanten kunnen de cadeaukaart gebruiken bij checkout, slechts een deel van het saldo besteden en de rest bewaren voor toekomstige bestellingen."
+    },
+    "pl-PL": {
+      pageTitle: "Karta Podarunkowa GIRFFON",
+      metaDescription: "Kup karte podarunkowa GIRFFON w formacie cyfrowym lub fizycznym i dodaj ja do istniejacego checkoutu.",
+      kicker: "Karta Podarunkowa GIRFFON",
+      heroTitle: "Luksusowe prezenty obslugiwane przez ten sam koszyk i checkout GIRFFON.",
+      heroText: "Wybierz cyfrowa karte podarunkowa bez kosztow dostawy albo fizyczna markowa karte z kodem QR, kodem kreskowym i premium prezentacja. Angielskie i wloskie etykiety sa juz zintegrowane z tym doswiadczeniem.",
+      heroPillDigital: "Cyfrowa karta podarunkowa",
+      heroPillPhysical: "Fizyczna karta podarunkowa",
+      heroPillRedeem: "Wykorzystaj pozniej z czesciowym saldem",
+      previewLabel: "Wartosc prezentu",
+      previewText: "Lub wpisz kwote indywidualna od EUR10 do EUR1000.",
+      previewDigitalLabel: "Cyfrowa",
+      previewDigitalValue: "Bez kosztow dostawy",
+      previewPhysicalLabel: "Fizyczna",
+      previewPhysicalValue: "Koszt dostawy doliczany przy checkout",
+      previewCodeLabel: "Format kodu",
+      previewRedemptionLabel: "Realizacja",
+      previewRedemptionValue: "Czesciowa i pelna",
+      formTitle: "Zbuduj swoja karte podarunkowa",
+      formIntro: "Wypelnij dane kupujacego i odbiorcy, wybierz rodzaj dostawy, a nastepnie dodaj karte bezposrednio do istniejacego koszyka GIRFFON.",
+      formCodePill: "Kod karty podarunkowej",
+      valuesSectionAria: "Wartosci kart podarunkowych",
+      product25CardAria: "Wybierz karte podarunkowa GIRFFON o wartosci 25 euro",
+      product50CardAria: "Wybierz karte podarunkowa GIRFFON o wartosci 50 euro",
+      product100CardAria: "Wybierz karte podarunkowa GIRFFON o wartosci 100 euro",
+      product25ImageAlt: "Karta podarunkowa GIRFFON EUR25",
+      product50ImageAlt: "Karta podarunkowa GIRFFON EUR50",
+      product100ImageAlt: "Karta podarunkowa GIRFFON EUR100",
+      product25Title: "Karta podarunkowa EUR25",
+      product25Text: "Elegancki prezent na start dla osobistych niespodzianek i premium gestow.",
+      product50Title: "Karta podarunkowa EUR50",
+      product50Text: "Zrownowazona opcja premium na urodziny, celebracje i prezenty z podziekowaniem.",
+      product100Title: "Karta podarunkowa EUR100",
+      product100Text: "Wyjatkowy luksusowy prezent na wazne chwile i bardziej ekskluzywne obdarowywanie.",
+      buyButton: "Kup karte podarunkowa",
+      amountLabel: "Kwota",
+      customPresetLabel: "Wlasna",
+      customAmountLabel: "Kwota indywidualna",
+      customAmountPlaceholder: "Opcjonalne, jesli wybrano kwote predefiniowana",
+      deliveryTypeLabel: "Typ dostawy",
+      deliveryDigitalLabel: "Cyfrowa karta podarunkowa<br>Bez kosztow dostawy",
+      deliveryPhysicalLabel: "Fizyczna karta podarunkowa<br>Drukowana i wysylana",
+      buyerNameLabel: "Imie i nazwisko kupujacego",
+      buyerNamePlaceholder: "Pelne imie i nazwisko kupujacego",
+      buyerEmailLabel: "Email kupujacego",
+      recipientNameLabel: "Imie i nazwisko odbiorcy",
+      recipientNamePlaceholder: "Pelne imie i nazwisko odbiorcy",
+      recipientEmailLabel: "Email odbiorcy",
+      messageLabel: "Osobista wiadomosc prezentowa",
+      messagePlaceholder: "Napisz premium wiadomosc dla odbiorcy",
+      submitText: "Dodaj karte podarunkowa do koszyka",
+      statusText: "Karty cyfrowe sa wysylane e-mailem po udanej platnosci. Karty fizyczne sa tworzone jako markowe zamowienia gotowe do wysylki.",
+      benefitDigitalTitle: "Realizacja cyfrowa",
+      benefitDigitalText: "E-mail odbiorcy zawiera po checkout bezpieczny kod, QR code, kwote, wiadomosc prezentowa i date waznosci.",
+      benefitPhysicalTitle: "Prezentacja fizyczna",
+      benefitPhysicalText: "Karty fizyczne sa zapisywane jako zwykle zamowienia i moga byc drukowane przez zespol admin z brandingiem GIRFFON i detalami kodu kreskowego.",
+      benefitRedeemTitle: "Elastyczne wykorzystanie",
+      benefitRedeemText: "Klienci moga wykorzystac karte podarunkowa przy checkout, zuzyc tylko czesc salda i zachowac reszte na przyszle zamowienia."
+    },
+    "sv-SE": {
+      pageTitle: "GIRFFON Presentkort",
+      metaDescription: "Kop ett GIRFFON presentkort i digitalt eller fysiskt format och lagg det i den befintliga checkouten.",
+      kicker: "GIRFFON Presentkort",
+      heroTitle: "Lyxiga presenter som gar genom samma GIRFFON-varukorg och checkout.",
+      heroText: "Valj ett digitalt presentkort utan fraktkostnad eller ett fysiskt profilkort med QR-kod, streckkod och premium presentation. Engelska och italienska etiketter finns redan integrerade i upplevelsen.",
+      heroPillDigital: "Digitalt presentkort",
+      heroPillPhysical: "Fysiskt presentkort",
+      heroPillRedeem: "Los in senare med delsaldo",
+      previewLabel: "Presentvarde",
+      previewText: "Eller ange ett eget belopp mellan EUR10 och EUR1000.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "Ingen fraktkostnad",
+      previewPhysicalLabel: "Fysisk",
+      previewPhysicalValue: "Frakt laggs till i checkout",
+      previewCodeLabel: "Kodformat",
+      previewRedemptionLabel: "Inlosen",
+      previewRedemptionValue: "Delvis och full",
+      formTitle: "Bygg ditt presentkort",
+      formIntro: "Fyll i uppgifter for kopare och mottagare, valj leveranstyp och lagg sedan kortet direkt i den befintliga GIRFFON-varukorgen.",
+      formCodePill: "Presentkortskod",
+      valuesSectionAria: "Presentkortsvarden",
+      product25CardAria: "Valj GIRFFON-presentkort pa 25 euro",
+      product50CardAria: "Valj GIRFFON-presentkort pa 50 euro",
+      product100CardAria: "Valj GIRFFON-presentkort pa 100 euro",
+      product25ImageAlt: "GIRFFON presentkort EUR25",
+      product50ImageAlt: "GIRFFON presentkort EUR50",
+      product100ImageAlt: "GIRFFON presentkort EUR100",
+      product25Title: "EUR25 Presentkort",
+      product25Text: "En forfinad ingangsgava for personliga overaskningar och premiumgester.",
+      product50Title: "EUR50 Presentkort",
+      product50Text: "Ett balanserat premiumalternativ for fodelsedagar, firanden och tackgavor.",
+      product100Title: "EUR100 Presentkort",
+      product100Text: "En stark lyxgava for stora milstolpar och mer exklusivt givande.",
+      buyButton: "Kop presentkort",
+      amountLabel: "Belopp",
+      customPresetLabel: "Anpassat",
+      customAmountLabel: "Anpassat belopp",
+      customAmountPlaceholder: "Valfritt om ett forvalt belopp ar valt",
+      deliveryTypeLabel: "Leveranstyp",
+      deliveryDigitalLabel: "Digitalt presentkort<br>Ingen fraktkostnad",
+      deliveryPhysicalLabel: "Fysiskt presentkort<br>Trycks och skickas",
+      buyerNameLabel: "Koparens namn",
+      buyerNamePlaceholder: "Koparens fullstandiga namn",
+      buyerEmailLabel: "Koparens e-post",
+      recipientNameLabel: "Mottagarens namn",
+      recipientNamePlaceholder: "Mottagarens fullstandiga namn",
+      recipientEmailLabel: "Mottagarens e-post",
+      messageLabel: "Personligt presentmeddelande",
+      messagePlaceholder: "Skriv ett premium-meddelande till mottagaren",
+      submitText: "Lagg till presentkort i varukorgen",
+      statusText: "Digitala kort skickas via e-post efter lyckad betalning. Fysiska kort skapas som profilerade bestallningar som kan skickas.",
+      benefitDigitalTitle: "Digital leverans",
+      benefitDigitalText: "Mottagarens e-post innehaller efter checkout den sakra koden, QR-koden, beloppet, presentmeddelandet och utgangsdatumet.",
+      benefitPhysicalTitle: "Fysisk presentation",
+      benefitPhysicalText: "Fysiska kort sparas som vanliga bestallningar och kan skrivas ut av adminteamet med GIRFFON-branding och streckkodsdetaljer.",
+      benefitRedeemTitle: "Flexibel inlosen",
+      benefitRedeemText: "Kunder kan anvanda presentkortet i checkout, bara losa in en del av saldot och spara resten till framtida bestallningar."
+    },
+    "de-CH": {
+      pageTitle: "GIRFFON Geschenkkarte",
+      metaDescription: "Kaufen Sie eine GIRFFON Geschenkkarte in digitalem oder physischem Format und fugen Sie sie dem bestehenden Checkout hinzu.",
+      kicker: "GIRFFON Geschenkkarte",
+      heroTitle: "Luxusgeschenke, die durch denselben GIRFFON Warenkorb und Checkout laufen.",
+      heroText: "Wahlen Sie eine digitale Geschenkkarte ohne Versandkosten oder eine physische Markenkarte mit QR-Code, Barcode und hochwertiger Prasentation. Englische und italienische Beschriftungen sind bereits im Erlebnis enthalten.",
+      heroPillDigital: "Digitale Geschenkkarte",
+      heroPillPhysical: "Physische Geschenkkarte",
+      heroPillRedeem: "Spater mit Teilguthaben einlosen",
+      previewLabel: "Geschenkwert",
+      previewText: "Oder geben Sie einen individuellen Betrag zwischen EUR10 und EUR1000 ein.",
+      previewDigitalLabel: "Digital",
+      previewDigitalValue: "Keine Versandkosten",
+      previewPhysicalLabel: "Physisch",
+      previewPhysicalValue: "Versand wird beim Checkout hinzugefugt",
+      previewCodeLabel: "Codeformat",
+      previewRedemptionLabel: "Einlosung",
+      previewRedemptionValue: "Teilweise und vollstandig",
+      formTitle: "Geschenkkarte erstellen",
+      formIntro: "Geben Sie die Daten von Kaufer und Empfanger ein, wahlen Sie die Lieferart und legen Sie die Karte dann direkt in den bestehenden GIRFFON Warenkorb.",
+      formCodePill: "Geschenkkarten-Code",
+      valuesSectionAria: "Geschenkkartenwerte",
+      product25CardAria: "GIRFFON Geschenkkarte uber 25 Euro auswahlen",
+      product50CardAria: "GIRFFON Geschenkkarte uber 50 Euro auswahlen",
+      product100CardAria: "GIRFFON Geschenkkarte uber 100 Euro auswahlen",
+      product25ImageAlt: "GIRFFON Geschenkkarte EUR25",
+      product50ImageAlt: "GIRFFON Geschenkkarte EUR50",
+      product100ImageAlt: "GIRFFON Geschenkkarte EUR100",
+      product25Title: "EUR25 Geschenkkarte",
+      product25Text: "Ein stilvoller Einstieg fur personliche Uberraschungen und hochwertige Gesten.",
+      product50Title: "EUR50 Geschenkkarte",
+      product50Text: "Eine ausgewogene Premium-Option fur Geburtstage, Feiern und Dankesgeschenke.",
+      product100Title: "EUR100 Geschenkkarte",
+      product100Text: "Ein besonderes Luxusgeschenk fur Meilensteine und gehobene Geschenkideen.",
+      buyButton: "Geschenkkarte kaufen",
+      amountLabel: "Betrag",
+      customPresetLabel: "Individuell",
+      customAmountLabel: "Individueller Betrag",
+      customAmountPlaceholder: "Optional, wenn ein fester Betrag ausgewahlt ist",
+      deliveryTypeLabel: "Lieferart",
+      deliveryDigitalLabel: "Digitale Geschenkkarte<br>Keine Versandkosten",
+      deliveryPhysicalLabel: "Physische Geschenkkarte<br>Gedruckt und versendet",
+      buyerNameLabel: "Name des Kaufers",
+      buyerNamePlaceholder: "Vollstandiger Name des Kaufers",
+      buyerEmailLabel: "E-Mail des Kaufers",
+      recipientNameLabel: "Name des Empfangers",
+      recipientNamePlaceholder: "Vollstandiger Name des Empfangers",
+      recipientEmailLabel: "E-Mail des Empfangers",
+      messageLabel: "Personliche Geschenknachricht",
+      messagePlaceholder: "Schreiben Sie eine hochwertige Nachricht fur den Empfanger",
+      submitText: "Geschenkkarte zum Warenkorb hinzufugen",
+      statusText: "Digitale Karten werden nach erfolgreicher Zahlung per E-Mail versendet. Physische Karten werden als versandfahige Markenbestellungen erstellt.",
+      benefitDigitalTitle: "Digitale Zustellung",
+      benefitDigitalText: "Die E-Mail des Empfangers enthalt nach dem Checkout den sicheren Code, QR-Code, Betrag, die Geschenknachricht und das Ablaufdatum.",
+      benefitPhysicalTitle: "Physische Prasentation",
+      benefitPhysicalText: "Physische Karten werden als normale Bestellungen gespeichert und konnen vom Admin-Team mit GIRFFON Branding und Barcode-Details gedruckt werden.",
+      benefitRedeemTitle: "Flexible Einlosung",
+      benefitRedeemText: "Kunden konnen die Geschenkkarte beim Checkout verwenden, nur einen Teil des Guthabens einlosen und den Rest fur spatere Bestellungen behalten."
+    }
+  };
+
   const ABOUT_PAGE_I18N = {
     "it-IT": {
       aboutPageVideoAria: "Video Chi Siamo",
@@ -1855,10 +2521,30 @@
     });
   }
 
+  function getLocalizedCountryName(countryCode, locale) {
+    const fallbackName = COUNTRY_NAME_FALLBACKS[countryCode] || countryCode;
+
+    if (typeof Intl === "undefined" || typeof Intl.DisplayNames !== "function") {
+      return fallbackName;
+    }
+
+    try {
+      const displayNames = new Intl.DisplayNames([locale], { type: "region" });
+      return displayNames.of(countryCode) || fallbackName;
+    } catch (_error) {
+      return fallbackName;
+    }
+  }
+
+  function getGiftCardTexts(locale) {
+    return Object.assign({}, GIFT_CARD_I18N["en-GB"], GIFT_CARD_I18N[locale] || {});
+  }
+
   function applyTranslations(countryCode) {
     const config = COUNTRY_CONFIG[countryCode] || COUNTRY_CONFIG[DEFAULT_COUNTRY];
     const lang = getTexts(config.locale);
     const accountLang = getAccountPanelTexts(config.locale);
+    const giftCardLang = getGiftCardTexts(config.locale);
 
     const accountLink = document.querySelector(".top-actions a:not(.icon-link)");
     const navLinks = document.querySelectorAll(".main-nav > a");
@@ -1911,8 +2597,108 @@
     if (localeTitle) localeTitle.textContent = lang.localeTitle;
     if (localeSubtitle) localeSubtitle.textContent = lang.localeSubtitle;
 
+    panel.querySelectorAll(".gf-locale-card").forEach((card) => {
+      const localeCountryCode = String(card.dataset.country || "").toUpperCase();
+      const localizedCountryName = getLocalizedCountryName(localeCountryCode, config.locale);
+      const countryNameNode = card.querySelector(".gf-locale-name");
+      const countryFlagImage = card.querySelector(".gf-locale-flag img");
+
+      if (countryNameNode) {
+        countryNameNode.textContent = localizedCountryName;
+      }
+
+      if (countryFlagImage) {
+        countryFlagImage.alt = localizedCountryName + " flag";
+      }
+    });
+
     const closeButton = document.getElementById("gfLocaleCloseBtn");
     if (closeButton) closeButton.textContent = lang.close;
+
+    setNodeText(document.getElementById("gfGiftCardKickerText"), giftCardLang.kicker);
+    setNodeText(document.getElementById("gfGiftCardHeroTitle"), giftCardLang.heroTitle);
+    setNodeText(document.getElementById("gfGiftCardHeroText"), giftCardLang.heroText);
+    setNodeText(document.getElementById("gfGiftCardHeroPillDigital"), giftCardLang.heroPillDigital);
+    setNodeText(document.getElementById("gfGiftCardHeroPillPhysical"), giftCardLang.heroPillPhysical);
+    setNodeText(document.getElementById("gfGiftCardHeroPillRedeem"), giftCardLang.heroPillRedeem);
+    setNodeText(document.getElementById("gfGiftCardPreviewLabel"), giftCardLang.previewLabel);
+    setNodeText(document.getElementById("gfGiftCardPreviewText"), giftCardLang.previewText);
+    setNodeText(document.getElementById("gfGiftCardPreviewDigitalLabel"), giftCardLang.previewDigitalLabel);
+    setNodeText(document.getElementById("gfGiftCardPreviewDigitalValue"), giftCardLang.previewDigitalValue);
+    setNodeText(document.getElementById("gfGiftCardPreviewPhysicalLabel"), giftCardLang.previewPhysicalLabel);
+    setNodeText(document.getElementById("gfGiftCardPreviewPhysicalValue"), giftCardLang.previewPhysicalValue);
+    setNodeText(document.getElementById("gfGiftCardPreviewCodeLabel"), giftCardLang.previewCodeLabel);
+    setNodeText(document.getElementById("gfGiftCardPreviewRedemptionLabel"), giftCardLang.previewRedemptionLabel);
+    setNodeText(document.getElementById("gfGiftCardPreviewRedemptionValue"), giftCardLang.previewRedemptionValue);
+    setNodeText(document.getElementById("gfGiftCardFormTitle"), giftCardLang.formTitle);
+    setNodeText(document.getElementById("gfGiftCardFormIntro"), giftCardLang.formIntro);
+    setNodeText(document.getElementById("gfGiftCardFormCodePill"), giftCardLang.formCodePill);
+    const giftCardShopStrip = document.getElementById("gfGiftCardShopStrip");
+    if (giftCardShopStrip && giftCardLang.valuesSectionAria) giftCardShopStrip.setAttribute("aria-label", giftCardLang.valuesSectionAria);
+    const giftCardProduct25Card = document.getElementById("gfGiftCardProduct25Card");
+    const giftCardProduct50Card = document.getElementById("gfGiftCardProduct50Card");
+    const giftCardProduct100Card = document.getElementById("gfGiftCardProduct100Card");
+    const giftCardProduct25Image = document.getElementById("gfGiftCardProduct25Image");
+    const giftCardProduct50Image = document.getElementById("gfGiftCardProduct50Image");
+    const giftCardProduct100Image = document.getElementById("gfGiftCardProduct100Image");
+
+    if (giftCardProduct25Card && giftCardLang.product25CardAria) giftCardProduct25Card.setAttribute("aria-label", giftCardLang.product25CardAria);
+    if (giftCardProduct50Card && giftCardLang.product50CardAria) giftCardProduct50Card.setAttribute("aria-label", giftCardLang.product50CardAria);
+    if (giftCardProduct100Card && giftCardLang.product100CardAria) giftCardProduct100Card.setAttribute("aria-label", giftCardLang.product100CardAria);
+    if (giftCardProduct25Image && giftCardLang.product25ImageAlt) giftCardProduct25Image.alt = giftCardLang.product25ImageAlt;
+    if (giftCardProduct50Image && giftCardLang.product50ImageAlt) giftCardProduct50Image.alt = giftCardLang.product50ImageAlt;
+    if (giftCardProduct100Image && giftCardLang.product100ImageAlt) giftCardProduct100Image.alt = giftCardLang.product100ImageAlt;
+    setNodeText(document.getElementById("gfGiftCardProduct25Title"), giftCardLang.product25Title);
+    setNodeText(document.getElementById("gfGiftCardProduct25Text"), giftCardLang.product25Text);
+    setNodeText(document.getElementById("gfGiftCardProduct50Title"), giftCardLang.product50Title);
+    setNodeText(document.getElementById("gfGiftCardProduct50Text"), giftCardLang.product50Text);
+    setNodeText(document.getElementById("gfGiftCardProduct100Title"), giftCardLang.product100Title);
+    setNodeText(document.getElementById("gfGiftCardProduct100Text"), giftCardLang.product100Text);
+    setNodeText(document.getElementById("gfGiftCardProduct25Button"), giftCardLang.buyButton);
+    setNodeText(document.getElementById("gfGiftCardProduct50Button"), giftCardLang.buyButton);
+    setNodeText(document.getElementById("gfGiftCardProduct100Button"), giftCardLang.buyButton);
+    setNodeText(document.getElementById("gfGiftCardAmountLabel"), giftCardLang.amountLabel);
+    setNodeText(document.getElementById("gfGiftCardCustomPresetLabel"), giftCardLang.customPresetLabel);
+    setNodeText(document.getElementById("gfGiftCardCustomAmountLabel"), giftCardLang.customAmountLabel);
+    setNodeText(document.getElementById("gfGiftCardDeliveryTypeLabel"), giftCardLang.deliveryTypeLabel);
+    setNodeHTML(document.getElementById("gfGiftCardDeliveryDigitalLabel"), giftCardLang.deliveryDigitalLabel);
+    setNodeHTML(document.getElementById("gfGiftCardDeliveryPhysicalLabel"), giftCardLang.deliveryPhysicalLabel);
+    setNodeText(document.getElementById("gfGiftBuyerNameLabel"), giftCardLang.buyerNameLabel);
+    setNodeText(document.getElementById("gfGiftBuyerEmailLabel"), giftCardLang.buyerEmailLabel);
+    setNodeText(document.getElementById("gfGiftRecipientNameLabel"), giftCardLang.recipientNameLabel);
+    setNodeText(document.getElementById("gfGiftRecipientEmailLabel"), giftCardLang.recipientEmailLabel);
+    setNodeText(document.getElementById("gfGiftMessageLabel"), giftCardLang.messageLabel);
+    setNodeText(document.getElementById("gfGiftCardSubmitText"), giftCardLang.submitText);
+    setNodeText(document.getElementById("gfGiftCardStatus"), giftCardLang.statusText);
+    setNodeText(document.getElementById("gfGiftCardBenefitDigitalTitle"), giftCardLang.benefitDigitalTitle);
+    setNodeText(document.getElementById("gfGiftCardBenefitDigitalText"), giftCardLang.benefitDigitalText);
+    setNodeText(document.getElementById("gfGiftCardBenefitPhysicalTitle"), giftCardLang.benefitPhysicalTitle);
+    setNodeText(document.getElementById("gfGiftCardBenefitPhysicalText"), giftCardLang.benefitPhysicalText);
+    setNodeText(document.getElementById("gfGiftCardBenefitRedeemTitle"), giftCardLang.benefitRedeemTitle);
+    setNodeText(document.getElementById("gfGiftCardBenefitRedeemText"), giftCardLang.benefitRedeemText);
+
+    const giftCardCustomAmount = document.getElementById("gfGiftCardCustomAmount");
+    const giftBuyerName = document.getElementById("gfGiftBuyerName");
+    const giftBuyerEmail = document.getElementById("gfGiftBuyerEmail");
+    const giftRecipientName = document.getElementById("gfGiftRecipientName");
+    const giftRecipientEmail = document.getElementById("gfGiftRecipientEmail");
+    const giftMessage = document.getElementById("gfGiftMessage");
+
+    if (giftCardCustomAmount && giftCardLang.customAmountPlaceholder) giftCardCustomAmount.placeholder = giftCardLang.customAmountPlaceholder;
+    if (giftBuyerName && giftCardLang.buyerNamePlaceholder) giftBuyerName.placeholder = giftCardLang.buyerNamePlaceholder;
+    if (giftBuyerEmail && giftCardLang.buyerEmailLabel) giftBuyerEmail.placeholder = "buyer@example.com";
+    if (giftRecipientName && giftCardLang.recipientNamePlaceholder) giftRecipientName.placeholder = giftCardLang.recipientNamePlaceholder;
+    if (giftRecipientEmail && giftCardLang.recipientEmailLabel) giftRecipientEmail.placeholder = "recipient@example.com";
+    if (giftMessage && giftCardLang.messagePlaceholder) giftMessage.placeholder = giftCardLang.messagePlaceholder;
+
+    if (giftCardLang.pageTitle) {
+      document.title = giftCardLang.pageTitle;
+    }
+
+    const giftCardMetaDescription = document.getElementById("gfGiftCardMetaDescription");
+    if (giftCardMetaDescription && giftCardLang.metaDescription) {
+      giftCardMetaDescription.setAttribute("content", giftCardLang.metaDescription);
+    }
 
     setNodeText(document.querySelector("#gfAccountPanel .gf-account-header h3"), lang.account);
     setNodeText(document.querySelector("#gfAccountGuest .gf-account-auth-head h4"), accountLang.signIn);

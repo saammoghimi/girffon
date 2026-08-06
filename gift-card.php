@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GIRFFON Gift Card</title>
-  <meta name="description" content="Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow." />
+  <title id="gfGiftCardPageTitle">GIRFFON Gift Card</title>
+  <meta id="gfGiftCardMetaDescription" name="description" content="Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow." />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <link rel="stylesheet" href="CSS/style.css" />
   <link rel="stylesheet" href="CSS/Hero.css" />
@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="CSS/settings-panel.css" />
   <link rel="stylesheet" href="CSS/locale-panel.css" />
   <link rel="stylesheet" href="CSS/account-panel.css" />
-  <link rel="stylesheet" href="CSS/gift-card-page.css" />
+  <link rel="stylesheet" href="CSS/gift-card-page.css?v=20260807r2" />
 </head>
 <body class="gift-card-page">
   <div class="top-bar">
@@ -100,27 +100,27 @@
   <main class="gift-card-shell">
     <section class="gift-card-hero">
       <article class="gift-card-panel">
-        <span class="gift-card-kicker"><i class="fa-solid fa-gift"></i> GIRFFON Gift Card</span>
-        <h1>Luxury gifting that moves through the same GIRFFON cart and checkout flow.</h1>
-        <p>Choose a digital gift card with zero shipping or a physical branded card with QR code, barcode, and premium print presentation. English and Italian labels are included directly inside the experience.</p>
+        <span class="gift-card-kicker" id="gfGiftCardKicker"><i class="fa-solid fa-gift"></i> <span id="gfGiftCardKickerText">GIRFFON Gift Card</span></span>
+        <h1 id="gfGiftCardHeroTitle">Luxury gifting that moves through the same GIRFFON cart and checkout flow.</h1>
+        <p id="gfGiftCardHeroText">Choose a digital gift card with zero shipping or a physical branded card with QR code, barcode, and premium print presentation. English and Italian labels are included directly inside the experience.</p>
         <div class="gift-card-pill-row">
-          <span class="gift-card-pill">Digital Gift Card / Carta regalo digitale</span>
-          <span class="gift-card-pill">Physical Gift Card / Carta regalo fisica</span>
-          <span class="gift-card-pill">Redeem later with partial balance support</span>
+          <span class="gift-card-pill" id="gfGiftCardHeroPillDigital">Digital Gift Card / Carta regalo digitale</span>
+          <span class="gift-card-pill" id="gfGiftCardHeroPillPhysical">Physical Gift Card / Carta regalo fisica</span>
+          <span class="gift-card-pill" id="gfGiftCardHeroPillRedeem">Redeem later with partial balance support</span>
         </div>
       </article>
 
       <aside class="gift-card-preview">
         <div class="gift-card-preview-card">
-          <span style="display:block;letter-spacing:.16em;text-transform:uppercase;font-size:.82rem;opacity:.8;">Gift Value</span>
+          <span id="gfGiftCardPreviewLabel" style="display:block;letter-spacing:.16em;text-transform:uppercase;font-size:.82rem;opacity:.8;">Gift Value</span>
           <strong>€25 · €50 · €100</strong>
-          <p style="margin:0;line-height:1.7;opacity:.9;">Or enter a custom amount between €10 and €1000.</p>
+          <p id="gfGiftCardPreviewText" style="margin:0;line-height:1.7;opacity:.9;">Or enter a custom amount between €10 and €1000.</p>
         </div>
         <div class="gift-card-preview-grid">
-          <div class="gift-card-preview-stat"><span>Digital</span><strong>No shipping cost</strong></div>
-          <div class="gift-card-preview-stat"><span>Physical</span><strong>Shipping added at checkout</strong></div>
-          <div class="gift-card-preview-stat"><span>Code Format</span><strong>GF-XXXX-XXXX-XXXX</strong></div>
-          <div class="gift-card-preview-stat"><span>Redemption</span><strong>Partial and full</strong></div>
+          <div class="gift-card-preview-stat"><span id="gfGiftCardPreviewDigitalLabel">Digital</span><strong id="gfGiftCardPreviewDigitalValue">No shipping cost</strong></div>
+          <div class="gift-card-preview-stat"><span id="gfGiftCardPreviewPhysicalLabel">Physical</span><strong id="gfGiftCardPreviewPhysicalValue">Shipping added at checkout</strong></div>
+          <div class="gift-card-preview-stat"><span id="gfGiftCardPreviewCodeLabel">Code Format</span><strong>GF-XXXX-XXXX-XXXX</strong></div>
+          <div class="gift-card-preview-stat"><span id="gfGiftCardPreviewRedemptionLabel">Redemption</span><strong id="gfGiftCardPreviewRedemptionValue">Partial and full</strong></div>
         </div>
       </aside>
     </section>
@@ -128,98 +128,98 @@
     <section class="gift-card-form-card">
       <div class="gift-card-form-head">
         <div>
-          <h2>Build Your Gift Card</h2>
-          <p>Fill out the buyer and recipient details, choose the delivery format, then add the card directly to the existing GIRFFON cart.</p>
+          <h2 id="gfGiftCardFormTitle">Build Your Gift Card</h2>
+          <p id="gfGiftCardFormIntro">Fill out the buyer and recipient details, choose the delivery format, then add the card directly to the existing GIRFFON cart.</p>
         </div>
-        <div class="gift-card-pill">Gift Card Code / Codice carta regalo</div>
+        <div class="gift-card-pill" id="gfGiftCardFormCodePill">Gift Card Code / Codice carta regalo</div>
       </div>
 
-      <section class="gift-card-shop-strip" aria-label="Gift card values">
-        <article class="gift-card-shop-card is-selected" data-gift-card-select="25" tabindex="0" role="button" aria-label="Select GIRFFON 25 euro gift card">
+      <section class="gift-card-shop-strip" id="gfGiftCardShopStrip" aria-label="Gift card values">
+        <article class="gift-card-shop-card is-selected" id="gfGiftCardProduct25Card" data-gift-card-select="25" tabindex="0" role="button" aria-label="Select GIRFFON 25 euro gift card">
           <div class="gift-card-shop-image">
-            <img src="Image/Gift/gift-25.png" alt="GIRFFON €25 Gift Card">
+            <img id="gfGiftCardProduct25Image" src="Image/Gift/gift-25.png" alt="GIRFFON €25 Gift Card">
           </div>
           <div class="gift-card-shop-copy">
-            <h3>€25 Gift Card</h3>
-            <p>A refined entry gift for personal surprises and premium gestures.</p>
+            <h3 id="gfGiftCardProduct25Title">€25 Gift Card</h3>
+            <p id="gfGiftCardProduct25Text">A refined entry gift for personal surprises and premium gestures.</p>
           </div>
-          <button class="gift-card-shop-button" type="button" data-gift-card-select="25">Buy Gift Card</button>
+          <button class="gift-card-shop-button" id="gfGiftCardProduct25Button" type="button" data-gift-card-select="25">Buy Gift Card</button>
         </article>
 
-        <article class="gift-card-shop-card" data-gift-card-select="50" tabindex="0" role="button" aria-label="Select GIRFFON 50 euro gift card">
+        <article class="gift-card-shop-card" id="gfGiftCardProduct50Card" data-gift-card-select="50" tabindex="0" role="button" aria-label="Select GIRFFON 50 euro gift card">
           <div class="gift-card-shop-image">
-            <img src="Image/Gift/gift-50.png" alt="GIRFFON €50 Gift Card">
+            <img id="gfGiftCardProduct50Image" src="Image/Gift/gift-50.png" alt="GIRFFON €50 Gift Card">
           </div>
           <div class="gift-card-shop-copy">
-            <h3>€50 Gift Card</h3>
-            <p>A balanced premium option for birthdays, celebrations, and thank-you gifts.</p>
+            <h3 id="gfGiftCardProduct50Title">€50 Gift Card</h3>
+            <p id="gfGiftCardProduct50Text">A balanced premium option for birthdays, celebrations, and thank-you gifts.</p>
           </div>
-          <button class="gift-card-shop-button" type="button" data-gift-card-select="50">Buy Gift Card</button>
+          <button class="gift-card-shop-button" id="gfGiftCardProduct50Button" type="button" data-gift-card-select="50">Buy Gift Card</button>
         </article>
 
-        <article class="gift-card-shop-card" data-gift-card-select="100" tabindex="0" role="button" aria-label="Select GIRFFON 100 euro gift card">
+        <article class="gift-card-shop-card" id="gfGiftCardProduct100Card" data-gift-card-select="100" tabindex="0" role="button" aria-label="Select GIRFFON 100 euro gift card">
           <div class="gift-card-shop-image">
-            <img src="Image/Gift/gift-100.png" alt="GIRFFON €100 Gift Card">
+            <img id="gfGiftCardProduct100Image" src="Image/Gift/gift-100.png" alt="GIRFFON €100 Gift Card">
           </div>
           <div class="gift-card-shop-copy">
-            <h3>€100 Gift Card</h3>
-            <p>A standout luxury gift for milestone moments and elevated gifting.</p>
+            <h3 id="gfGiftCardProduct100Title">€100 Gift Card</h3>
+            <p id="gfGiftCardProduct100Text">A standout luxury gift for milestone moments and elevated gifting.</p>
           </div>
-          <button class="gift-card-shop-button" type="button" data-gift-card-select="100">Buy Gift Card</button>
+          <button class="gift-card-shop-button" id="gfGiftCardProduct100Button" type="button" data-gift-card-select="100">Buy Gift Card</button>
         </article>
       </section>
 
       <form id="gfGiftCardForm" class="gift-card-form-grid" novalidate>
         <div class="gift-card-field gift-card-field-wide">
-          <label>Amount / Importo</label>
+          <label id="gfGiftCardAmountLabel">Amount / Importo</label>
           <div class="gift-card-amount-grid">
             <label class="gift-card-choice"><input type="radio" name="gift_amount_preset" value="25" checked><span>€25</span></label>
             <label class="gift-card-choice"><input type="radio" name="gift_amount_preset" value="50"><span>€50</span></label>
             <label class="gift-card-choice"><input type="radio" name="gift_amount_preset" value="100"><span>€100</span></label>
-            <label class="gift-card-choice"><input type="radio" name="gift_amount_preset" value="custom"><span>Custom / Personalizzato</span></label>
+            <label class="gift-card-choice"><input type="radio" name="gift_amount_preset" value="custom"><span id="gfGiftCardCustomPresetLabel">Custom / Personalizzato</span></label>
           </div>
         </div>
 
         <div class="gift-card-field gift-card-field-wide">
-          <label for="gfGiftCardCustomAmount">Custom Amount / Importo personalizzato</label>
+          <label for="gfGiftCardCustomAmount" id="gfGiftCardCustomAmountLabel">Custom Amount / Importo personalizzato</label>
           <input class="gift-card-custom-input" id="gfGiftCardCustomAmount" name="custom_amount" type="number" min="10" max="1000" step="0.01" placeholder="Optional if a preset amount is selected">
         </div>
 
         <div class="gift-card-field gift-card-field-wide">
-          <label>Delivery Type / Tipo di consegna</label>
+          <label id="gfGiftCardDeliveryTypeLabel">Delivery Type / Tipo di consegna</label>
           <div class="gift-card-delivery-grid">
-            <label class="gift-card-choice"><input type="radio" name="delivery_type" value="digital" checked><span>Digital Gift Card<br>Zero shipping cost</span></label>
-            <label class="gift-card-choice"><input type="radio" name="delivery_type" value="physical"><span>Physical Gift Card<br>Printed and shipped</span></label>
+            <label class="gift-card-choice"><input type="radio" name="delivery_type" value="digital" checked><span id="gfGiftCardDeliveryDigitalLabel">Digital Gift Card<br>Zero shipping cost</span></label>
+            <label class="gift-card-choice"><input type="radio" name="delivery_type" value="physical"><span id="gfGiftCardDeliveryPhysicalLabel">Physical Gift Card<br>Printed and shipped</span></label>
           </div>
         </div>
 
         <div class="gift-card-field">
-          <label for="gfGiftBuyerName">Buyer Name / Nome acquirente</label>
+          <label for="gfGiftBuyerName" id="gfGiftBuyerNameLabel">Buyer Name / Nome acquirente</label>
           <input id="gfGiftBuyerName" name="buyer_name" type="text" placeholder="Buyer full name" required>
         </div>
 
         <div class="gift-card-field">
-          <label for="gfGiftBuyerEmail">Buyer Email / Email acquirente</label>
+          <label for="gfGiftBuyerEmail" id="gfGiftBuyerEmailLabel">Buyer Email / Email acquirente</label>
           <input id="gfGiftBuyerEmail" name="buyer_email" type="email" placeholder="buyer@example.com" required>
         </div>
 
         <div class="gift-card-field">
-          <label for="gfGiftRecipientName">Recipient Name / Nome destinatario</label>
+          <label for="gfGiftRecipientName" id="gfGiftRecipientNameLabel">Recipient Name / Nome destinatario</label>
           <input id="gfGiftRecipientName" name="recipient_name" type="text" placeholder="Recipient full name" required>
         </div>
 
         <div class="gift-card-field">
-          <label for="gfGiftRecipientEmail">Recipient Email / Email destinatario</label>
+          <label for="gfGiftRecipientEmail" id="gfGiftRecipientEmailLabel">Recipient Email / Email destinatario</label>
           <input id="gfGiftRecipientEmail" name="recipient_email" type="email" placeholder="recipient@example.com" required>
         </div>
 
         <div class="gift-card-field gift-card-field-wide">
-          <label for="gfGiftMessage">Personal Gift Message / Messaggio regalo</label>
+          <label for="gfGiftMessage" id="gfGiftMessageLabel">Personal Gift Message / Messaggio regalo</label>
           <textarea id="gfGiftMessage" name="gift_message" placeholder="Write a premium message for the recipient"></textarea>
         </div>
 
         <div class="gift-card-field gift-card-field-wide" style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;">
-          <button class="gift-card-submit" id="gfGiftCardSubmit" type="submit"><i class="fa-solid fa-cart-plus"></i> Add Gift Card to Cart</button>
+          <button class="gift-card-submit" id="gfGiftCardSubmit" type="submit"><i class="fa-solid fa-cart-plus"></i> <span id="gfGiftCardSubmitText">Add Gift Card to Cart</span></button>
           <p class="gift-card-status" id="gfGiftCardStatus">Digital cards are emailed after successful payment. Physical cards are created as shippable branded orders.</p>
         </div>
       </form>
@@ -227,9 +227,9 @@
 
     <section class="gift-card-benefits">
       <div class="gift-card-benefits-grid">
-        <article class="gift-card-benefit"><h3>Digital Fulfilment</h3><p>Recipient email includes the secure code, QR code, amount, gift message, and expiration date after checkout.</p></article>
-        <article class="gift-card-benefit"><h3>Physical Presentation</h3><p>Physical cards are saved as normal orders and can be printed by the admin team with GIRFFON branding and barcode details.</p></article>
-        <article class="gift-card-benefit"><h3>Flexible Redemption</h3><p>Customers can apply a gift card at checkout, use only part of the balance, and keep the remainder for future orders.</p></article>
+        <article class="gift-card-benefit"><h3 id="gfGiftCardBenefitDigitalTitle">Digital Fulfilment</h3><p id="gfGiftCardBenefitDigitalText">Recipient email includes the secure code, QR code, amount, gift message, and expiration date after checkout.</p></article>
+        <article class="gift-card-benefit"><h3 id="gfGiftCardBenefitPhysicalTitle">Physical Presentation</h3><p id="gfGiftCardBenefitPhysicalText">Physical cards are saved as normal orders and can be printed by the admin team with GIRFFON branding and barcode details.</p></article>
+        <article class="gift-card-benefit"><h3 id="gfGiftCardBenefitRedeemTitle">Flexible Redemption</h3><p id="gfGiftCardBenefitRedeemText">Customers can apply a gift card at checkout, use only part of the balance, and keep the remainder for future orders.</p></article>
       </div>
     </section>
   </main>
@@ -740,9 +740,10 @@
 
   <script src="JS/analytics.js?v=20260804r21"></script>
   <script src="JS/cart.js?v=20260804r23"></script>
+  <script src="JS/script.js?v=20260429b"></script>
   <script src="JS/contact-panel.js"></script>
   <script src="JS/settings-panel.js"></script>
-  <script src="JS/locale-panel.js"></script>
+  <script src="JS/locale-panel.js?v=20260807r4"></script>
   <script src="JS/account-panel.js?v=forgot-password-1"></script>
   <script src="JS/site-search.js"></script>
   <script src="JS/gift-card-page.js?v=20260806r1"></script>

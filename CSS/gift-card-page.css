@@ -367,6 +367,112 @@
   line-height: 1.7;
 }
 
+body.gift-card-page.gf-dark-mode {
+  background:
+    radial-gradient(circle at top left, rgba(212, 161, 0, 0.18), transparent 28%),
+    linear-gradient(180deg, #10151b 0%, #171d25 100%);
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-panel,
+body.gift-card-page.gf-dark-mode .gift-card-form-card,
+body.gift-card-page.gf-dark-mode .gift-card-benefits {
+  background: rgba(23, 30, 39, 0.94);
+  border-color: rgba(232, 188, 92, 0.16);
+  box-shadow: 0 26px 56px rgba(0, 0, 0, 0.34);
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-kicker {
+  background: rgba(212, 161, 0, 0.16);
+  color: #efdcb2;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-panel h1,
+body.gift-card-page.gf-dark-mode .gift-card-form-head h2,
+body.gift-card-page.gf-dark-mode .gift-card-shop-copy h3,
+body.gift-card-page.gf-dark-mode .gift-card-benefit h3,
+body.gift-card-page.gf-dark-mode .gift-card-field label,
+body.gift-card-page.gf-dark-mode .gift-card-field-wide label {
+  color: #f6f1e8;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-panel p,
+body.gift-card-page.gf-dark-mode .gift-card-form-head p,
+body.gift-card-page.gf-dark-mode .gift-card-shop-copy p,
+body.gift-card-page.gf-dark-mode .gift-card-benefit p,
+body.gift-card-page.gf-dark-mode .gift-card-status {
+  color: #c2b7a5;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(232, 188, 92, 0.28);
+  color: #f2e6cf;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-preview {
+  background: linear-gradient(135deg, #15100c 0%, #2b1e13 52%, #8f6a28 100%);
+  color: #fff4de;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-preview-card,
+body.gift-card-page.gf-dark-mode .gift-card-preview-stat {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-shop-card {
+  border-color: rgba(232, 188, 92, 0.12);
+  background: linear-gradient(180deg, rgba(28, 35, 45, 0.98), rgba(22, 29, 38, 0.92));
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-shop-card:hover,
+body.gift-card-page.gf-dark-mode .gift-card-shop-card:focus-visible,
+body.gift-card-page.gf-dark-mode .gift-card-shop-card.is-selected {
+  border-color: rgba(232, 188, 92, 0.7);
+  box-shadow: 0 24px 40px rgba(232, 188, 92, 0.14);
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-field input,
+body.gift-card-page.gf-dark-mode .gift-card-field textarea,
+body.gift-card-page.gf-dark-mode .gift-card-field select,
+body.gift-card-page.gf-dark-mode .gift-card-custom-input,
+body.gift-card-page.gf-dark-mode .gift-card-choice span {
+  background: #111820;
+  border-color: rgba(232, 188, 92, 0.14);
+  color: #f6f1e8;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-field input::placeholder,
+body.gift-card-page.gf-dark-mode .gift-card-field textarea::placeholder,
+body.gift-card-page.gf-dark-mode .gift-card-custom-input::placeholder {
+  color: #8f8a7f;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-choice input:checked + span {
+  border-color: rgba(232, 188, 92, 0.84);
+  box-shadow: 0 18px 34px rgba(232, 188, 92, 0.18);
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-submit,
+body.gift-card-page.gf-dark-mode .gift-card-shop-button {
+  background: linear-gradient(135deg, #8e6828, #d6ac57);
+  color: #10151b;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-status.is-success {
+  color: #7ad89a;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-status.is-error {
+  color: #ff9b9b;
+}
+
+body.gift-card-page.gf-dark-mode .gift-card-benefit {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(232, 188, 92, 0.1);
+}
+
 @media (max-width: 980px) {
   .gift-card-hero,
   .gift-card-preview-grid,
