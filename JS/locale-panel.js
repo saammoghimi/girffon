@@ -1683,6 +1683,18 @@
       pageTitle: "GIRFFON Gift Card",
       metaDescription: "Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow.",
       kicker: "GIRFFON Gift Card",
+      homeSectionAria: "GIRFFON gift cards",
+      homeHeading: "Choose the perfect value and go straight into the existing gift card flow.",
+      homeIntro: "Each card opens the public Gift Card page with the matching amount already selected for faster checkout.",
+      homeProduct25Title: "EUR25 Gift Card",
+      homeProduct25Text: "Ideal for a refined entry gift.",
+      homeProduct25Button: "Buy EUR25 Gift Card",
+      homeProduct50Title: "EUR50 Gift Card",
+      homeProduct50Text: "A balanced option for premium gifting.",
+      homeProduct50Button: "Buy EUR50 Gift Card",
+      homeProduct100Title: "EUR100 Gift Card",
+      homeProduct100Text: "A luxury statement for milestone occasions.",
+      homeProduct100Button: "Buy EUR100 Gift Card",
       heroTitle: "Luxury gifting that moves through the same GIRFFON cart and checkout.",
       heroText: "Choose a digital gift card with no shipping cost or a physical branded card with QR code, barcode, and premium presentation. English and Italian labels are already built into the experience.",
       heroPillDigital: "Digital gift card",
@@ -1742,6 +1754,18 @@
       pageTitle: "GIRFFON Gift Card",
       metaDescription: "Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow.",
       kicker: "GIRFFON Gift Card",
+      homeSectionAria: "GIRFFON gift cards",
+      homeHeading: "Choose the perfect value and go straight into the existing gift card flow.",
+      homeIntro: "Each card opens the public Gift Card page with the matching amount already selected for faster checkout.",
+      homeProduct25Title: "EUR25 Gift Card",
+      homeProduct25Text: "Ideal for a refined entry gift.",
+      homeProduct25Button: "Buy EUR25 Gift Card",
+      homeProduct50Title: "EUR50 Gift Card",
+      homeProduct50Text: "A balanced option for premium gifting.",
+      homeProduct50Button: "Buy EUR50 Gift Card",
+      homeProduct100Title: "EUR100 Gift Card",
+      homeProduct100Text: "A luxury statement for milestone occasions.",
+      homeProduct100Button: "Buy EUR100 Gift Card",
       heroTitle: "Luxury gifting that moves through the same GIRFFON cart and checkout.",
       heroText: "Choose a digital gift card with no shipping charge or a physical branded card with QR code, barcode, and premium presentation. English and Italian labels are already built into the experience.",
       heroPillDigital: "Digital gift card",
@@ -1801,6 +1825,18 @@
       pageTitle: "GIRFFON Gift Card",
       metaDescription: "Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow.",
       kicker: "GIRFFON Gift Card",
+      homeSectionAria: "GIRFFON gift cards",
+      homeHeading: "Choose the perfect value and go straight into the existing gift card flow.",
+      homeIntro: "Each card opens the public Gift Card page with the matching amount already selected for faster checkout.",
+      homeProduct25Title: "EUR25 Gift Card",
+      homeProduct25Text: "Ideal for a refined entry gift.",
+      homeProduct25Button: "Buy EUR25 Gift Card",
+      homeProduct50Title: "EUR50 Gift Card",
+      homeProduct50Text: "A balanced option for premium gifting.",
+      homeProduct50Button: "Buy EUR50 Gift Card",
+      homeProduct100Title: "EUR100 Gift Card",
+      homeProduct100Text: "A luxury statement for milestone occasions.",
+      homeProduct100Button: "Buy EUR100 Gift Card",
       heroTitle: "Luxury gifting that moves through the same GIRFFON cart and checkout.",
       heroText: "Choose a digital gift card with no shipping cost or a physical branded card with QR code, barcode, and premium presentation. English and Italian labels are already built into the experience.",
       heroPillDigital: "Digital gift card",
@@ -1860,6 +1896,18 @@
       pageTitle: "GIRFFON Carta Regalo",
       metaDescription: "Acquista una Carta Regalo GIRFFON in formato digitale o fisico e aggiungila al checkout esistente.",
       kicker: "Carta Regalo GIRFFON",
+      homeSectionAria: "Carte regalo GIRFFON",
+      homeHeading: "Scegli il valore perfetto ed entra subito nel flusso gift card esistente.",
+      homeIntro: "Ogni carta apre la pagina pubblica Gift Card con l'importo corrispondente gia selezionato per un checkout piu rapido.",
+      homeProduct25Title: "Carta Regalo da EUR25",
+      homeProduct25Text: "Ideale per un regalo raffinato d'ingresso.",
+      homeProduct25Button: "Acquista Carta Regalo EUR25",
+      homeProduct50Title: "Carta Regalo da EUR50",
+      homeProduct50Text: "Un'opzione equilibrata per regali premium.",
+      homeProduct50Button: "Acquista Carta Regalo EUR50",
+      homeProduct100Title: "Carta Regalo da EUR100",
+      homeProduct100Text: "Un regalo di lusso per occasioni importanti.",
+      homeProduct100Button: "Acquista Carta Regalo EUR100",
       heroTitle: "Regali di lusso che passano nello stesso carrello e checkout GIRFFON.",
       heroText: "Scegli una gift card digitale senza costi di spedizione oppure una card fisica brandizzata con codice QR, codice a barre e presentazione premium. Le etichette in inglese e italiano sono gia integrate nell'esperienza.",
       heroPillDigital: "Carta regalo digitale",
@@ -1919,6 +1967,18 @@
       pageTitle: "GIRFFON Geschenkkarte",
       metaDescription: "Kaufen Sie eine GIRFFON Geschenkkarte in digitalem oder physischem Format und fugen Sie sie dem bestehenden Checkout hinzu.",
       kicker: "GIRFFON Geschenkkarte",
+      homeSectionAria: "GIRFFON Geschenkkarten",
+      homeHeading: "Wahlen Sie den perfekten Wert und gehen Sie direkt in den bestehenden Geschenkkartenablauf.",
+      homeIntro: "Jede Karte offnet die offentliche Geschenkkartenseite mit dem passenden bereits gewahlten Betrag fur einen schnelleren Checkout.",
+      homeProduct25Title: "EUR25 Geschenkkarte",
+      homeProduct25Text: "Ideal fur ein stilvolles Einstiegsgeschenk.",
+      homeProduct25Button: "EUR25 Geschenkkarte kaufen",
+      homeProduct50Title: "EUR50 Geschenkkarte",
+      homeProduct50Text: "Eine ausgewogene Option fur hochwertiges Schenken.",
+      homeProduct50Button: "EUR50 Geschenkkarte kaufen",
+      homeProduct100Title: "EUR100 Geschenkkarte",
+      homeProduct100Text: "Ein Luxus-Statement fur besondere Meilensteine.",
+      homeProduct100Button: "EUR100 Geschenkkarte kaufen",
       heroTitle: "Luxusgeschenke, die durch denselben GIRFFON Warenkorb und Checkout laufen.",
       heroText: "Wahlen Sie eine digitale Geschenkkarte ohne Versandkosten oder eine physische Markenkarte mit QR-Code, Barcode und hochwertiger Prasentation. Englische und italienische Beschriftungen sind bereits im Erlebnis enthalten.",
       heroPillDigital: "Digitale Geschenkkarte",
@@ -1978,6 +2038,18 @@
       pageTitle: "Carte Cadeau GIRFFON",
       metaDescription: "Achetez une carte cadeau GIRFFON en format numerique ou physique et ajoutez-la au checkout existant.",
       kicker: "Carte Cadeau GIRFFON",
+      homeSectionAria: "Cartes cadeaux GIRFFON",
+      homeHeading: "Choisissez la valeur parfaite et entrez directement dans le parcours cadeau existant.",
+      homeIntro: "Chaque carte ouvre la page publique Carte Cadeau avec le montant correspondant deja selectionne pour un checkout plus rapide.",
+      homeProduct25Title: "Carte cadeau EUR25",
+      homeProduct25Text: "Ideale pour un cadeau d'entree raffine.",
+      homeProduct25Button: "Acheter la carte cadeau EUR25",
+      homeProduct50Title: "Carte cadeau EUR50",
+      homeProduct50Text: "Une option equilibree pour un cadeau premium.",
+      homeProduct50Button: "Acheter la carte cadeau EUR50",
+      homeProduct100Title: "Carte cadeau EUR100",
+      homeProduct100Text: "Une declaration de luxe pour les grandes occasions.",
+      homeProduct100Button: "Acheter la carte cadeau EUR100",
       heroTitle: "Un cadeau de luxe qui passe par le meme panier et le meme checkout GIRFFON.",
       heroText: "Choisissez une carte cadeau numerique sans frais de livraison ou une carte physique signee avec QR code, code-barres et presentation premium. Les libelles anglais et italiens sont deja integres a l'experience.",
       heroPillDigital: "Carte cadeau numerique",
@@ -2037,6 +2109,18 @@
       pageTitle: "Tarjeta Regalo GIRFFON",
       metaDescription: "Compra una tarjeta regalo GIRFFON en formato digital o fisico y anadela al checkout existente.",
       kicker: "Tarjeta Regalo GIRFFON",
+      homeSectionAria: "Tarjetas regalo GIRFFON",
+      homeHeading: "Elige el valor perfecto y entra directamente en el flujo existente de tarjeta regalo.",
+      homeIntro: "Cada tarjeta abre la pagina publica de Tarjeta Regalo con el importe correspondiente ya seleccionado para un checkout mas rapido.",
+      homeProduct25Title: "Tarjeta regalo EUR25",
+      homeProduct25Text: "Ideal para un regalo inicial refinado.",
+      homeProduct25Button: "Comprar tarjeta regalo EUR25",
+      homeProduct50Title: "Tarjeta regalo EUR50",
+      homeProduct50Text: "Una opcion equilibrada para regalos premium.",
+      homeProduct50Button: "Comprar tarjeta regalo EUR50",
+      homeProduct100Title: "Tarjeta regalo EUR100",
+      homeProduct100Text: "Una opcion de lujo para ocasiones importantes.",
+      homeProduct100Button: "Comprar tarjeta regalo EUR100",
       heroTitle: "Regalos de lujo que pasan por el mismo carrito y checkout de GIRFFON.",
       heroText: "Elige una tarjeta regalo digital sin coste de envio o una tarjeta fisica de marca con codigo QR, codigo de barras y presentacion premium. Las etiquetas en ingles e italiano ya estan integradas en la experiencia.",
       heroPillDigital: "Tarjeta regalo digital",
@@ -2096,6 +2180,18 @@
       pageTitle: "GIRFFON Cadeaukaart",
       metaDescription: "Koop een GIRFFON cadeaukaart in digitale of fysieke vorm en voeg deze toe aan de bestaande checkout.",
       kicker: "GIRFFON Cadeaukaart",
+      homeSectionAria: "GIRFFON cadeaukaarten",
+      homeHeading: "Kies de perfecte waarde en ga direct naar de bestaande cadeaukaartflow.",
+      homeIntro: "Elke kaart opent de openbare cadeaukaartpagina met het bijpassende bedrag al geselecteerd voor een snellere checkout.",
+      homeProduct25Title: "EUR25 Cadeaukaart",
+      homeProduct25Text: "Ideaal als verfijnd instapcadeau.",
+      homeProduct25Button: "Koop EUR25 cadeaukaart",
+      homeProduct50Title: "EUR50 Cadeaukaart",
+      homeProduct50Text: "Een gebalanceerde optie voor premium cadeaus.",
+      homeProduct50Button: "Koop EUR50 cadeaukaart",
+      homeProduct100Title: "EUR100 Cadeaukaart",
+      homeProduct100Text: "Een luxe statement voor bijzondere mijlpalen.",
+      homeProduct100Button: "Koop EUR100 cadeaukaart",
       heroTitle: "Luxe cadeaus die via dezelfde GIRFFON winkelwagen en checkout lopen.",
       heroText: "Kies een digitale cadeaukaart zonder verzendkosten of een fysieke merkkaart met QR-code, barcode en premium presentatie. Engelse en Italiaanse labels zijn al in de ervaring opgenomen.",
       heroPillDigital: "Digitale cadeaukaart",
@@ -2155,6 +2251,18 @@
       pageTitle: "Karta Podarunkowa GIRFFON",
       metaDescription: "Kup karte podarunkowa GIRFFON w formacie cyfrowym lub fizycznym i dodaj ja do istniejacego checkoutu.",
       kicker: "Karta Podarunkowa GIRFFON",
+      homeSectionAria: "Karty podarunkowe GIRFFON",
+      homeHeading: "Wybierz idealna wartosc i przejdz od razu do istniejacego procesu kart podarunkowych.",
+      homeIntro: "Kazda karta otwiera publiczna strone karty podarunkowej z juz wybrana odpowiednia kwota dla szybszego checkoutu.",
+      homeProduct25Title: "Karta podarunkowa EUR25",
+      homeProduct25Text: "Idealna jako elegancki prezent na start.",
+      homeProduct25Button: "Kup karte podarunkowa EUR25",
+      homeProduct50Title: "Karta podarunkowa EUR50",
+      homeProduct50Text: "Zrownowazona opcja na prezenty premium.",
+      homeProduct50Button: "Kup karte podarunkowa EUR50",
+      homeProduct100Title: "Karta podarunkowa EUR100",
+      homeProduct100Text: "Luksusowy wybor na wazne okazje.",
+      homeProduct100Button: "Kup karte podarunkowa EUR100",
       heroTitle: "Luksusowe prezenty obslugiwane przez ten sam koszyk i checkout GIRFFON.",
       heroText: "Wybierz cyfrowa karte podarunkowa bez kosztow dostawy albo fizyczna markowa karte z kodem QR, kodem kreskowym i premium prezentacja. Angielskie i wloskie etykiety sa juz zintegrowane z tym doswiadczeniem.",
       heroPillDigital: "Cyfrowa karta podarunkowa",
@@ -2214,6 +2322,18 @@
       pageTitle: "GIRFFON Presentkort",
       metaDescription: "Kop ett GIRFFON presentkort i digitalt eller fysiskt format och lagg det i den befintliga checkouten.",
       kicker: "GIRFFON Presentkort",
+      homeSectionAria: "GIRFFON presentkort",
+      homeHeading: "Valj det perfekta vardet och ga direkt in i det befintliga presentkortsflodet.",
+      homeIntro: "Varje kort oppnar den publika presentkortssidan med motsvarande belopp redan valt for en snabbare checkout.",
+      homeProduct25Title: "EUR25 Presentkort",
+      homeProduct25Text: "Perfekt som en forfinad forstagava.",
+      homeProduct25Button: "Kop EUR25 presentkort",
+      homeProduct50Title: "EUR50 Presentkort",
+      homeProduct50Text: "Ett balanserat alternativ for premiumgivande.",
+      homeProduct50Button: "Kop EUR50 presentkort",
+      homeProduct100Title: "EUR100 Presentkort",
+      homeProduct100Text: "En lyxig markering for stora tillfallen.",
+      homeProduct100Button: "Kop EUR100 presentkort",
       heroTitle: "Lyxiga presenter som gar genom samma GIRFFON-varukorg och checkout.",
       heroText: "Valj ett digitalt presentkort utan fraktkostnad eller ett fysiskt profilkort med QR-kod, streckkod och premium presentation. Engelska och italienska etiketter finns redan integrerade i upplevelsen.",
       heroPillDigital: "Digitalt presentkort",
@@ -2273,6 +2393,18 @@
       pageTitle: "GIRFFON Geschenkkarte",
       metaDescription: "Kaufen Sie eine GIRFFON Geschenkkarte in digitalem oder physischem Format und fugen Sie sie dem bestehenden Checkout hinzu.",
       kicker: "GIRFFON Geschenkkarte",
+      homeSectionAria: "GIRFFON Geschenkkarten",
+      homeHeading: "Wahlen Sie den perfekten Wert und gehen Sie direkt in den bestehenden Geschenkkartenablauf.",
+      homeIntro: "Jede Karte offnet die offentliche Geschenkkartenseite mit dem passenden bereits gewahlten Betrag fur einen schnelleren Checkout.",
+      homeProduct25Title: "EUR25 Geschenkkarte",
+      homeProduct25Text: "Ideal fur ein stilvolles Einstiegsgeschenk.",
+      homeProduct25Button: "EUR25 Geschenkkarte kaufen",
+      homeProduct50Title: "EUR50 Geschenkkarte",
+      homeProduct50Text: "Eine ausgewogene Option fur hochwertiges Schenken.",
+      homeProduct50Button: "EUR50 Geschenkkarte kaufen",
+      homeProduct100Title: "EUR100 Geschenkkarte",
+      homeProduct100Text: "Ein Luxus-Statement fur besondere Meilensteine.",
+      homeProduct100Button: "EUR100 Geschenkkarte kaufen",
       heroTitle: "Luxusgeschenke, die durch denselben GIRFFON Warenkorb und Checkout laufen.",
       heroText: "Wahlen Sie eine digitale Geschenkkarte ohne Versandkosten oder eine physische Markenkarte mit QR-Code, Barcode und hochwertiger Prasentation. Englische und italienische Beschriftungen sind bereits im Erlebnis enthalten.",
       heroPillDigital: "Digitale Geschenkkarte",
@@ -2700,6 +2832,34 @@
       giftCardMetaDescription.setAttribute("content", giftCardLang.metaDescription);
     }
 
+    const homeGiftCardSection = document.getElementById("gfHomeGiftCardSection");
+    const homeGiftCard25Card = document.getElementById("gfHomeGiftCard25Card");
+    const homeGiftCard50Card = document.getElementById("gfHomeGiftCard50Card");
+    const homeGiftCard100Card = document.getElementById("gfHomeGiftCard100Card");
+    const homeGiftCard25Image = document.getElementById("gfHomeGiftCard25Image");
+    const homeGiftCard50Image = document.getElementById("gfHomeGiftCard50Image");
+    const homeGiftCard100Image = document.getElementById("gfHomeGiftCard100Image");
+
+    if (homeGiftCardSection && giftCardLang.homeSectionAria) homeGiftCardSection.setAttribute("aria-label", giftCardLang.homeSectionAria);
+    if (homeGiftCard25Card && giftCardLang.product25CardAria) homeGiftCard25Card.setAttribute("aria-label", giftCardLang.product25CardAria);
+    if (homeGiftCard50Card && giftCardLang.product50CardAria) homeGiftCard50Card.setAttribute("aria-label", giftCardLang.product50CardAria);
+    if (homeGiftCard100Card && giftCardLang.product100CardAria) homeGiftCard100Card.setAttribute("aria-label", giftCardLang.product100CardAria);
+    if (homeGiftCard25Image && giftCardLang.product25ImageAlt) homeGiftCard25Image.alt = giftCardLang.product25ImageAlt;
+    if (homeGiftCard50Image && giftCardLang.product50ImageAlt) homeGiftCard50Image.alt = giftCardLang.product50ImageAlt;
+    if (homeGiftCard100Image && giftCardLang.product100ImageAlt) homeGiftCard100Image.alt = giftCardLang.product100ImageAlt;
+    setNodeText(document.getElementById("gfHomeGiftCardKicker"), giftCardLang.kicker);
+    setNodeText(document.getElementById("gfHomeGiftCardHeading"), giftCardLang.homeHeading);
+    setNodeText(document.getElementById("gfHomeGiftCardIntro"), giftCardLang.homeIntro);
+    setNodeText(document.getElementById("gfHomeGiftCard25Title"), giftCardLang.homeProduct25Title);
+    setNodeText(document.getElementById("gfHomeGiftCard25Text"), giftCardLang.homeProduct25Text);
+    setNodeText(document.getElementById("gfHomeGiftCard25Button"), giftCardLang.homeProduct25Button);
+    setNodeText(document.getElementById("gfHomeGiftCard50Title"), giftCardLang.homeProduct50Title);
+    setNodeText(document.getElementById("gfHomeGiftCard50Text"), giftCardLang.homeProduct50Text);
+    setNodeText(document.getElementById("gfHomeGiftCard50Button"), giftCardLang.homeProduct50Button);
+    setNodeText(document.getElementById("gfHomeGiftCard100Title"), giftCardLang.homeProduct100Title);
+    setNodeText(document.getElementById("gfHomeGiftCard100Text"), giftCardLang.homeProduct100Text);
+    setNodeText(document.getElementById("gfHomeGiftCard100Button"), giftCardLang.homeProduct100Button);
+
     setNodeText(document.querySelector("#gfAccountPanel .gf-account-header h3"), lang.account);
     setNodeText(document.querySelector("#gfAccountGuest .gf-account-auth-head h4"), accountLang.signIn);
     setNodeText(document.querySelector("#gfAccountGuest .gf-account-auth-head p"), accountLang.accountIntro);
@@ -2989,6 +3149,10 @@
   function scheduleReapply(countryCode) {
     [300, 1200, 2800].forEach((delay) => {
       window.setTimeout(() => {
+        const activeCountry = localStorage.getItem(STORAGE_KEY) || DEFAULT_COUNTRY;
+        if (activeCountry !== countryCode) {
+          return;
+        }
         updateAllPrices(countryCode);
         applyTranslations(countryCode);
       }, delay);
