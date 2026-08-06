@@ -139,7 +139,7 @@ $adminVisitorDeviceMax = $computeAdminAnalyticsMax($adminVisitorDevices);
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Dashboard</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260804r12">
 </head>
 <body class="admin-page" data-admin-page="dashboard" data-admin-dashboard-source="database" data-admin-orders-source="database" data-admin-invoices-source="database" data-admin-weather-city="<?php echo $escapeAdminDashboard($adminWeatherCity); ?>" data-admin-weather-country="<?php echo $escapeAdminDashboard($adminWeatherCountry); ?>" data-admin-analytics="<?php echo $escapeAdminDashboardJson($adminAnalyticsExplorer); ?>">
   <div class="admin-layout">
@@ -661,6 +661,8 @@ $adminVisitorDeviceMax = $computeAdminAnalyticsMax($adminVisitorDevices);
             <div class="admin-analytics-card"><span>Average Session</span><strong data-visitor-summary="average_session_duration_label"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['average_session_duration_label'] ?? '0s'); ?></strong></div>
             <div class="admin-analytics-card"><span>Average Time Per Page</span><strong data-visitor-summary="average_time_per_page_label"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['average_time_per_page_label'] ?? '0s'); ?></strong></div>
             <div class="admin-analytics-card"><span>Conversion Rate</span><strong data-visitor-summary="conversion_rate"><?php echo $escapeAdminDashboard($formatAdminDashboardPercent($adminVisitorAnalytics['conversion_rate'] ?? 0)); ?></strong></div>
+          </div>
+          <div class="admin-visitor-overview-grid admin-visitor-overview-grid--actions">
             <div class="admin-analytics-card"><span>Bounce Rate</span><strong data-visitor-summary="bounce_rate"><?php echo $escapeAdminDashboard($formatAdminDashboardPercent($adminVisitorAnalytics['bounce_rate'] ?? 0)); ?></strong></div>
             <div class="admin-analytics-card"><span>Add To Cart</span><strong data-visitor-summary="add_to_cart"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['add_to_cart'] ?? 0); ?></strong></div>
             <div class="admin-analytics-card"><span>Wishlist Adds</span><strong data-visitor-summary="wishlist_adds"><?php echo $escapeAdminDashboard($adminVisitorAnalytics['wishlist_adds'] ?? 0); ?></strong></div>

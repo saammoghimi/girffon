@@ -404,6 +404,7 @@ $company = is_array($invoice['company'] ?? null) ? $invoice['company'] : girffon
       </article>
     </section>
   </main>
+  <script src="JS/analytics.js?v=20260804r14"></script>
 <?php if ($autoPrint): ?>
   <script>
     window.addEventListener('load', function () {

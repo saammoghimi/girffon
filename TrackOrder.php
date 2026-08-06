@@ -442,4 +442,8 @@ if ($cartOnlyScriptPosition !== false) {
     }
 }
 
+if (strpos($template, 'JS/analytics.js?v=20260804r14') === false) {
+  $template = str_replace('</body>', '  <script src="JS/analytics.js?v=20260804r14"></script>' . PHP_EOL . '</body>', $template);
+}
+
 echo $template;

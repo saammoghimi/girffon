@@ -847,6 +847,7 @@ $sizeLines = is_array($order['size_lines'] ?? null) ? $order['size_lines'] : [];
     </section>
   </main>
 
+  <script src="JS/analytics.js?v=20260804r14"></script>
   <script>
     (function () {
       const form = document.getElementById('gfCustomDesignCheckoutForm');

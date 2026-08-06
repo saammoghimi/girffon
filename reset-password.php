@@ -115,6 +115,7 @@ $token = trim((string) ($_GET['token'] ?? ''));
     <a class="back-link" href="/GirffoN/Index.html">Back to GirffoN</a>
   </main>
 
+  <script src="JS/analytics.js?v=20260804r14"></script>
   <script>
     (function () {
       const form = document.getElementById('gfResetPasswordForm');

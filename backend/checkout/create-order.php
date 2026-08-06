@@ -537,7 +537,7 @@ try {
     }
 
     if (($analyticsPayload['visitor_id'] ?? '') !== '' && ($analyticsPayload['session_id'] ?? '') !== '') {
-        girffonAdminTrackWebsiteVisitor($pdo, [
+        $completedOrderTracked = girffonAdminTrackWebsiteVisitor($pdo, [
             'event_type' => 'completed_order',
             'visitor_id' => (string) $analyticsPayload['visitor_id'],
             'session_id' => (string) $analyticsPayload['session_id'],
@@ -551,6 +551,19 @@ try {
                 'item_count' => count($normalizedItems),
                 'order_total' => $amountDue,
             ],
+        ]);
+
+        girffonAdminAnalyticsDebugLog([
+            'timestamp' => gmdate('c'),
+            'tracker_version' => 'server',
+            'event_type' => 'completed_order',
+            'page_url' => '/GirffoN/CartTest.html?checkout=success',
+            'page_path' => '/GirffoN/CartTest.html',
+            'action_result' => $completedOrderTracked ? 'server_order_tracking_completed' : 'server_order_tracking_failed',
+            'tracked' => $completedOrderTracked,
+            'database_insert_result' => (string) ((girffonAdminAnalyticsGetLastTrackDebug()['database_insert_result'] ?? ($completedOrderTracked ? 'recorded' : 'not_recorded'))),
+            'order_number' => $orderNumber,
+            'payment_status' => $paymentStatus,
         ]);
     }
 

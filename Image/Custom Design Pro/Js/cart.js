@@ -17,6 +17,7 @@
   const ANALYTICS_SESSION_TTL_MS = 30 * 60 * 1000;
   const ANALYTICS_HEARTBEAT_MS = 60 * 1000;
   const ANALYTICS_EXIT_ONCE_PREFIX = "girffon_analytics_exit_";
+  const sharedAnalytics = window.GirffonAnalytics && window.GirffonAnalytics._shared ? window.GirffonAnalytics : null;
   const pageStartedAt = Date.now();
   const pageInstanceId = cdpAnalyticsId("page");
   const CART_STRINGS = {
@@ -161,6 +162,10 @@
   }
 
   function cdpAnalyticsContext() {
+    if (sharedAnalytics && typeof sharedAnalytics.getContext === "function") {
+      return sharedAnalytics.getContext();
+    }
+
     const now = Date.now();
     let visitorId = cdpStorageGet(window.localStorage, ANALYTICS_VISITOR_KEY);
     if (!visitorId) {
@@ -241,6 +246,10 @@
   }
 
   function cdpSendExitAnalytics() {
+    if (sharedAnalytics && typeof sharedAnalytics.trackExit === "function") {
+      return sharedAnalytics.trackExit();
+    }
+
     const exitKey = ANALYTICS_EXIT_ONCE_PREFIX + pageInstanceId;
     if (cdpStorageGet(window.sessionStorage, exitKey) === "1") {
       return false;
@@ -275,10 +284,18 @@
   }
 
   function cdpTrack(eventType, meta) {
+    if (sharedAnalytics && typeof sharedAnalytics.track === "function") {
+      return sharedAnalytics.track(eventType, meta);
+    }
+
     return cdpSendPayload(cdpBuildPayload(eventType, meta), false);
   }
 
   function cdpTrackOnce(eventType, onceKey, meta) {
+    if (sharedAnalytics && typeof sharedAnalytics.trackOnce === "function") {
+      return sharedAnalytics.trackOnce(eventType, onceKey, meta);
+    }
+
     const storageKey = ANALYTICS_ONCE_PREFIX + String(onceKey || eventType || "event");
     if (cdpStorageGet(window.sessionStorage, storageKey) === "1") {
       return;
@@ -288,36 +305,56 @@
     cdpTrack(eventType, meta);
   }
 
-  window.GirffonAnalytics = window.GirffonAnalytics || {
-    track: cdpTrack,
-    trackOnce: cdpTrackOnce,
-    getContext: cdpAnalyticsContext
-  };
-
-  window.addEventListener("load", function () {
-    cdpTrack("page_view", { section: "custom_design" });
+  function cdpTrackOpenEvent() {
     cdpTrackOnce("custom_design_open", "custom-design-open", {
       product: String(window.cdpProductConfig && window.cdpProductConfig.productName || "Custom Product")
     });
-  }, { once: true });
+  }
 
-  window.setInterval(function () {
-    cdpTrack("heartbeat", {
-      active_seconds: Math.max(1, Math.round((Date.now() - pageStartedAt) / 1000))
-    });
-  }, ANALYTICS_HEARTBEAT_MS);
+  function cdpScheduleOpenEvent() {
+    var trigger = function () {
+      window.setTimeout(cdpTrackOpenEvent, 0);
+    };
 
-  document.addEventListener("visibilitychange", function () {
-    if (document.visibilityState !== "hidden") {
+    if (document.readyState === "interactive" || document.readyState === "complete") {
+      trigger();
       return;
     }
 
-    cdpSendExitAnalytics();
-  });
+    document.addEventListener("DOMContentLoaded", trigger, { once: true });
+  }
 
-  window.addEventListener("pagehide", function () {
-    cdpSendExitAnalytics();
-  });
+  cdpScheduleOpenEvent();
+
+  if (!sharedAnalytics) {
+    window.GirffonAnalytics = window.GirffonAnalytics || {
+      track: cdpTrack,
+      trackOnce: cdpTrackOnce,
+      getContext: cdpAnalyticsContext
+    };
+
+    window.addEventListener("load", function () {
+      cdpTrack("page_view", { section: "custom_design" });
+    }, { once: true });
+
+    window.setInterval(function () {
+      cdpTrack("heartbeat", {
+        active_seconds: Math.max(1, Math.round((Date.now() - pageStartedAt) / 1000))
+      });
+    }, ANALYTICS_HEARTBEAT_MS);
+
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState !== "hidden") {
+        return;
+      }
+
+      cdpSendExitAnalytics();
+    });
+
+    window.addEventListener("pagehide", function () {
+      cdpSendExitAnalytics();
+    });
+  }
       orderSummary: "Bestellübersicht",
       cartInvoice: "Warenkorb & Rechnung",
       closeCartPanel: "Warenkorb schließen",

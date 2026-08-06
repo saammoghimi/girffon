@@ -207,7 +207,8 @@
     </div>
   </footer>
 
-  <script src="JS/cart.js?v=20260429b"></script>
-  <script src="JS/gift-card-page.js"></script>
+  <script src="JS/analytics.js?v=20260804r21"></script>
+  <script src="JS/cart.js?v=20260804r23"></script>
+  <script src="JS/gift-card-page.js?v=20260804r21"></script>
 </body>
 </html>

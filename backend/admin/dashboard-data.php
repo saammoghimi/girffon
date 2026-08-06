@@ -15,6 +15,24 @@ function girffonAdminDashboardEnsureLogDirectory(): void
     }
 }
 
+function girffonAdminAnalyticsDebugLog(array $entry): void
+{
+    girffonAdminDashboardEnsureLogDirectory();
+    $line = '[' . gmdate('Y-m-d H:i:s') . '] ' . json_encode($entry, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL;
+    @file_put_contents(girffonAdminDashboardLogPath('visitor-analytics-debug.log'), $line, FILE_APPEND);
+}
+
+function girffonAdminAnalyticsSetLastTrackDebug(array $state): void
+{
+    $GLOBALS['girffon_admin_analytics_last_track_debug'] = $state;
+}
+
+function girffonAdminAnalyticsGetLastTrackDebug(): array
+{
+    $state = $GLOBALS['girffon_admin_analytics_last_track_debug'] ?? null;
+    return is_array($state) ? $state : [];
+}
+
 function girffonAdminDashboardReadJsonLog(string $fileName): array
 {
     $path = girffonAdminDashboardLogPath($fileName);
@@ -891,21 +909,154 @@ function girffonAdminAnalyticsDetectBrowser(string $userAgent = ''): string
     return 'Other';
 }
 
-function girffonAdminAnalyticsDetectDevice(string $userAgent = ''): string
+function girffonAdminAnalyticsSignalString($value, int $maxLength = 255): string
+{
+    return girffonAdminAnalyticsSanitizeText((string) $value, $maxLength);
+}
+
+function girffonAdminAnalyticsSignalInt($value): int
+{
+    return max(0, (int) $value);
+}
+
+function girffonAdminAnalyticsSignalFloat($value): float
+{
+    return max(0, (float) $value);
+}
+
+function girffonAdminAnalyticsDeviceSignals(array $payload = []): array
+{
+    $metadata = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
+    $clientHints = is_array($metadata['ua_client_hints'] ?? null) ? $metadata['ua_client_hints'] : [];
+    $platform = girffonAdminAnalyticsSignalString(
+        $payload['platform']
+        ?? $metadata['platform']
+        ?? $clientHints['platform']
+        ?? $_SERVER['HTTP_SEC_CH_UA_PLATFORM']
+        ?? $_SERVER['HTTP_USER_AGENT']
+        ?? '',
+        120
+    );
+    $pointerType = strtolower(girffonAdminAnalyticsSignalString($payload['pointer_type'] ?? $metadata['pointer_type'] ?? '', 32));
+    $orientation = strtolower(girffonAdminAnalyticsSignalString($payload['orientation'] ?? $metadata['orientation'] ?? '', 32));
+    $touchPoints = girffonAdminAnalyticsSignalInt($payload['touch_points'] ?? $metadata['touch_points'] ?? $_POST['touch_points'] ?? $_GET['touch_points'] ?? 0);
+    $viewportWidth = girffonAdminAnalyticsSignalInt($payload['viewport_width'] ?? $metadata['viewport_width'] ?? $_POST['viewport_width'] ?? $_GET['viewport_width'] ?? 0);
+    $screenWidth = girffonAdminAnalyticsSignalInt($payload['screen_width'] ?? $metadata['screen_width'] ?? 0);
+    $devicePixelRatio = girffonAdminAnalyticsSignalFloat($payload['device_pixel_ratio'] ?? $metadata['device_pixel_ratio'] ?? 0);
+    $clientHintsTextParts = [];
+    foreach (['platform', 'model', 'architecture', 'bitness', 'platformVersion', 'uaFullVersion'] as $hintKey) {
+        if (!empty($clientHints[$hintKey])) {
+            $clientHintsTextParts[] = (string) $clientHints[$hintKey];
+        }
+    }
+    foreach (['formFactors', 'brands'] as $hintListKey) {
+        if (is_array($clientHints[$hintListKey] ?? null)) {
+            foreach ($clientHints[$hintListKey] as $hintValue) {
+                if ((string) $hintValue !== '') {
+                    $clientHintsTextParts[] = (string) $hintValue;
+                }
+            }
+        }
+    }
+
+    return [
+        'platform' => $platform,
+        'platform_lower' => strtolower($platform),
+        'pointer_type' => $pointerType,
+        'orientation' => $orientation,
+        'touch_points' => $touchPoints,
+        'viewport_width' => $viewportWidth,
+        'screen_width' => $screenWidth,
+        'short_size' => min(array_filter([$viewportWidth, $screenWidth]) ?: [0]),
+        'long_size' => max($viewportWidth, $screenWidth),
+        'device_pixel_ratio' => $devicePixelRatio,
+        'client_hints_mobile' => filter_var($clientHints['mobile'] ?? ($_SERVER['HTTP_SEC_CH_UA_MOBILE'] ?? false), FILTER_VALIDATE_BOOLEAN),
+        'client_hints_text' => strtolower(implode(' ', $clientHintsTextParts)),
+    ];
+}
+
+function girffonAdminAnalyticsTabletModelMatch(string $value): bool
+{
+    return (bool) preg_match('/(lenovo[\s-]*tab|tb[-\s]?\w+|yt[-\s]?\w+|m10|m9|p11|p12|xiaomi[\s-]*pad|redmi[\s-]*pad|matepad|honor[\s-]*pad|oneplus[\s-]*pad|pixel[\s-]*tablet|sm-x\w+|galaxy[\s-]*tab|fire[\s-]*hd|kf[a-z]{2,4}\w*|nokia[\s-]*t\d+|tcl[\s-]*tab|alcatel[\s-]*(?:1t|3t|joy[\s-]*tab)|xperia[\s-]*tablet|zenpad|transformer|iconia|venue[\s-]*\d+|surface|mi[\s-]*pad)/i', $value);
+}
+
+function girffonAdminAnalyticsDetectDeviceDecision(string $userAgent = '', array $payload = []): array
 {
     $userAgent = strtolower(trim($userAgent !== '' ? $userAgent : (string) ($_SERVER['HTTP_USER_AGENT'] ?? '')));
+    $signals = girffonAdminAnalyticsDeviceSignals($payload);
+    $touchPoints = $signals['touch_points'];
+    $viewportWidth = $signals['viewport_width'];
+    $screenWidth = $signals['screen_width'];
+    $pointerType = $signals['pointer_type'];
+    $shortSize = $signals['short_size'];
+    $longSize = $signals['long_size'];
+    $devicePixelRatio = $signals['device_pixel_ratio'];
+    $platform = $signals['platform_lower'];
+    $clientHintsText = $signals['client_hints_text'];
+    $clientHintsMobile = !empty($signals['client_hints_mobile']);
+    $isWindows = strpos($userAgent, 'windows nt') !== false || strpos($platform, 'win') !== false || strpos($clientHintsText, 'windows') !== false;
+    $isAndroid = strpos($userAgent, 'android') !== false || strpos($platform, 'android') !== false || strpos($clientHintsText, 'android') !== false;
+    $isIpadDesktopMode = (strpos($userAgent, 'macintosh') !== false || strpos($platform, 'mac') !== false) && $touchPoints > 1;
+    $hasTabletKeyword = (bool) preg_match('/ipad|tablet|playbook|silk|kindle|nexus 7|nexus 9|nexus 10|sm-t|xoom/i', $userAgent)
+        || girffonAdminAnalyticsTabletModelMatch($userAgent)
+        || girffonAdminAnalyticsTabletModelMatch($clientHintsText);
+    $androidWithoutMobile = $isAndroid && strpos($userAgent, 'mobile') === false;
+    $explicitPhone = (bool) preg_match('/mobi|iphone|ipod|phone/i', $userAgent) || ($clientHintsMobile && !$isIpadDesktopMode);
+    $surfaceTabletMode = $isWindows
+        && $touchPoints > 1
+        && $pointerType === 'coarse'
+        && $shortSize >= 700
+        && $shortSize <= 1100
+        && $longSize <= 1500;
+    $genericTouchTablet = $touchPoints > 1
+        && $shortSize >= 600
+        && $shortSize <= 1280
+        && $longSize >= 800
+        && !$explicitPhone
+        && ($pointerType === 'coarse' || $devicePixelRatio >= 1.25)
+        && (!$isWindows || $surfaceTabletMode);
+    $screenSizedTablet = $touchPoints > 1
+        && $shortSize >= 600
+        && $shortSize <= 1600
+        && !$explicitPhone
+        && (!$isWindows || $surfaceTabletMode);
+
     if ($userAgent === '') {
-        return 'Desktop';
+        return [
+            'device' => ($touchPoints > 1 && $viewportWidth >= 700 && $viewportWidth <= 1366) ? 'Tablet' : 'Desktop',
+            'rule' => ($touchPoints > 1 && $viewportWidth >= 700 && $viewportWidth <= 1366) ? 'generic_touch_tablet' : 'desktop_fallback',
+        ];
     }
 
-    if (strpos($userAgent, 'ipad') !== false || strpos($userAgent, 'tablet') !== false) {
-        return 'Tablet';
+    if ($isIpadDesktopMode) {
+        return ['device' => 'Tablet', 'rule' => 'ipad_desktop_mode'];
     }
-    if (strpos($userAgent, 'mobi') !== false || strpos($userAgent, 'android') !== false || strpos($userAgent, 'iphone') !== false) {
-        return 'Mobile';
+    if ($hasTabletKeyword) {
+        return ['device' => 'Tablet', 'rule' => 'explicit_tablet_user_agent'];
+    }
+    if ($androidWithoutMobile) {
+        return ['device' => 'Tablet', 'rule' => 'android_without_mobile'];
+    }
+    if ($surfaceTabletMode) {
+        return ['device' => 'Tablet', 'rule' => 'generic_touch_tablet'];
+    }
+    if ($explicitPhone) {
+        return ['device' => 'Mobile', 'rule' => 'mobile_user_agent'];
+    }
+    if ($genericTouchTablet) {
+        return ['device' => 'Tablet', 'rule' => 'generic_touch_tablet'];
+    }
+    if ($screenSizedTablet) {
+        return ['device' => 'Tablet', 'rule' => 'screen_sized_tablet'];
     }
 
-    return 'Desktop';
+    return ['device' => 'Desktop', 'rule' => 'desktop_fallback'];
+}
+
+function girffonAdminAnalyticsDetectDevice(string $userAgent = '', array $payload = []): string
+{
+    $decision = girffonAdminAnalyticsDetectDeviceDecision($userAgent, $payload);
+    return (string) ($decision['device'] ?? 'Desktop');
 }
 
 function girffonAdminAnalyticsTrafficSource(string $referrerHost = '', string $explicitSource = ''): string
@@ -935,6 +1086,97 @@ function girffonAdminAnalyticsTrafficSource(string $referrerHost = '', string $e
     return 'Other';
 }
 
+function girffonAdminAnalyticsTrafficSourceDecision(array $payload = [], string $serverUserAgent = '', string $serverReferer = ''): array
+{
+    $pageUrl = (string) ($payload['page_url'] ?? ($payload['meta']['page_url'] ?? ''));
+    $documentReferrer = (string) ($payload['referrer'] ?? $serverReferer);
+    $referrerHost = girffonAdminAnalyticsNormalizeHost($documentReferrer);
+    $serverUserAgent = strtolower(trim((string) ($payload['user_agent'] ?? $serverUserAgent)));
+    $utmSource = '';
+    $fbclid = '';
+
+    if ($pageUrl !== '') {
+        $pageQuery = (string) parse_url($pageUrl, PHP_URL_QUERY);
+        if ($pageQuery !== '') {
+            parse_str($pageQuery, $pageParams);
+            $utmSource = strtolower(trim((string) ($pageParams['utm_source'] ?? '')));
+            $fbclid = trim((string) ($pageParams['fbclid'] ?? ''));
+        }
+    }
+
+    if ($utmSource === '') {
+        $utmSource = strtolower(trim((string) ($payload['utm_source'] ?? ($payload['meta']['utm_source'] ?? ''))));
+    }
+    if ($fbclid === '') {
+        $fbclid = trim((string) ($payload['fbclid'] ?? ($payload['meta']['fbclid'] ?? '')));
+    }
+
+    $normalizedExplicitSource = strtolower(trim((string) ($payload['traffic_source'] ?? '')));
+    if (in_array($normalizedExplicitSource, ['instagram', 'facebook', 'google', 'bing', 'direct', 'other'], true)) {
+        $ruleMap = [
+            'instagram' => 'utm_source_instagram',
+            'facebook' => 'utm_source_facebook',
+            'google' => 'google_referrer',
+            'bing' => 'bing_referrer',
+            'direct' => 'direct_no_referrer',
+            'other' => 'other_referrer',
+        ];
+
+        return [
+            'source' => ucfirst($normalizedExplicitSource),
+            'rule' => (string) ($payload['matched_source_rule'] ?? ($payload['meta']['matched_source_rule'] ?? ($ruleMap[$normalizedExplicitSource] ?? 'other_referrer'))),
+            'document_referrer' => $documentReferrer,
+            'utm_source' => $utmSource,
+            'fbclid' => $fbclid,
+        ];
+    }
+
+    $isInternalReferrer = in_array($referrerHost, ['girffon.shop', 'www.girffon.shop', 'localhost'], true);
+    if ($isInternalReferrer) {
+        $referrerHost = '';
+    }
+
+    $instagramReferrer = (bool) preg_match('/(^|\.)((l|lm)\.)?instagram\.com$/i', $referrerHost);
+    $facebookReferrer = (bool) preg_match('/(^|\.)((m|l|lm|web)\.)?facebook\.com$/i', $referrerHost)
+        || (bool) preg_match('/(^|\.)fb\.com$/i', $referrerHost)
+        || (bool) preg_match('/(^|\.)m\.me$/i', $referrerHost);
+    $instagramUserAgent = strpos($serverUserAgent, 'instagram') !== false;
+    $facebookUserAgent = (bool) preg_match('/fban|fbav|fb_iab|fb4a|fbios|facebook|messenger/i', $serverUserAgent);
+
+    if ($utmSource === 'instagram') {
+        return ['source' => 'Instagram', 'rule' => 'utm_source_instagram', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($utmSource === 'facebook' || $utmSource === 'messenger') {
+        return ['source' => 'Facebook', 'rule' => 'utm_source_facebook', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($instagramReferrer) {
+        return ['source' => 'Instagram', 'rule' => 'instagram_referrer', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($facebookReferrer) {
+        return ['source' => 'Facebook', 'rule' => 'facebook_referrer', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($fbclid !== '') {
+        return ['source' => 'Facebook', 'rule' => 'fbclid_parameter', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($referrerHost === '' && $instagramUserAgent) {
+        return ['source' => 'Instagram', 'rule' => 'instagram_in_app_browser', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($referrerHost === '' && $facebookUserAgent) {
+        return ['source' => 'Facebook', 'rule' => 'facebook_in_app_browser', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if (strpos($referrerHost, 'google.') !== false) {
+        return ['source' => 'Google', 'rule' => 'google_referrer', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if (strpos($referrerHost, 'bing.') !== false) {
+        return ['source' => 'Bing', 'rule' => 'bing_referrer', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+    if ($referrerHost === '') {
+        return ['source' => 'Direct', 'rule' => 'direct_no_referrer', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+    }
+
+    return ['source' => 'Other', 'rule' => 'other_referrer', 'document_referrer' => $documentReferrer, 'utm_source' => $utmSource, 'fbclid' => $fbclid];
+}
+
 function girffonAdminFormatDurationLabel(int $seconds): string
 {
     $seconds = max(0, $seconds);
@@ -954,28 +1196,47 @@ function girffonAdminFormatDurationLabel(int $seconds): string
 
 function girffonAdminTrackWebsiteVisitor(PDO $pdo, array $payload): bool
 {
+    $eventType = strtolower(girffonAdminAnalyticsSanitizeText($payload['event_type'] ?? 'page_view', 64));
+    if (!preg_match('/^[a-z0-9_]+$/', $eventType)) {
+        $eventType = 'page_view';
+    }
+
+    $debugState = [
+        'event_type' => $eventType,
+        'page_url' => (string) ($payload['page_url'] ?? $payload['page_path'] ?? ''),
+        'action_result' => 'tracking_started',
+        'tracked' => false,
+        'database_insert_result' => 'not_started',
+    ];
+
     if (!girffonAdminEnsureWebsiteAnalyticsTables($pdo)) {
+        $debugState['action_result'] = 'tracking_skipped_tables_unavailable';
+        $debugState['database_insert_result'] = 'tables_unavailable';
+        girffonAdminAnalyticsSetLastTrackDebug($debugState);
         return false;
     }
 
     $visitorId = girffonAdminAnalyticsSanitizeText($payload['visitor_id'] ?? '', 128);
     $sessionId = girffonAdminAnalyticsSanitizeText($payload['session_id'] ?? '', 128);
     if ($visitorId === '' || $sessionId === '') {
+        $debugState['action_result'] = 'tracking_skipped_missing_identity';
+        $debugState['database_insert_result'] = 'missing_visitor_or_session';
+        girffonAdminAnalyticsSetLastTrackDebug($debugState);
         return false;
-    }
-
-    $eventType = strtolower(girffonAdminAnalyticsSanitizeText($payload['event_type'] ?? 'page_view', 64));
-    if (!preg_match('/^[a-z0-9_]+$/', $eventType)) {
-        $eventType = 'page_view';
     }
 
     $pagePath = girffonAdminAnalyticsNormalizePagePath($payload['page_path'] ?? '');
     $pageTitle = girffonAdminAnalyticsSanitizeText($payload['page_title'] ?? '', 255);
-    $referrerHost = girffonAdminAnalyticsNormalizeHost($payload['referrer'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
+    $sourceDecision = girffonAdminAnalyticsTrafficSourceDecision($payload, (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), (string) ($_SERVER['HTTP_REFERER'] ?? ''));
+    $referrerHost = girffonAdminAnalyticsNormalizeHost((string) ($sourceDecision['document_referrer'] ?? ''));
     $country = girffonAdminAnalyticsDetectCountry($payload);
     $browserName = girffonAdminAnalyticsSanitizeText($payload['browser_name'] ?? girffonAdminAnalyticsDetectBrowser((string) ($payload['user_agent'] ?? '')), 32) ?: 'Other';
-    $deviceType = girffonAdminAnalyticsSanitizeText($payload['device_type'] ?? girffonAdminAnalyticsDetectDevice((string) ($payload['user_agent'] ?? '')), 16) ?: 'Desktop';
-    $trafficSource = girffonAdminAnalyticsTrafficSource($referrerHost, (string) ($payload['traffic_source'] ?? ''));
+    $deviceType = girffonAdminAnalyticsSanitizeText($payload['device_type'] ?? '', 16);
+    if ($deviceType === '') {
+        $deviceType = girffonAdminAnalyticsDetectDevice((string) ($payload['user_agent'] ?? ''), $payload);
+    }
+    $deviceType = $deviceType ?: 'Desktop';
+    $trafficSource = (string) ($sourceDecision['source'] ?? 'Direct');
     $ipAddress = girffonAdminAnalyticsSanitizeText($_SERVER['REMOTE_ADDR'] ?? '', 45);
     $metadata = is_array($payload['meta'] ?? null) ? $payload['meta'] : [];
     $durationSeconds = max(0, min(86400, (int) ($payload['duration_seconds'] ?? ($metadata['duration_seconds'] ?? 0))));
@@ -1006,6 +1267,7 @@ function girffonAdminTrackWebsiteVisitor(PDO $pdo, array $payload): bool
             ':metadata_json' => $metadataJson,
             ':created_at' => $createdAt,
         ]);
+        $debugState['database_insert_result'] = 'event_inserted';
 
         $readSession = $pdo->prepare('SELECT * FROM website_visitor_sessions WHERE session_id = :session_id LIMIT 1');
         $readSession->execute([':session_id' => $sessionId]);
@@ -1062,6 +1324,7 @@ function girffonAdminTrackWebsiteVisitor(PDO $pdo, array $payload): bool
                 ':is_bounce' => $isBounce,
                 ':session_id' => $sessionId,
             ]);
+            $debugState['database_insert_result'] = 'event_inserted_session_updated';
         } else {
             $insertSession = $pdo->prepare(
                 'INSERT INTO website_visitor_sessions (
@@ -1093,11 +1356,19 @@ function girffonAdminTrackWebsiteVisitor(PDO $pdo, array $payload): bool
                 ':completed_orders_count' => $completedOrdersCount,
                 ':is_bounce' => $isBounce,
             ]);
+            $debugState['database_insert_result'] = 'event_inserted_session_created';
         }
     } catch (PDOException $exception) {
+        $debugState['action_result'] = 'tracking_failed_database_exception';
+        $debugState['database_insert_result'] = 'database_exception';
+        $debugState['error_message'] = $exception->getMessage();
+        girffonAdminAnalyticsSetLastTrackDebug($debugState);
         return false;
     }
 
+    $debugState['action_result'] = 'tracking_completed';
+    $debugState['tracked'] = true;
+    girffonAdminAnalyticsSetLastTrackDebug($debugState);
     return true;
 }
 

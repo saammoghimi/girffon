@@ -173,6 +173,9 @@ $profileInjection = '  <script>window.GIRFFON_PROFILE_PAGE_DATA = ' . json_encod
     . '  <script src="JS/profile-page-server.js?v=20260519r2"></script>';
 
 $template = str_replace('  <script src="JS/profile-page.js"></script>', '', $template);
+if (strpos($template, 'JS/analytics.js?v=20260804r14') === false) {
+    $template = str_replace('</body>', '  <script src="JS/analytics.js?v=20260804r14"></script>' . PHP_EOL . '</body>', $template);
+}
 $template = str_replace('</body>', $profileInjection . PHP_EOL . '</body>', $template);
 
 echo $template;

@@ -639,10 +639,395 @@ function girffonGiftCardBuildPrintHtml(array $giftCard): string
     $recipientName = htmlspecialchars((string) ($giftCard['recipient_name'] ?? 'Gift Recipient'), ENT_QUOTES, 'UTF-8');
     $message = nl2br(htmlspecialchars((string) ($giftCard['gift_message'] ?? ''), ENT_QUOTES, 'UTF-8'));
     $expiresAt = htmlspecialchars((string) ($giftCard['expires_at'] ?? ''), ENT_QUOTES, 'UTF-8');
-    $barcode = htmlspecialchars((string) ($giftCard['barcode_value'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $barcode = htmlspecialchars((string) (($giftCard['barcode_value'] ?? '') !== '' ? $giftCard['barcode_value'] : ($giftCard['gift_code'] ?? '')), ENT_QUOTES, 'UTF-8');
     $qrUrl = htmlspecialchars(girffonGiftCardQrImageUrl((string) ($giftCard['qr_payload'] ?? girffonGiftCardBuildQrPayload($giftCard))), ENT_QUOTES, 'UTF-8');
+        $logoUrl = htmlspecialchars('/GirffoN/Image/Logo/Logo.png', ENT_QUOTES, 'UTF-8');
+        $printedAt = htmlspecialchars(date('n/j/y, g:i A'), ENT_QUOTES, 'UTF-8');
+        $giftNote = $message !== '' ? $message : 'Enjoy your GirffoN gift card.';
 
-    return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>GirffoN Gift Card</title><style>body{margin:0;padding:24px;background:#f5f1ea;color:#1f1812;font-family:Georgia,"Times New Roman",serif}.gift-card-print{max-width:720px;margin:0 auto;background:linear-gradient(135deg,#1f1812 0%,#3b2e22 55%,#c9a56a 100%);color:#f7efe3;border-radius:28px;padding:32px;display:grid;gap:24px}.gift-card-top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.gift-card-brand{letter-spacing:.28em;text-transform:uppercase;font-size:.85rem}.gift-card-amount{font-size:2.6rem;font-weight:700}.gift-card-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center}.gift-card-box{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:20px}.gift-card-box img{width:160px;height:160px;background:#fff;padding:8px;border-radius:16px}.gift-card-barcode{background:#fff;border-radius:16px;padding:14px;color:#1f1812}.gift-card-code{font-size:1.1rem;letter-spacing:.24em}.gift-card-meta{display:grid;gap:8px;font-size:.95rem}.gift-card-note{margin:0;line-height:1.7}@media print{body{padding:0;background:#fff}.gift-card-print{border-radius:0;max-width:none;min-height:100vh}}</style></head><body><section class="gift-card-print"><div class="gift-card-top"><div><div class="gift-card-brand">GirffoN Gift Card</div><h1 style="margin:.5rem 0 0;font-size:2rem;">Luxury credit for premium custom fashion</h1></div><div class="gift-card-amount">' . $amount . '</div></div><div class="gift-card-grid"><div class="gift-card-box"><p style="margin:0 0 10px;opacity:.82;">To</p><strong style="font-size:1.25rem;">' . $recipientName . '</strong><p class="gift-card-note" style="margin-top:14px;">' . ($message !== '' ? $message : 'Enjoy your GirffoN gift card.') . '</p><div class="gift-card-meta" style="margin-top:18px;"><span><strong>Code:</strong> ' . $giftCode . '</span><span><strong>Expires:</strong> ' . $expiresAt . '</span></div></div><div class="gift-card-box" style="text-align:center;"><img src="' . $qrUrl . '" alt="Gift card QR code"><div class="gift-card-barcode" style="margin-top:16px;"><div id="giftCardBarcode" data-barcode="' . $barcode . '"></div><div class="gift-card-code">' . $giftCode . '</div></div></div></div></section><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script><script>var target=document.getElementById("giftCardBarcode");if(target&&window.JsBarcode){var svg=document.createElementNS("http://www.w3.org/2000/svg","svg");target.appendChild(svg);window.JsBarcode(svg,target.getAttribute("data-barcode")||"' . $barcode . '",{format:"CODE128",displayValue:false,height:60,margin:0,width:1.45,background:"#ffffff",lineColor:"#1f1812"});}window.onload=function(){window.print();};</script></body></html>';
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GirffoN Gift Card</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 18px;
+            background: #efe9df;
+            color: #2a2118;
+            font-family: Georgia, "Times New Roman", serif;
+        }
+
+        .gift-card-sheet {
+            width: 190mm;
+            min-height: 275mm;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #fffdfa 0%, #fbf6ed 100%);
+            border: 1px solid #ead7b0;
+            border-radius: 18px;
+            box-shadow: 0 12px 38px rgba(60, 42, 20, 0.14);
+            padding: 16mm 15mm 14mm;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gift-card-sheet::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at top right, rgba(215, 181, 111, 0.22), transparent 30%),
+                linear-gradient(135deg, rgba(28, 25, 22, 0.03), transparent 42%);
+            pointer-events: none;
+        }
+
+        .gift-card-frame {
+            position: relative;
+            z-index: 1;
+            min-height: calc(275mm - 30mm);
+            border: 1px solid rgba(214, 180, 110, 0.72);
+            border-radius: 14px;
+            padding: 14mm 13mm 12mm;
+            display: grid;
+            grid-template-rows: auto auto 1fr auto;
+            gap: 12mm;
+        }
+
+        .gift-card-meta-bar,
+        .gift-card-footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: #7d6a4e;
+        }
+
+        .gift-card-meta-bar strong,
+        .gift-card-footer-bar strong {
+            color: #3b2c1d;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .gift-card-header {
+            display: grid;
+            grid-template-columns: 1.25fr .75fr;
+            gap: 18mm;
+            align-items: start;
+        }
+
+        .gift-card-brand-stack {
+            display: grid;
+            gap: 8mm;
+        }
+
+        .gift-card-logo-row {
+            display: block;
+        }
+
+        .gift-card-logo-row img {
+            width: 272px;
+            height: auto;
+            display: block;
+        }
+
+        .gift-card-kicker {
+            margin: 0;
+            font-size: 11px;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: #b59357;
+        }
+
+        .gift-card-title {
+            margin: 0;
+            font-size: 30px;
+            line-height: 1.06;
+            color: #a8977d;
+            max-width: 420px;
+        }
+
+        .gift-card-amount-box {
+            justify-self: end;
+            text-align: right;
+            color: #b19b79;
+        }
+
+        .gift-card-amount-box span {
+            display: block;
+            font-size: 17px;
+            letter-spacing: 0.32em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .gift-card-amount-box strong {
+            display: block;
+            font-size: 54px;
+            line-height: 0.94;
+            font-weight: 700;
+        }
+
+        .gift-card-body {
+            display: grid;
+            grid-template-columns: 1fr 220px;
+            gap: 18mm;
+            align-items: end;
+        }
+
+        .gift-card-message-area {
+            align-self: end;
+            display: grid;
+            gap: 12px;
+            color: #af9f88;
+        }
+
+        .gift-card-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #c1b19a;
+        }
+
+        .gift-card-recipient {
+            font-size: 35px;
+            line-height: 1;
+            color: #8f7e67;
+            font-weight: 700;
+            text-transform: lowercase;
+        }
+
+        .gift-card-note {
+            margin: 0;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #b0a08a;
+            max-width: 420px;
+        }
+
+        .gift-card-details {
+            display: grid;
+            gap: 7px;
+            margin-top: 8px;
+            font-size: 17px;
+            color: #8b7761;
+        }
+
+        .gift-card-details strong {
+            color: #7f6745;
+        }
+
+        .gift-card-code-panel {
+            display: grid;
+            gap: 14px;
+            align-self: end;
+        }
+
+        .gift-card-qr-box,
+        .gift-card-barcode-box {
+            background: #fffdf9;
+            border: 1px solid #ead9b5;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+        }
+
+        .gift-card-qr-box {
+            width: 190px;
+            justify-self: center;
+        }
+
+        .gift-card-qr-box img {
+            display: block;
+            width: 166px;
+            height: 166px;
+            margin: 0 auto;
+            background: #fff;
+        }
+
+        .gift-card-barcode-box {
+            text-align: center;
+            color: #201912;
+            padding-top: 14px;
+        }
+
+        #giftCardBarcode {
+            min-height: 62px;
+        }
+
+        #giftCardBarcode svg {
+            width: 100%;
+            height: 64px;
+            display: block;
+        }
+
+        .gift-card-code {
+            margin-top: 10px;
+            font-size: 24px;
+            letter-spacing: 0.22em;
+            color: #463320;
+        }
+
+        @media screen and (max-width: 860px) {
+            body {
+                padding: 0;
+            }
+
+            .gift-card-sheet {
+                width: 100%;
+                min-height: auto;
+                border-radius: 0;
+                border: 0;
+                box-shadow: none;
+                padding: 24px;
+            }
+
+            .gift-card-frame {
+                min-height: auto;
+                padding: 24px;
+            }
+
+            .gift-card-header,
+            .gift-card-body {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .gift-card-amount-box,
+            .gift-card-code-panel {
+                justify-self: start;
+                text-align: left;
+            }
+
+            .gift-card-recipient {
+                font-size: 28px;
+            }
+
+            .gift-card-title {
+                font-size: 24px;
+            }
+
+            .gift-card-code {
+                font-size: 18px;
+            }
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: #fff;
+            }
+
+            .gift-card-sheet {
+                width: auto;
+                min-height: 0;
+                margin: 0;
+                border: 0;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 0;
+                background: #fff;
+            }
+
+            .gift-card-frame {
+                min-height: 0;
+                border-radius: 0;
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <section class="gift-card-sheet">
+        <div class="gift-card-frame">
+            <div class="gift-card-meta-bar">
+                <span>{$printedAt}</span>
+                <strong>GirffoN Gift Card</strong>
+            </div>
+
+            <div class="gift-card-header">
+                <div class="gift-card-brand-stack">
+                    <div class="gift-card-logo-row">
+                        <img src="{$logoUrl}" alt="GirffoN Logo">
+                    </div>
+                    <div>
+                        <p class="gift-card-kicker">GirffoN Gift Card</p>
+                        <h1 class="gift-card-title">Luxury credit for premium custom fashion</h1>
+                    </div>
+                </div>
+                <div class="gift-card-amount-box">
+                    <span>Value</span>
+                    <strong>{$amount}</strong>
+                </div>
+            </div>
+
+            <div class="gift-card-body">
+                <div class="gift-card-message-area">
+                    <div class="gift-card-label">To</div>
+                    <div class="gift-card-recipient">{$recipientName}</div>
+                    <p class="gift-card-note">{$giftNote}</p>
+                    <div class="gift-card-details">
+                        <span><strong>Code:</strong> {$giftCode}</span>
+                        <span><strong>Expires:</strong> {$expiresAt}</span>
+                    </div>
+                </div>
+
+                <div class="gift-card-code-panel">
+                    <div class="gift-card-qr-box">
+                        <img src="{$qrUrl}" alt="Gift card QR code">
+                    </div>
+                    <div class="gift-card-barcode-box">
+                        <div id="giftCardBarcode" data-barcode="{$barcode}"></div>
+                        <div class="gift-card-code">{$giftCode}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gift-card-footer-bar">
+                <span>Redeem online during checkout with the printed code or QR.</span>
+                <strong>Premium Clothing</strong>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script>
+        var target = document.getElementById('giftCardBarcode');
+        if (target && window.JsBarcode) {
+            var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            target.appendChild(svg);
+            window.JsBarcode(svg, target.getAttribute('data-barcode') || '{$barcode}', {
+                format: 'CODE128',
+                displayValue: false,
+                height: 58,
+                margin: 0,
+                width: 1.55,
+                background: '#fffdf9',
+                lineColor: '#201912'
+            });
+        }
+        window.onload = function () {
+            window.print();
+        };
+    </script>
+</body>
+</html>
+HTML;
 }
 
 function girffonSendGiftCardEmail(array $giftCard): bool
