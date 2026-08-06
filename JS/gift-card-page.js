@@ -45,6 +45,103 @@
     }
   }
 
+  function setFieldInvalid(field, invalid) {
+    if (!field) {
+      return;
+    }
+
+    field.classList.toggle('is-invalid', !!invalid);
+    field.setAttribute('aria-invalid', invalid ? 'true' : 'false');
+  }
+
+  function clearValidationState(form) {
+    form.querySelectorAll('.is-invalid').forEach(function (field) {
+      field.classList.remove('is-invalid');
+      field.setAttribute('aria-invalid', 'false');
+    });
+  }
+
+  function validateGiftCardForm(form) {
+    const fields = [
+      {
+        node: form.querySelector('#gfGiftBuyerName'),
+        message: 'Enter the buyer name before adding the gift card.'
+      },
+      {
+        node: form.querySelector('#gfGiftBuyerEmail'),
+        message: 'Enter a valid buyer email before adding the gift card.'
+      },
+      {
+        node: form.querySelector('#gfGiftRecipientName'),
+        message: 'Enter the recipient name before adding the gift card.'
+      },
+      {
+        node: form.querySelector('#gfGiftRecipientEmail'),
+        message: 'Enter a valid recipient email before adding the gift card.'
+      }
+    ];
+    const customPreset = form.querySelector('input[name="gift_amount_preset"][value="custom"]');
+    const customInput = form.querySelector('input[name="custom_amount"]');
+
+    clearValidationState(form);
+
+    if (customPreset && customPreset.checked && customInput) {
+      const customAmount = Number(customInput.value || 0);
+      const customAmountValid = customInput.value.trim() !== '' && customAmount > 0;
+      setFieldInvalid(customInput, !customAmountValid);
+      if (!customAmountValid) {
+        return {
+          valid: false,
+          message: 'Enter a valid custom amount before adding the gift card.',
+          field: customInput
+        };
+      }
+    }
+
+    for (let index = 0; index < fields.length; index += 1) {
+      const field = fields[index];
+      const node = field.node;
+      if (!node) {
+        continue;
+      }
+
+      const valid = node.checkValidity() && node.value.trim() !== '';
+      setFieldInvalid(node, !valid);
+
+      if (!valid) {
+        return {
+          valid: false,
+          message: field.message,
+          field: node
+        };
+      }
+    }
+
+    return {
+      valid: true,
+      message: '',
+      field: null
+    };
+  }
+
+  function showValidationError(form, validationResult) {
+    setStatus(validationResult.message || 'Complete the required fields before adding the gift card to the cart.', 'error');
+    if (validationResult.field && typeof validationResult.field.focus === 'function') {
+      validationResult.field.focus();
+    }
+  }
+
+  function submitGiftCardForm(form) {
+    const validationResult = validateGiftCardForm(form);
+    if (!validationResult.valid) {
+      showValidationError(form, validationResult);
+      return false;
+    }
+
+    form.requestSubmit();
+    return true;
+  }
+
   function selectedAmount(form) {
     const checkedPreset = form.querySelector('input[name="gift_amount_preset"]:checked');
     const customInput = form.querySelector('input[name="custom_amount"]');
@@ -113,6 +210,13 @@
 
     const form = event.currentTarget;
     const submitButton = document.getElementById(SUBMIT_ID);
+    const validationResult = validateGiftCardForm(form);
+
+    if (!validationResult.valid) {
+      showValidationError(form, validationResult);
+      return;
+    }
+
     const formData = new FormData(form);
     const amount = selectedAmount(form);
     const payload = {
@@ -125,12 +229,9 @@
       gift_message: String(formData.get('gift_message') || '').trim()
     };
 
-    if (!payload.buyer_name || !payload.buyer_email || !payload.recipient_name || !payload.recipient_email) {
-      setStatus('Complete buyer and recipient details before adding the gift card to the cart.', 'error');
-      return;
-    }
-
     if (!(amount > 0)) {
+      const customInput = form.querySelector('input[name="custom_amount"]');
+      setFieldInvalid(customInput, true);
       setStatus('Choose a valid gift card amount.', 'error');
       return;
     }
@@ -217,6 +318,21 @@
     form.querySelectorAll('input[name="gift_amount_preset"]').forEach(function (input) {
       input.addEventListener('change', function () {
         syncSelectedCards(form, input.value === 'custom' ? '' : input.value);
+        setFieldInvalid(form.querySelector('input[name="custom_amount"]'), false);
+      });
+    });
+
+    form.querySelectorAll('input, textarea').forEach(function (field) {
+      field.addEventListener('input', function () {
+        if (field.classList.contains('is-invalid')) {
+          setFieldInvalid(field, !field.checkValidity() || field.value.trim() === '');
+        }
+      });
+
+      field.addEventListener('blur', function () {
+        if (field.value.trim() !== '') {
+          setFieldInvalid(field, !field.checkValidity());
+        }
       });
     });
 
@@ -233,9 +349,21 @@
           customPreset.checked = true;
           syncSelectedCards(form, '');
         }
+        setFieldInvalid(customInput, false);
       });
     }
 
     form.addEventListener('submit', handleSubmit);
+
+    document.querySelectorAll('.gift-card-shop-button').forEach(function (button) {
+      button.addEventListener('click', function (event) {
+        event.preventDefault();
+        const amount = button.getAttribute('data-gift-card-select');
+        if (amount) {
+          applyPresetAmount(form, amount);
+        }
+        submitGiftCardForm(form);
+      });
+    });
   });
 }());

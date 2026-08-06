@@ -246,6 +246,15 @@
   color: #1f1812;
 }
 
+.gift-card-field input.is-invalid,
+.gift-card-field textarea.is-invalid,
+.gift-card-field select.is-invalid,
+.gift-card-custom-input.is-invalid {
+  border-color: #8a2626;
+  box-shadow: 0 0 0 3px rgba(138, 38, 38, 0.12);
+  background: #fff7f7;
+}
+
 .gift-card-field textarea {
   min-height: 128px;
   resize: vertical;
