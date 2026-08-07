@@ -16,5 +16,5 @@ if (!empty($_SESSION['user_id']) || !empty($_SESSION['girffon_user_id'])) {
 }
 
 $_SESSION['post_login_redirect'] = $redirect;
-header('Location: /GirffoN/Index.html');
+header('Location: /GirffoN/index.html');
 exit;

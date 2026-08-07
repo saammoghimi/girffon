@@ -53,6 +53,6 @@ if ($isDirectRequest) {
 }
 
 if (empty($_SESSION['user_id'])) {
-    header('Location: /GirffoN/Index.html');
+    header('Location: /GirffoN/index.html');
     exit;
 }

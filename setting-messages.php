@@ -348,7 +348,7 @@ $messageSettingsTotal = count($adminMessagePreferences);
           <h1 class="admin-page-title" id="adminCurrentPage">Message Settings</h1>
         </div>
         <div class="admin-topbar-actions">
-          <a class="admin-button admin-button-soft admin-view-shop-button" href="Index.html" aria-label="View Shop" title="View Shop">View Shop</a>
+          <a class="admin-button admin-button-soft admin-view-shop-button" href="index.html" aria-label="View Shop" title="View Shop">View Shop</a>
           <a class="admin-button admin-button-soft admin-refresh-button" href="admin-messages.php" aria-label="Back to Messages" title="Back to Messages">Messages</a>
           <button class="admin-button admin-button-soft admin-settings-button" type="button" data-admin-settings data-admin-settings-target="setting-messages.php" aria-label="Settings" title="Settings">Settings</button>
           <button class="admin-button admin-button-danger admin-topbar-logout-button" type="button" data-admin-logout aria-label="Logout" title="Logout">Logout</button>

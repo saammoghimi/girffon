@@ -112,7 +112,7 @@ $token = trim((string) ($_GET['token'] ?? ''));
     </form>
 
     <div id="gfResetPasswordStatus" class="status" role="status" aria-live="polite"></div>
-    <a class="back-link" href="/GirffoN/Index.html">Back to GirffoN</a>
+    <a class="back-link" href="/GirffoN/index.html">Back to GirffoN</a>
   </main>
 
   <script src="JS/analytics.js?v=20260804r14"></script>

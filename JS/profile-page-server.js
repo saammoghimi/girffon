@@ -1618,7 +1618,7 @@
             securityStatus.hidden = false;
             securityStatus.textContent = payload.message || 'Account disabled successfully.';
           }
-          window.location.href = '/GirffoN/Index.html';
+          window.location.href = '/GirffoN/index.html';
         }).catch(function (error) {
           if (securityStatus) {
             securityStatus.hidden = false;

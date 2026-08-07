@@ -71,7 +71,7 @@ $user = $userStatement->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) {
     $_SESSION = [];
-    header('Location: /GirffoN/Index.html');
+    header('Location: /GirffoN/index.html');
     exit;
 }
 
