@@ -282,6 +282,7 @@ function girffonAdminCreateCustomDesignOrder(PDO $pdo, array $customer, array $p
         'city' => (string) ($customer['city'] ?? ''),
         'country' => (string) ($customer['country'] ?? ''),
         'postcode' => (string) ($customer['postcode'] ?? ''),
+        'session_owner' => (string) ($customer['session_owner'] ?? girffonAdminCustomDesignValueAt($payload, ['customer.session_owner', 'session_owner'], '')),
     ];
 
     try {
@@ -993,6 +994,7 @@ function girffonAdminCustomDesignBuildDetail(array $orderRow, array $uploadRows,
         'customer_note' => (string) ($orderRow['customer_note'] ?? ''),
         'admin_note' => (string) ($orderRow['admin_note'] ?? ''),
         'created_at' => (string) ($orderRow['created_at'] ?? ''),
+        'design_payload' => $payload,
         'preview_views' => $previewViews,
         'front_preview' => (string) ($previewViews['front']['path'] ?? $fallbackPreview),
         'uploads' => $uploads,

@@ -34,6 +34,16 @@ function girffonProfileCurrentUserId(): int
     return (int) ($_SESSION['user_id'] ?? $_SESSION['girffon_user_id'] ?? 0);
 }
 
+function girffonProfileSessionOwnerToken(): string
+{
+    $sessionId = session_id();
+    if (!is_string($sessionId) || $sessionId === '') {
+        $sessionId = 'guest';
+    }
+
+    return 'session-' . sha1($sessionId);
+}
+
 function girffonProfileRequireUserId(): int
 {
     $userId = girffonProfileCurrentUserId();

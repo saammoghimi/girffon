@@ -27,6 +27,17 @@ function girffonCustomDesignCheckoutOwnsOrder(array $order, array $user): bool
     return $orderEmail !== '' && $orderEmail === $userEmail;
 }
 
+function girffonCustomDesignCheckoutSessionOwnsOrder(array $order): bool
+{
+  $payload = is_array($order['design_payload'] ?? null) ? $order['design_payload'] : [];
+  $orderSessionOwner = trim((string) ($payload['customer']['session_owner'] ?? ($payload['session_owner'] ?? '')));
+  if ($orderSessionOwner === '') {
+    return false;
+  }
+
+  return hash_equals($orderSessionOwner, girffonProfileSessionOwnerToken());
+}
+
 function girffonCustomDesignCheckoutSummary(array $order): array
 {
     $summary = is_array($order['checkout_summary'] ?? null) ? $order['checkout_summary'] : [];
@@ -60,27 +71,51 @@ function girffonCustomDesignCheckoutReference(): string
 $orderId = (int) ($_POST['order'] ?? $_GET['order'] ?? 0);
 $redirectUrl = '/GirffoN/custom-design-checkout.php?order=' . $orderId;
 $userId = girffonProfileCurrentUserId();
+$order = $orderId > 0 ? girffonAdminFetchCustomDesignOrderDetail($pdo, $orderId) : null;
+$user = $userId > 0 ? girffonProfileFetchUserById($pdo, $userId) : null;
+$sessionOwnsOrder = $order ? girffonCustomDesignCheckoutSessionOwnsOrder($order) : false;
 
-if ($userId <= 0) {
+if ($userId <= 0 && !$sessionOwnsOrder) {
     header('Location: /GirffoN/backend/auth/require-login.php?redirect=' . rawurlencode($redirectUrl));
     exit;
 }
 
-$user = girffonProfileFetchUserById($pdo, $userId);
-if (!$user) {
+if ($userId > 0 && !$user) {
     http_response_code(404);
     echo 'Customer account not found.';
     exit;
 }
 
-$order = $orderId > 0 ? girffonAdminFetchCustomDesignOrderDetail($pdo, $orderId) : null;
-if (!$order || !girffonCustomDesignCheckoutOwnsOrder($order, $user)) {
+$userOwnsOrder = $user ? girffonCustomDesignCheckoutOwnsOrder($order ?: [], $user) : false;
+if (!$order || (!$userOwnsOrder && !$sessionOwnsOrder)) {
     http_response_code(404);
     echo 'Custom design order not found.';
     exit;
 }
 
-$normalizedUser = girffonProfileNormalizeUserRow($user);
+$normalizedUser = $user
+  ? girffonProfileNormalizeUserRow($user)
+  : [
+    'id' => 0,
+    'name' => '',
+    'first_name' => '',
+    'last_name' => '',
+    'email' => '',
+    'phone' => '',
+    'address' => '',
+    'city' => '',
+    'country' => '',
+    'postcode' => '',
+    'postal_code' => '',
+    'preferred_language' => '',
+    'date_of_birth' => '',
+    'gender' => '',
+    'avatar' => '',
+    'username' => '',
+    'created_at' => '',
+    'updated_at' => '',
+    'last_login_at' => '',
+  ];
 $summary = girffonCustomDesignCheckoutSummary($order);
 $errors = [];
 $successMessage = '';

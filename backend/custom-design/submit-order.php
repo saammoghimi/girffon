@@ -11,9 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     ]);
 }
 
-$userId = girffonProfileRequireUserId();
-$user = girffonProfileFetchUserById($pdo, $userId);
-if (!$user) {
+$userId = girffonProfileCurrentUserId();
+$user = $userId > 0 ? girffonProfileFetchUserById($pdo, $userId) : null;
+if ($userId > 0 && !$user) {
     girffonProfileJsonResponse(404, [
         'success' => false,
         'message' => 'Customer account not found.',
@@ -40,9 +40,40 @@ if (!is_array($payload) || !is_array($payload['snapshot'] ?? null)) {
     ]);
 }
 
+$sessionOwner = girffonProfileSessionOwnerToken();
+$payload['session_owner'] = $sessionOwner;
+$payload['customer'] = array_merge(
+    is_array($payload['customer'] ?? null) ? $payload['customer'] : [],
+    ['session_owner' => $sessionOwner]
+);
 $payload['status'] = 'pending_payment';
 
-$result = girffonAdminCreateCustomDesignOrder($pdo, girffonProfileNormalizeUserRow($user), $payload);
+$customer = $user
+    ? girffonProfileNormalizeUserRow($user)
+    : [
+        'id' => 0,
+        'name' => '',
+        'first_name' => '',
+        'last_name' => '',
+        'email' => '',
+        'phone' => '',
+        'address' => '',
+        'city' => '',
+        'country' => '',
+        'postcode' => '',
+        'postal_code' => '',
+        'preferred_language' => '',
+        'date_of_birth' => '',
+        'gender' => '',
+        'avatar' => '',
+        'username' => '',
+        'created_at' => '',
+        'updated_at' => '',
+        'last_login_at' => '',
+        'session_owner' => $sessionOwner,
+    ];
+
+$result = girffonAdminCreateCustomDesignOrder($pdo, $customer, $payload);
 if (!($result['success'] ?? false)) {
     girffonProfileJsonResponse(500, [
         'success' => false,
