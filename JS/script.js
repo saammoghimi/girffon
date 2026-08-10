@@ -74,8 +74,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const href = String(trigger.getAttribute("href") || "").trim();
       if (href === "" || href === "#") {
         e.preventDefault();
+        openMenu(box);
+        return;
       }
-      openMenu(box);
+
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
+        return;
+      }
+
+      e.preventDefault();
+      window.location.href = href;
     });
   });
 
