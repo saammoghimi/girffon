@@ -146,6 +146,13 @@
       </div>
       <p id="gfCheckoutGiftCardStatus" style="margin:12px 0 0;color:#7a6a58;font-weight:600;">Apply a valid gift card to preview the available balance before checkout.</p>
       <p id="gfCheckoutGiftCardBalance" style="margin:8px 0 0;color:#255f36;font-weight:700;display:none;"></p>
+        <div id="gfCheckoutGiftCardRemaining" style="display:none;margin-top:14px;padding:16px 18px;border-radius:18px;background:linear-gradient(135deg,rgba(255,240,244,0.96) 0%,rgba(255,247,248,0.98) 100%);border:1px solid rgba(214,61,89,0.2);box-shadow:0 14px 30px rgba(214,61,89,0.12);">
+          <p style="margin:0;color:#6a2431;font-weight:700;line-height:1.5;">
+            <span aria-hidden="true">&#9888; </span><span id="gfCheckoutGiftCardRemainingText"></span>
+          </p>
+          <p id="gfCheckoutGiftCardRemainingHelp" style="margin:10px 0 0;color:#8d4150;line-height:1.6;font-weight:600;">Add another product to use your remaining credit. You only pay the difference if the order exceeds your Gift Card balance.</p>
+          <a id="gfCheckoutGiftCardAddProduct" href="catalog.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:14px;min-height:48px;padding:0 18px;border-radius:999px;background:linear-gradient(135deg,#d63d59 0%,#f05e7d 100%);color:#fff;text-decoration:none;font-weight:800;letter-spacing:0.01em;box-shadow:0 16px 28px rgba(214,61,89,0.24);transition:transform .2s ease,box-shadow .2s ease;">+ Add Another Product</a>
+        </div>
     </div>
     <p style="margin:10px 4px 0;color:#7a6a58;font-size:0.95rem;">Physical gift card purchases add the configured shipping charge during checkout. Digital gift cards keep shipping at zero.</p>
     <div class="cart-actions">
@@ -158,6 +165,23 @@
       <button class="cart-btn cart-btn-checkout" id="openBankModal">
         <span id="gfCheckoutBtnText">Checkout</span> <i class="fa-solid fa-credit-card"></i>
       </button>
+    </div>
+
+    <div id="gfGiftCardCheckoutConfirmModal" class="bank-modal" style="display:none;">
+      <div class="bank-modal-content" style="max-width:560px;border-radius:28px;padding:28px 26px;background:linear-gradient(180deg,#fff8fa 0%,#ffffff 100%);border:1px solid rgba(214,61,89,0.18);box-shadow:0 28px 60px rgba(214,61,89,0.16);">
+        <span class="bank-modal-close" id="gfGiftCardCheckoutConfirmClose" style="color:#8f5360;">&times;</span>
+        <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px;">
+          <div style="width:48px;height:48px;border-radius:16px;background:linear-gradient(135deg,#ffd6df 0%,#ffeef2 100%);color:#cf2946;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex:0 0 auto;">&#9888;</div>
+          <div>
+            <h2 style="margin:0;color:#5c1f2b;font-size:1.5rem;line-height:1.25;"><span id="gfGiftCardCheckoutConfirmAmount" style="font-size:1.12em;font-weight:900;color:#cf2946;"></span> Gift Card credit will remain</h2>
+            <p style="margin:12px 0 0;color:#7b4150;line-height:1.6;font-weight:600;">Would you like to add another product and use your remaining credit?</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;margin-top:24px;">
+          <a id="gfGiftCardCheckoutConfirmAdd" href="catalog.html" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border-radius:999px;background:linear-gradient(135deg,#d63d59 0%,#f05e7d 100%);color:#fff;text-decoration:none;font-weight:800;box-shadow:0 16px 28px rgba(214,61,89,0.24);">+ Add Another Product</a>
+          <button type="button" id="gfGiftCardCheckoutConfirmContinue" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border-radius:999px;border:1px solid rgba(214,61,89,0.18);background:#fff;color:#6a2431;font-weight:800;cursor:pointer;">Continue Checkout Anyway</button>
+        </div>
+      </div>
     </div>
 
     <!-- Bank Payment Modal -->
@@ -685,6 +709,37 @@
       return checkoutCsrfToken;
     }
 
+    function calculateCartTotalAmount() {
+      return cartData.reduce(function (sum, item) {
+        return sum + ((Number(item.price) || 0) * (Number(item.qty) || 0));
+      }, 0);
+    }
+
+    function calculateRemainingGiftCardCredit(totalAmount) {
+      const giftCardBalance = Number(appliedGiftCard && appliedGiftCard.remaining_balance) || 0;
+      return Math.max(0, Math.round((giftCardBalance - (Number(totalAmount) || 0)) * 100) / 100);
+    }
+
+    function updateGiftCardRemainingNotice(totalAmount) {
+      const container = document.getElementById('gfCheckoutGiftCardRemaining');
+      const textNode = document.getElementById('gfCheckoutGiftCardRemainingText');
+
+      if (!container || !textNode) {
+        return;
+      }
+
+      const remainingBalance = calculateRemainingGiftCardCredit(totalAmount);
+
+      if (!appliedGiftCard || remainingBalance <= 0) {
+        container.style.display = 'none';
+        textNode.innerHTML = '';
+        return;
+      }
+
+      textNode.innerHTML = '<span style="font-size:1.2em;color:#cf2946;font-weight:900;">' + formatCartCurrency(remainingBalance) + '</span> Gift Card credit will remain';
+      container.style.display = 'block';
+    }
+
     function setAppliedGiftCardState(nextState) {
       appliedGiftCard = nextState;
       const statusNode = document.getElementById('gfCheckoutGiftCardStatus');
@@ -701,6 +756,7 @@
         balanceNode.textContent = '';
         balanceNode.style.display = 'none';
         removeButton.style.display = 'none';
+        updateGiftCardRemainingNotice(0);
         return;
       }
 
@@ -709,6 +765,7 @@
       balanceNode.textContent = 'Available balance: ' + formatCartCurrency(Number(nextState.remaining_balance) || 0);
       balanceNode.style.display = 'block';
       removeButton.style.display = 'inline-flex';
+      updateGiftCardRemainingNotice(calculateCartTotalAmount());
     }
 
     function mapCartItem(item) {
@@ -835,6 +892,7 @@
       if (!cartData.length) {
         tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:28px 16px;color:#777;font-weight:600;">Your cart is empty.</td></tr>';
         document.getElementById('cart-total').textContent = formatCartCurrency(0);
+        updateGiftCardRemainingNotice(0);
         saveCart();
         updateCheckoutModalState();
         return;
@@ -882,6 +940,7 @@
         `;
       });
       document.getElementById('cart-total').textContent = formatCartCurrency(total);
+      updateGiftCardRemainingNotice(total);
       saveCart();
       updateCheckoutModalState();
     }
@@ -952,6 +1011,16 @@
       card.addEventListener('click', () => {
         window.setTimeout(applyCartPageTranslations, 0);
       });
+    });
+
+    window.addEventListener('girffon:cart-synced', function (event) {
+      const syncedCart = event && event.detail && Array.isArray(event.detail.items) ? event.detail.items : null;
+      if (!syncedCart) {
+        return;
+      }
+
+      replaceCartData(syncedCart);
+      renderCart();
     });
 
     const cartLangObserver = new MutationObserver(() => {
@@ -1636,6 +1705,39 @@
       if (countryInput && !countryInput.value.trim()) countryInput.value = user.country || '';
     }
 
+    async function startExistingCheckoutFlow() {
+      try {
+        const sessionPayload = await readCheckoutSession(true);
+        clearCheckoutCustomerFields();
+        if (sessionPayload && sessionPayload.authenticated) {
+          prefillCheckoutCustomerFields(sessionPayload.user || null);
+        }
+      } catch (_error) {
+        clearCheckoutCustomerFields();
+      }
+
+      updateCheckoutModalState();
+      document.getElementById('bankModal').style.display = 'flex';
+    }
+
+    function closeGiftCardCheckoutConfirmModal() {
+      const modal = document.getElementById('gfGiftCardCheckoutConfirmModal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    function openGiftCardCheckoutConfirmModal(remainingBalance) {
+      const modal = document.getElementById('gfGiftCardCheckoutConfirmModal');
+      const amountNode = document.getElementById('gfGiftCardCheckoutConfirmAmount');
+      if (!modal || !amountNode) {
+        return;
+      }
+
+      amountNode.textContent = formatCartCurrency(remainingBalance);
+      modal.style.display = 'flex';
+    }
+
     document.getElementById('openBankModal').onclick = async function() {
       try {
         await refreshCartFromBackend();
@@ -1655,21 +1757,23 @@
         });
       }
 
-      try {
-        const sessionPayload = await readCheckoutSession(true);
-        clearCheckoutCustomerFields();
-        if (sessionPayload && sessionPayload.authenticated) {
-          prefillCheckoutCustomerFields(sessionPayload.user || null);
-        }
-      } catch (_error) {
-        clearCheckoutCustomerFields();
+      const remainingGiftCardCredit = calculateRemainingGiftCardCredit(calculateCartTotalAmount());
+      if (appliedGiftCard && remainingGiftCardCredit > 0) {
+        openGiftCardCheckoutConfirmModal(remainingGiftCardCredit);
+        return;
       }
 
-      updateCheckoutModalState();
-      document.getElementById('bankModal').style.display = 'flex';
+      await startExistingCheckoutFlow();
     };
     document.getElementById('closeBankModal').onclick = function() {
       document.getElementById('bankModal').style.display = 'none';
+    };
+    document.getElementById('gfGiftCardCheckoutConfirmClose').onclick = function() {
+      closeGiftCardCheckoutConfirmModal();
+    };
+    document.getElementById('gfGiftCardCheckoutConfirmContinue').onclick = async function() {
+      closeGiftCardCheckoutConfirmModal();
+      await startExistingCheckoutFlow();
     };
 
     function safeReadArray(key) {
