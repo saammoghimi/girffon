@@ -71,7 +71,10 @@ document.addEventListener("DOMContentLoaded", () => {
     box.addEventListener("mouseleave", () => closeMenu(box));
 
     trigger.addEventListener("click", (e) => {
-      e.preventDefault();
+      const href = String(trigger.getAttribute("href") || "").trim();
+      if (href === "" || href === "#") {
+        e.preventDefault();
+      }
       openMenu(box);
     });
   });
