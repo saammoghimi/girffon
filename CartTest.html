@@ -1705,6 +1705,16 @@
       if (countryInput && !countryInput.value.trim()) countryInput.value = user.country || '';
     }
 
+    function normalizeCheckoutEmailField() {
+      const emailInput = document.getElementById('gfBankEmailInput');
+      if (!emailInput) {
+        return null;
+      }
+
+      emailInput.value = emailInput.value.trim();
+      return emailInput;
+    }
+
     async function startExistingCheckoutFlow() {
       try {
         const sessionPayload = await readCheckoutSession(true);
@@ -1837,6 +1847,17 @@
       clearCheckoutCustomerFields();
       updateCheckoutModalState();
       document.getElementById('bankModal').style.display = 'none';
+    }
+
+    const checkoutEmailInput = document.getElementById('gfBankEmailInput');
+    if (checkoutEmailInput) {
+      checkoutEmailInput.addEventListener('blur', normalizeCheckoutEmailField);
+      checkoutEmailInput.addEventListener('change', normalizeCheckoutEmailField);
+    }
+
+    const payNowButton = document.getElementById('gfPayNowBtn');
+    if (payNowButton) {
+      payNowButton.addEventListener('click', normalizeCheckoutEmailField);
     }
 
     document.getElementById('bankForm').onsubmit = async function(e) {

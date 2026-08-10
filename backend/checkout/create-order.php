@@ -254,7 +254,7 @@ if ($customerName === '' && $user) {
     $customerName = trim((string) ($user['username'] ?? ''));
 }
 
-$customerEmail = strtolower(girffonCheckoutField($shipping, $user, 'email', 'email'));
+$customerEmail = trim(girffonCheckoutField($shipping, $user, 'email', 'email'));
 $customerPhone = girffonCheckoutField($shipping, $user, 'phone', 'phone');
 $customerAddress = girffonCheckoutField($shipping, $user, 'address', 'address');
 $customerCity = girffonCheckoutField($shipping, $user, 'city', 'city');
