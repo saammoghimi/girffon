@@ -76,6 +76,59 @@ $adminNormalizeProductStatus = static function ($value) {
   $normalized = strtolower(trim((string) $value));
   return in_array($normalized, ['active', 'draft', 'archived'], true) ? $normalized : 'active';
 };
+$adminNormalizeProductCategory = static function ($value) {
+  $normalized = strtolower(trim((string) $value));
+  $normalized = str_replace(['&', '/'], [' and ', ' '], $normalized);
+  $normalized = preg_replace('/[^a-z0-9]+/', ' ', $normalized);
+  $normalized = trim((string) preg_replace('/\s+/', ' ', $normalized));
+
+  if ($normalized === '') {
+    return 'uncategorized';
+  }
+
+  if (str_contains($normalized, 'custom')) {
+    return 'custom-design';
+  }
+
+  if (str_contains($normalized, 'home')) {
+    return 'home-living';
+  }
+
+  if (str_contains($normalized, 'accessor')) {
+    return 'accessories';
+  }
+
+  if (str_contains($normalized, 'kid')) {
+    return 'kids';
+  }
+
+  if (str_contains($normalized, 'women')) {
+    return 'women';
+  }
+
+  if (str_contains($normalized, 'men')) {
+    return 'men';
+  }
+
+  return str_replace(' ', '-', $normalized);
+};
+$adminCategoryLabels = [
+  'all' => 'All',
+  'men' => 'Men',
+  'women' => 'Women',
+  'kids' => 'Kids',
+  'accessories' => 'Accessories',
+  'home-living' => 'Home & Living',
+  'custom-design' => 'Custom Design',
+];
+$adminCategoryCounts = array_fill_keys(array_keys($adminCategoryLabels), 0);
+$adminCategoryCounts['all'] = count($adminProducts);
+foreach ($adminProducts as $adminProductCountRow) {
+  $adminProductCategoryKey = $adminNormalizeProductCategory($adminProductCountRow['category'] ?? '');
+  if (array_key_exists($adminProductCategoryKey, $adminCategoryCounts)) {
+    $adminCategoryCounts[$adminProductCategoryKey] += 1;
+  }
+}
 if ($adminEditingProductId > 0 && !$adminEditingProduct && $adminProductErrorMessage === '') {
   $adminProductErrorMessage = 'Product not found.';
 }
@@ -555,6 +608,290 @@ $adminProductTableColumnCount = 10
         border-radius: 16px;
       }
     }
+
+    .admin-hidden-form {
+      display: none;
+    }
+
+    .admin-products-toolbar {
+      display: grid;
+      gap: 18px;
+      margin-bottom: 18px;
+      padding: 18px;
+      border: 1px solid rgba(199, 165, 75, 0.18);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(255, 255, 255, 0.88));
+    }
+
+    .admin-products-toolbar-grid,
+    .admin-products-table-controls,
+    .admin-products-advanced-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .admin-products-toolbar-grid .admin-field,
+    .admin-products-table-controls .admin-field,
+    .admin-products-advanced-grid .admin-field {
+      margin: 0;
+    }
+
+    .admin-products-toolbar-grid .admin-field-wide {
+      grid-column: span 2;
+    }
+
+    .admin-products-search-note {
+      margin: 6px 0 0;
+      color: #6b5d49;
+      font-size: 0.84rem;
+    }
+
+    .admin-category-tabs,
+    .admin-scope-toggle,
+    .admin-discount-chip-grid,
+    .admin-pagination {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .admin-category-tab,
+    .admin-scope-button,
+    .admin-discount-chip,
+    .admin-pagination-button {
+      border: 1px solid rgba(43, 36, 27, 0.12);
+      background: #fff;
+      color: #2b241b;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .admin-category-tab.is-active,
+    .admin-scope-button.is-active,
+    .admin-discount-chip.is-active,
+    .admin-pagination-button.is-active {
+      background: #2b241b;
+      color: #fff8ef;
+      border-color: #2b241b;
+    }
+
+    .admin-category-tab:hover,
+    .admin-scope-button:hover,
+    .admin-discount-chip:hover,
+    .admin-pagination-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(43, 36, 27, 0.32);
+    }
+
+    .admin-products-selection-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(247, 242, 231, 0.78);
+      border: 1px solid rgba(199, 165, 75, 0.14);
+    }
+
+    .admin-products-selection-summary {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: center;
+      color: #5a4e3f;
+    }
+
+    .admin-products-selection-summary strong {
+      color: #2b241b;
+    }
+
+    .admin-products-selection-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .admin-products-selection-actions .admin-button {
+      min-height: 42px;
+    }
+
+    .admin-product-bulk-panel {
+      gap: 18px;
+    }
+
+    .admin-product-bulk-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .admin-product-bulk-head h3 {
+      margin: 0 0 6px;
+      color: #2b241b;
+    }
+
+    .admin-product-discount-note {
+      margin: 0;
+      color: #6b5d49;
+      max-width: 720px;
+    }
+
+    .admin-discount-chip-grid {
+      align-items: center;
+    }
+
+    .admin-discount-custom-field {
+      min-width: 160px;
+      flex: 0 0 160px;
+    }
+
+    .admin-discount-custom-field .admin-input:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .admin-products-advanced {
+      border: 1px solid rgba(199, 165, 75, 0.16);
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .admin-products-advanced summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: #2b241b;
+      list-style: none;
+    }
+
+    .admin-products-advanced summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .admin-products-advanced[open] summary {
+      margin-bottom: 14px;
+    }
+
+    .admin-products-table-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 18px 0 12px;
+    }
+
+    .admin-products-table-results {
+      color: #6b5d49;
+      font-size: 0.92rem;
+    }
+
+    .admin-product-name-cell {
+      min-width: 220px;
+    }
+
+    .admin-product-name-stack {
+      display: grid;
+      gap: 4px;
+    }
+
+    .admin-product-name-stack small,
+    .admin-product-discount-stack small {
+      color: #6b5d49;
+      line-height: 1.4;
+    }
+
+    .admin-product-discount-empty {
+      color: #8a8072;
+      font-weight: 700;
+    }
+
+    .admin-product-discount-stack {
+      min-width: 170px;
+    }
+
+    .admin-product-sale-pricing {
+      min-width: 120px;
+    }
+
+    .admin-product-select-head input,
+    .admin-product-select-cell input {
+      width: 18px;
+      height: 18px;
+      accent-color: #2b241b;
+      cursor: pointer;
+    }
+
+    .admin-table tbody tr[hidden] {
+      display: none;
+    }
+
+    .admin-table tbody tr.is-selected {
+      background: rgba(199, 165, 75, 0.08);
+    }
+
+    .admin-pagination-button[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .admin-pagination-button[disabled]:hover {
+      transform: none;
+      border-color: rgba(43, 36, 27, 0.12);
+    }
+
+    .admin-visually-muted {
+      color: #7a6d5c;
+    }
+
+    @media (max-width: 1080px) {
+      .admin-products-toolbar-grid,
+      .admin-products-table-controls,
+      .admin-products-advanced-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .admin-products-toolbar-grid .admin-field-wide {
+        grid-column: span 2;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .admin-products-toolbar-grid,
+      .admin-products-table-controls,
+      .admin-products-advanced-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .admin-products-toolbar-grid .admin-field-wide {
+        grid-column: span 1;
+      }
+
+      .admin-products-selection-bar,
+      .admin-product-bulk-head,
+      .admin-products-table-meta {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .admin-products-selection-actions,
+      .admin-scope-toggle,
+      .admin-discount-chip-grid,
+      .admin-pagination {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body class="admin-page" data-admin-page="products" data-admin-products-source="database">
@@ -711,161 +1048,242 @@ $adminProductTableColumnCount = 10
             </div>
           </div>
 
-          <form action="backend/admin/bulk-product-discount.php" method="POST">
+          <form id="adminBulkDiscountForm" action="backend/admin/bulk-product-discount.php" method="POST">
+            <input type="hidden" id="adminDiscountScopeInput" name="discount_scope" value="selected">
+            <input type="hidden" id="adminDiscountPercentInput" name="discount_percent" value="">
+
+            <div class="admin-products-toolbar">
+              <div class="admin-products-toolbar-grid">
+                <div class="admin-field admin-field-wide">
+                  <label for="adminProductsSearch">Search Products</label>
+                  <input class="admin-input" id="adminProductsSearch" type="search" placeholder="Search by product name, SKU, or barcode">
+                  <p class="admin-products-search-note">Examples: FR-MEN-001, GRF-FR-MEN-001, Men's France T-Shirt</p>
+                </div>
+
+                <div class="admin-field">
+                  <label for="adminProductsFilterStatus">Status Filter</label>
+                  <select class="admin-select" id="adminProductsFilterStatus">
+                    <option value="all">All</option>
+                    <option value="active">Active</option>
+                    <option value="on-sale">On Sale</option>
+                    <option value="no-discount">No Discount</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="admin-category-tabs" role="tablist" aria-label="Product categories">
+                <?php foreach ($adminCategoryLabels as $adminCategoryKey => $adminCategoryLabel): ?>
+                  <button
+                    class="admin-category-tab<?php echo $adminCategoryKey === 'all' ? ' is-active' : ''; ?>"
+                    type="button"
+                    data-category-filter="<?php echo $escapeAdminProduct($adminCategoryKey); ?>"
+                    role="tab"
+                    aria-selected="<?php echo $adminCategoryKey === 'all' ? 'true' : 'false'; ?>"
+                  >
+                    <?php echo $escapeAdminProduct($adminCategoryLabel); ?>
+                    <span class="admin-visually-muted">(<?php echo $escapeAdminProduct($adminCategoryCounts[$adminCategoryKey] ?? 0); ?>)</span>
+                  </button>
+                <?php endforeach; ?>
+              </div>
+
+              <div class="admin-products-selection-bar">
+                <div class="admin-products-selection-summary">
+                  <strong id="adminProductsSelectedSummary">Selected: 0 products</strong>
+                  <span id="adminProductsVisibleSummary">Showing 0 of <?php echo $escapeAdminProduct(count($adminProducts)); ?> products</span>
+                  <span id="adminProductsScopeSummary">Scope: Selected Products</span>
+                </div>
+
+                <div class="admin-products-selection-actions">
+                  <button class="admin-button admin-button-soft" type="button" id="adminSelectVisibleProducts">Select Visible Products</button>
+                  <button class="admin-button admin-button-soft" type="button" id="adminClearSelectedProducts">Clear Selection</button>
+                </div>
+              </div>
+            </div>
+
             <div class="admin-product-bulk-panel">
-              <div>
-                <h3 style="margin:0 0 6px;color:#2b241b;">Discount / Sale Campaign</h3>
-                <p class="admin-panel-note">Choose one product, multiple products, or all products and apply a timed sale without replacing the original base price.</p>
-              </div>
-
-              <div class="admin-product-bulk-grid">
-                <div class="admin-field">
-                  <label for="adminDiscountScope">Target</label>
-                  <select class="admin-select" id="adminDiscountScope" name="discount_scope">
-                    <option value="selected">Selected Products</option>
-                    <option value="all">All Products</option>
-                  </select>
+              <div class="admin-product-bulk-head">
+                <div>
+                  <h3>Product Discount</h3>
+                  <p class="admin-product-discount-note">Common workflow: search a product, select one or more rows, choose 5%-50%, then apply the discount. Switch the scope to All Products only when you want a store-wide campaign.</p>
                 </div>
 
-                <div class="admin-field">
-                  <label for="adminDiscountPercent">Discount</label>
-                  <select class="admin-select" id="adminDiscountPercent" name="discount_percent">
-                    <option value="">Choose discount</option>
-                    <?php foreach ($adminDiscountPercentOptions as $discountPercentOption): ?>
-                      <option value="<?php echo $escapeAdminProduct($discountPercentOption); ?>"><?php echo $escapeAdminProduct($discountPercentOption); ?>% Off</option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-
-                <div class="admin-field">
-                  <label for="adminDiscountLabel">Campaign Label</label>
-                  <input class="admin-input" id="adminDiscountLabel" name="discount_label" type="text" placeholder="Christmas Sale">
-                </div>
-
-                <div class="admin-field">
-                  <label for="adminDiscountStartAt">Start Date</label>
-                  <input class="admin-input" id="adminDiscountStartAt" name="discount_start_at" type="datetime-local">
-                </div>
-
-                <div class="admin-field">
-                  <label for="adminDiscountEndAt">End Date</label>
-                  <input class="admin-input" id="adminDiscountEndAt" name="discount_end_at" type="datetime-local">
-                </div>
-
-                <div class="admin-field" style="align-self:end;">
-                  <label class="admin-product-bulk-check" for="adminDiscountEnabled">
-                    <input id="adminDiscountEnabled" name="discount_enabled" type="checkbox" checked>
-                    <span>Enable discount</span>
-                  </label>
+                <div class="admin-scope-toggle" role="group" aria-label="Discount scope">
+                  <button class="admin-scope-button is-active" type="button" data-discount-scope="selected">Selected Products</button>
+                  <button class="admin-scope-button" type="button" data-discount-scope="all">All Products</button>
                 </div>
               </div>
+
+              <div class="admin-discount-chip-grid" role="group" aria-label="Discount percentages">
+                <?php foreach ($adminDiscountPercentOptions as $discountPercentOption): ?>
+                  <button class="admin-discount-chip" type="button" data-discount-chip="<?php echo $escapeAdminProduct($discountPercentOption); ?>"><?php echo $escapeAdminProduct($discountPercentOption); ?>%</button>
+                <?php endforeach; ?>
+
+                <div class="admin-field admin-discount-custom-field">
+                  <label for="adminDiscountPercentCustom">Custom %</label>
+                  <input class="admin-input" id="adminDiscountPercentCustom" type="number" min="5" max="50" step="1" placeholder="5-50" disabled>
+                </div>
+              </div>
+
+              <details class="admin-products-advanced">
+                <summary>Advanced Discount Settings</summary>
+                <div class="admin-products-advanced-grid">
+                  <div class="admin-field">
+                    <label for="adminDiscountLabel">Campaign Label</label>
+                    <input class="admin-input" id="adminDiscountLabel" name="discount_label" type="text" placeholder="Christmas Sale">
+                  </div>
+
+                  <div class="admin-field">
+                    <label for="adminDiscountStartAt">Start Date</label>
+                    <input class="admin-input" id="adminDiscountStartAt" name="discount_start_at" type="datetime-local">
+                  </div>
+
+                  <div class="admin-field">
+                    <label for="adminDiscountEndAt">End Date</label>
+                    <input class="admin-input" id="adminDiscountEndAt" name="discount_end_at" type="datetime-local">
+                  </div>
+
+                  <div class="admin-field">
+                    <label class="admin-product-bulk-check" for="adminDiscountEnabled">
+                      <input id="adminDiscountEnabled" name="discount_enabled" type="checkbox" checked>
+                      <span>Enable discount</span>
+                    </label>
+                  </div>
+                </div>
+              </details>
 
               <div class="admin-form-actions">
                 <button class="admin-button admin-button-accent" type="submit" name="discount_action" value="apply">Apply Discount</button>
                 <button class="admin-button admin-button-soft" type="submit" name="discount_action" value="remove">Remove Discount</button>
+                <button class="admin-button admin-button-danger" type="submit" name="discount_action" value="remove" data-force-scope="all" data-confirm-message="Remove discounts from all products?">Remove From All Products</button>
               </div>
             </div>
 
-          <div class="admin-table-wrap">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th class="admin-product-select-head"><input type="checkbox" id="adminProductsSelectAll" aria-label="Select all products"></th>
-                  <th>Image</th>
-                  <th>Product Name</th>
-                  <th>SKU</th>
-                  <?php if ($showAdminProductBarcodeColumn): ?>
-                  <th>Barcode</th>
-                  <?php endif; ?>
-                  <th>Price</th>
-                  <?php if ($showAdminProductSalePriceColumn): ?>
-                  <th>Sale Price</th>
-                  <?php endif; ?>
-                  <th>Discount</th>
-                  <th>Category</th>
-                  <?php if ($showAdminProductVariantColumn): ?>
-                  <th>Size / Color</th>
-                  <?php endif; ?>
-                  <?php if ($showAdminProductStatusColumn): ?>
-                  <th>Status</th>
-                  <?php endif; ?>
-                  <th>Stock</th>
-                  <th>Updated</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="adminProductsTableBody">
-                <?php if ($adminProducts): ?>
-                  <?php foreach ($adminProducts as $product): ?>
-                    <?php $productImage = $resolveAdminProductImage($product["image"] ?? ""); ?>
-                    <?php $discountStatus = strtolower(trim((string) ($product['discount_status'] ?? 'disabled'))); ?>
-                    <?php $discountCaption = trim((string) (($product['sale_caption'] ?? '') !== '' ? $product['sale_caption'] : ($product['discount_label'] ?? ''))); ?>
-                    <tr>
-                      <td class="admin-product-select-cell"><input type="checkbox" class="admin-product-select" name="product_ids[]" value="<?php echo $escapeAdminProduct($product['id'] ?? 0); ?>" aria-label="Select <?php echo $escapeAdminProduct($product['name'] ?? 'product'); ?>"></td>
-                      <td>
-                        <?php if ($productImage): ?>
-                          <img class="admin-order-thumb" src="<?php echo $escapeAdminProduct($productImage); ?>" alt="<?php echo $escapeAdminProduct($product["name"] ?? "Product image"); ?>">
-                        <?php else: ?>
-                          <div class="admin-order-thumb admin-order-thumb-placeholder">No image</div>
-                        <?php endif; ?>
-                      </td>
-                      <td><strong><?php echo $escapeAdminProduct($product["name"] ?? ""); ?></strong></td>
-                      <td><?php echo $escapeAdminProduct($product["sku"] ?? "-"); ?></td>
-                      <?php $productBarcode = ($product["barcode"] ?? '') !== '' ? $product["barcode"] : girffonAdminBuildProductBarcode((string) ($product["sku"] ?? '')); ?>
-                      <?php $productVariant = $formatAdminProductVariant($product["size"] ?? '', $product["color"] ?? ''); ?>
-                      <?php if ($showAdminProductBarcodeColumn): ?>
-                      <td class="admin-product-barcode-cell">
-                        <div class="admin-product-barcode-box">
-                          <svg class="admin-product-barcode-svg" data-product-barcode value="<?php echo $escapeAdminProduct($productBarcode); ?>" aria-label="Barcode for <?php echo $escapeAdminProduct($product["name"] ?? "Product"); ?>"></svg>
-                          <span class="admin-product-barcode-value"><?php echo $escapeAdminProduct($productBarcode); ?></span>
-                        </div>
-                      </td>
-                      <?php endif; ?>
-                      <td><?php echo $escapeAdminProduct($formatAdminProductCurrency($product["price"] ?? 0)); ?></td>
-                      <?php if ($showAdminProductSalePriceColumn): ?>
-                      <td><?php echo $escapeAdminProduct(($product["sale_price"] ?? null) !== null && $product["sale_price"] !== '' ? $formatAdminProductCurrency($product["sale_price"]) : '-'); ?></td>
-                      <?php endif; ?>
-                      <td><?php echo $escapeAdminProduct($product["category"] ?? "-"); ?></td>
-                      <?php if ($showAdminProductVariantColumn): ?>
-                      <td><?php echo $escapeAdminProduct($productVariant); ?></td>
-                      <?php endif; ?>
-                      <?php if ($showAdminProductStatusColumn): ?>
-                      <td><?php echo $formatAdminProductLabel($product["status"] ?? "active"); ?></td>
-                      <?php endif; ?>
-                      <td><?php echo $escapeAdminProduct($product["stock"] ?? 0); ?></td>
-                      <td><?php echo $escapeAdminProduct($product["updated_at"] ?? $product["created_at"] ?? '-'); ?></td>
-                      <td>
-                        <div class="admin-product-table-actions">
-                          <?php if ($showAdminProductEditAction): ?>
-                          <a class="admin-button admin-button-soft" href="admin-products.php?edit=<?php echo $escapeAdminProduct($product['id'] ?? 0); ?>" aria-label="Edit product" title="Edit product">
-                            <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                              <path d="M12 6l4 4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                          </a>
+            <div class="admin-products-table-meta">
+              <div class="admin-products-table-results" id="adminProductsResultsMeta">Showing 0 products</div>
+
+              <div class="admin-products-table-controls">
+                <div class="admin-field">
+                  <label for="adminProductsRowsPerPage">Rows Per Page</label>
+                  <select class="admin-select" id="adminProductsRowsPerPage">
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th class="admin-product-select-head"><input type="checkbox" id="adminProductsSelectAll" aria-label="Select all visible products"></th>
+                    <th>Image</th>
+                    <th>Product Name</th>
+                    <th>SKU</th>
+                    <?php if ($showAdminProductBarcodeColumn): ?>
+                    <th>Barcode</th>
+                    <?php endif; ?>
+                    <th>Price</th>
+                    <?php if ($showAdminProductSalePriceColumn): ?>
+                    <th>Sale Price</th>
+                    <?php endif; ?>
+                    <th>Discount</th>
+                    <th>Category</th>
+                    <?php if ($showAdminProductVariantColumn): ?>
+                    <th>Size / Color</th>
+                    <?php endif; ?>
+                    <?php if ($showAdminProductStatusColumn): ?>
+                    <th>Status</th>
+                    <?php endif; ?>
+                    <th>Stock</th>
+                    <th>Updated</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminProductsTableBody">
+                  <?php if ($adminProducts): ?>
+                    <?php foreach ($adminProducts as $product): ?>
+                      <?php
+                        $productId = (int) ($product['id'] ?? 0);
+                        $productImage = $resolveAdminProductImage($product['image'] ?? '');
+                        $discountStatus = strtolower(trim((string) ($product['discount_status'] ?? 'disabled')));
+                        $discountCaption = trim((string) (($product['sale_caption'] ?? '') !== '' ? $product['sale_caption'] : ($product['discount_label'] ?? '')));
+                        $productBarcode = ($product['barcode'] ?? '') !== '' ? $product['barcode'] : girffonAdminBuildProductBarcode((string) ($product['sku'] ?? ''));
+                        $productVariant = $formatAdminProductVariant($product['size'] ?? '', $product['color'] ?? '');
+                        $categoryKey = $adminNormalizeProductCategory($product['category'] ?? '');
+                        $productStatus = $adminNormalizeProductStatus($product['status'] ?? 'active');
+                        $productSearchText = implode(' ', [
+                          (string) ($product['name'] ?? ''),
+                          (string) ($product['sku'] ?? ''),
+                          (string) $productBarcode,
+                          (string) ($product['category'] ?? ''),
+                        ]);
+                        $isOnSale = !empty($product['is_on_sale']) && ($product['effective_sale_price'] ?? null) !== null;
+                        $displayDiscountPercent = (int) ($product['display_discount_percent'] ?? 0);
+                        $discountBadge = $displayDiscountPercent > 0 ? ($displayDiscountPercent . '% OFF') : trim((string) ($product['sale_badge'] ?? 'SALE'));
+                        $salePriceValue = $isOnSale
+                          ? $formatAdminProductCurrency($product['effective_sale_price'] ?? 0)
+                          : (($product['sale_price'] ?? null) !== null && $product['sale_price'] !== '' ? $formatAdminProductCurrency($product['sale_price']) : '-');
+                        $updatedAtDisplay = $formatAdminProductDateTime($product['updated_at'] ?? $product['created_at'] ?? '');
+                      ?>
+                      <tr
+                        class="admin-product-row"
+                        data-product-id="<?php echo $escapeAdminProduct($productId); ?>"
+                        data-search-text="<?php echo $escapeAdminProduct($productSearchText); ?>"
+                        data-category-slug="<?php echo $escapeAdminProduct($categoryKey); ?>"
+                        data-product-status="<?php echo $escapeAdminProduct($productStatus); ?>"
+                        data-discount-filter="<?php echo $escapeAdminProduct($isOnSale ? 'on-sale' : 'no-discount'); ?>"
+                      >
+                        <td class="admin-product-select-cell">
+                          <input type="checkbox" class="admin-product-select" name="product_ids[]" value="<?php echo $escapeAdminProduct($productId); ?>" aria-label="Select <?php echo $escapeAdminProduct($product['name'] ?? 'product'); ?>">
+                        </td>
+                        <td>
+                          <?php if ($productImage): ?>
+                            <img class="admin-order-thumb" src="<?php echo $escapeAdminProduct($productImage); ?>" alt="<?php echo $escapeAdminProduct($product['name'] ?? 'Product image'); ?>">
+                          <?php else: ?>
+                            <div class="admin-order-thumb admin-order-thumb-placeholder">No image</div>
                           <?php endif; ?>
-                          <?php if ($showAdminProductPrintAction): ?>
-                          <td>
-                            <?php if (!empty($product['is_on_sale']) && ($product['effective_sale_price'] ?? null) !== null): ?>
-                              <div class="admin-product-sale-pricing">
-                                <strong><?php echo $escapeAdminProduct($formatAdminProductCurrency($product['effective_sale_price'])); ?></strong>
-                                <span><?php echo $escapeAdminProduct($formatAdminProductCurrency($product['price'] ?? 0)); ?></span>
-                              </div>
-                            <?php else: ?>
-                              <?php echo $escapeAdminProduct(($product["sale_price"] ?? null) !== null && $product["sale_price"] !== '' ? $formatAdminProductCurrency($product["sale_price"]) : '-'); ?>
+                        </td>
+                        <td class="admin-product-name-cell">
+                          <div class="admin-product-name-stack">
+                            <strong><?php echo $escapeAdminProduct($product['name'] ?? ''); ?></strong>
+                            <?php if (trim((string) ($product['description'] ?? '')) !== ''): ?>
+                              <small><?php echo $escapeAdminProduct($product['description']); ?></small>
                             <?php endif; ?>
-                          </td>
-                            <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <td>
+                          </div>
+                        </td>
+                        <td><?php echo $escapeAdminProduct($product['sku'] ?? '-'); ?></td>
+                        <?php if ($showAdminProductBarcodeColumn): ?>
+                        <td class="admin-product-barcode-cell">
+                          <div class="admin-product-barcode-box">
+                            <svg class="admin-product-barcode-svg" data-product-barcode value="<?php echo $escapeAdminProduct($productBarcode); ?>" aria-label="Barcode for <?php echo $escapeAdminProduct($product['name'] ?? 'Product'); ?>"></svg>
+                            <span class="admin-product-barcode-value"><?php echo $escapeAdminProduct($productBarcode); ?></span>
+                          </div>
+                        </td>
+                        <?php endif; ?>
+                        <td><?php echo $escapeAdminProduct($formatAdminProductCurrency($product['price'] ?? 0)); ?></td>
+                        <?php if ($showAdminProductSalePriceColumn): ?>
+                        <td>
+                          <?php if ($isOnSale): ?>
+                            <div class="admin-product-sale-pricing">
+                              <strong><?php echo $escapeAdminProduct($salePriceValue); ?></strong>
+                              <span><?php echo $escapeAdminProduct($formatAdminProductCurrency($product['price'] ?? 0)); ?></span>
+                            </div>
+                          <?php else: ?>
+                            <?php echo $escapeAdminProduct($salePriceValue); ?>
+                          <?php endif; ?>
+                        </td>
+                        <?php endif; ?>
+                        <td>
+                          <?php if ($isOnSale || $discountStatus !== 'disabled'): ?>
                             <div class="admin-product-discount-stack">
-                              <?php if (!empty($product['is_on_sale'])): ?>
-                                <span class="admin-product-sale-badge"><?php echo $escapeAdminProduct($product['sale_badge'] ?? 'SALE'); ?></span>
+                              <?php if ($isOnSale): ?>
+                                <span class="admin-product-sale-badge"><?php echo $escapeAdminProduct($discountBadge); ?></span>
+                              <?php else: ?>
+                                <span class="admin-product-sale-status"><?php echo $escapeAdminProduct(ucfirst($discountStatus)); ?></span>
                               <?php endif; ?>
-                              <span class="admin-product-sale-status"><?php echo $escapeAdminProduct(ucfirst($discountStatus)); ?></span>
-                              <?php if (!empty($product['display_discount_percent'])): ?>
-                                <small><?php echo $escapeAdminProduct($product['display_discount_percent']); ?>% off</small>
-                              <?php endif; ?>
-                              <?php if ($discountCaption !== ''): ?>
+                              <?php if ($discountCaption !== '' && strcasecmp($discountCaption, $discountBadge) !== 0): ?>
                                 <small><?php echo $escapeAdminProduct($discountCaption); ?></small>
                               <?php endif; ?>
                               <?php if (($product['discount_start_at'] ?? '') !== '' || ($product['discount_end_at'] ?? '') !== ''): ?>
@@ -876,43 +1294,92 @@ $adminProductTableColumnCount = 10
                                 </small>
                               <?php endif; ?>
                             </div>
-                          </td>
-                              <path d="M7 8V4h10v4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                              <path d="M6 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                              <path d="M7 14h10v6H7z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                              <path d="M17 11h.01" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                          </button>
+                          <?php else: ?>
+                            <span class="admin-product-discount-empty">&mdash;</span>
                           <?php endif; ?>
-                          <?php if ($showAdminProductDeleteAction): ?>
-                          <form action="backend/admin/delete-product.php" method="POST" onsubmit="return confirm('Delete this product?');">
-                            <input type="hidden" name="id" value="<?php echo $escapeAdminProduct($product['id'] ?? 0); ?>">
-                            <button class="admin-button admin-button-danger" type="submit" aria-label="Delete product" title="Delete product">
-                              <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M3 6h18" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                                <path d="M8 6V4h8v2" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                                <path d="M19 6l-1 14H6L5 6" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                                <path d="M10 11v6M14 11v6" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-                              </svg>
-                            </button>
-                          </form>
-                          <?php endif; ?>
-                          <?php if (!$showAdminProductEditAction && !$showAdminProductPrintAction && !$showAdminProductDeleteAction): ?>
-                            <span class="admin-panel-note">Locked</span>
-                          <?php endif; ?>
-                        </div>
-                      </td>
+                        </td>
+                        <td><?php echo $escapeAdminProduct($product['category'] ?? '-'); ?></td>
+                        <?php if ($showAdminProductVariantColumn): ?>
+                        <td><?php echo $escapeAdminProduct($productVariant); ?></td>
+                        <?php endif; ?>
+                        <?php if ($showAdminProductStatusColumn): ?>
+                        <td><?php echo $formatAdminProductLabel($productStatus); ?></td>
+                        <?php endif; ?>
+                        <td><?php echo $escapeAdminProduct($product['stock'] ?? 0); ?></td>
+                        <td><?php echo $escapeAdminProduct($updatedAtDisplay !== '' ? $updatedAtDisplay : '-'); ?></td>
+                        <td>
+                          <div class="admin-product-table-actions">
+                            <?php if ($showAdminProductEditAction): ?>
+                              <a class="admin-button admin-button-soft" href="admin-products.php?edit=<?php echo $escapeAdminProduct($productId); ?>" aria-label="Edit product" title="Edit product">
+                                <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M4 20h4l10-10-4-4L4 16v4Z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M12 6l4 4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                              </a>
+                            <?php endif; ?>
+                            <?php if ($showAdminProductPrintAction): ?>
+                              <button
+                                class="admin-button admin-button-soft"
+                                type="button"
+                                data-print-product-barcode
+                                data-product-name="<?php echo $escapeAdminProduct($product['name'] ?? 'Product'); ?>"
+                                data-product-sku="<?php echo $escapeAdminProduct($product['sku'] ?? '-'); ?>"
+                                data-product-barcode-value="<?php echo $escapeAdminProduct($productBarcode); ?>"
+                                data-product-price="<?php echo $escapeAdminProduct($salePriceValue); ?>"
+                                data-product-variant="<?php echo $escapeAdminProduct($productVariant); ?>"
+                                aria-label="Print barcode"
+                                title="Print barcode"
+                              >
+                                <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M7 8V4h10v4" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M6 17H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-1" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M7 14h10v6H7z" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M17 11h.01" stroke="#2b241b" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                              </button>
+                            <?php endif; ?>
+                            <?php if ($showAdminProductDeleteAction): ?>
+                              <button class="admin-button admin-button-danger" type="submit" form="adminDeleteProduct<?php echo $escapeAdminProduct($productId); ?>" aria-label="Delete product" title="Delete product">
+                                <svg class="admin-product-action-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M3 6h18" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M8 6V4h8v2" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M19 6l-1 14H6L5 6" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                  <path d="M10 11v6M14 11v6" stroke="#b63a3a" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                              </button>
+                            <?php endif; ?>
+                            <?php if (!$showAdminProductEditAction && !$showAdminProductPrintAction && !$showAdminProductDeleteAction): ?>
+                              <span class="admin-panel-note">Locked</span>
+                            <?php endif; ?>
+                          </div>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                    <tr id="adminProductsNoResults" hidden>
+                      <td colspan="<?php echo $escapeAdminProduct($adminProductTableColumnCount); ?>" class="admin-empty">No products match the current search or filters.</td>
                     </tr>
-                  <?php endforeach; ?>
-                <?php else: ?>
-                  <tr>
-                    <td colspan="<?php echo $escapeAdminProduct($adminProductTableColumnCount); ?>" class="admin-empty">No products found in the database yet.</td>
-                  </tr>
-                <?php endif; ?>
-              </tbody>
-            </table>
-          </div>
+                  <?php else: ?>
+                    <tr>
+                      <td colspan="<?php echo $escapeAdminProduct($adminProductTableColumnCount); ?>" class="admin-empty">No products found in the database yet.</td>
+                    </tr>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="admin-products-table-meta">
+              <div class="admin-products-table-results" id="adminProductsPageMeta">Page 1 of 1</div>
+              <div class="admin-pagination" id="adminProductsPagination" aria-label="Products pagination"></div>
+            </div>
           </form>
+
+          <?php if ($showAdminProductDeleteAction && $adminProducts): ?>
+            <?php foreach ($adminProducts as $product): ?>
+              <form id="adminDeleteProduct<?php echo $escapeAdminProduct((int) ($product['id'] ?? 0)); ?>" class="admin-hidden-form" action="backend/admin/delete-product.php" method="POST" onsubmit="return confirm('Delete this product?');">
+                <input type="hidden" name="id" value="<?php echo $escapeAdminProduct((int) ($product['id'] ?? 0)); ?>">
+              </form>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </article>
         <?php endif; ?>
       </section>
@@ -979,14 +1446,358 @@ $adminProductTableColumnCount = 10
         svg.innerHTML = bars + '<text x="' + (totalWidth / 2) + '" y="44" text-anchor="middle" font-size="7.5" letter-spacing="1.2" fill="#1f1a14">' + escapeHtml(value) + '</text>';
       }
 
+      const bulkDiscountForm = document.getElementById('adminBulkDiscountForm');
       const selectAllProducts = document.getElementById('adminProductsSelectAll');
-      if (selectAllProducts) {
-        selectAllProducts.addEventListener('change', function () {
-          document.querySelectorAll('.admin-product-select').forEach(function (checkbox) {
-            checkbox.checked = selectAllProducts.checked;
-          });
+      const productsTableBody = document.getElementById('adminProductsTableBody');
+      const productsNoResults = document.getElementById('adminProductsNoResults');
+      const searchInput = document.getElementById('adminProductsSearch');
+      const statusFilter = document.getElementById('adminProductsFilterStatus');
+      const rowsPerPageSelect = document.getElementById('adminProductsRowsPerPage');
+      const categoryButtons = Array.from(document.querySelectorAll('[data-category-filter]'));
+      const scopeButtons = Array.from(document.querySelectorAll('[data-discount-scope]'));
+      const percentButtons = Array.from(document.querySelectorAll('[data-discount-chip]'));
+      const customPercentInput = document.getElementById('adminDiscountPercentCustom');
+      const discountPercentInput = document.getElementById('adminDiscountPercentInput');
+      const discountScopeInput = document.getElementById('adminDiscountScopeInput');
+      const selectedSummary = document.getElementById('adminProductsSelectedSummary');
+      const visibleSummary = document.getElementById('adminProductsVisibleSummary');
+      const scopeSummary = document.getElementById('adminProductsScopeSummary');
+      const resultsMeta = document.getElementById('adminProductsResultsMeta');
+      const pageMeta = document.getElementById('adminProductsPageMeta');
+      const paginationRoot = document.getElementById('adminProductsPagination');
+      const selectVisibleButton = document.getElementById('adminSelectVisibleProducts');
+      const clearSelectedButton = document.getElementById('adminClearSelectedProducts');
+      const productRows = productsTableBody ? Array.from(productsTableBody.querySelectorAll('.admin-product-row')) : [];
+
+      const productsState = {
+        search: '',
+        category: 'all',
+        status: 'all',
+        rowsPerPage: Number(rowsPerPageSelect && rowsPerPageSelect.value) || 10,
+        page: 1,
+        scope: discountScopeInput ? discountScopeInput.value : 'selected',
+        selectedDiscount: '',
+        customDiscount: false
+      };
+
+      function normalizeFilterValue(value) {
+        return String(value || '')
+          .toLowerCase()
+          .replace(/&/g, ' and ')
+          .replace(/[^a-z0-9]+/g, ' ')
+          .trim()
+          .replace(/\s+/g, ' ');
+      }
+
+      function getCheckedProducts() {
+        return productRows.filter(function (row) {
+          const checkbox = row.querySelector('.admin-product-select');
+          return Boolean(checkbox && checkbox.checked);
         });
       }
+
+      function getFilteredRows() {
+        return productRows.filter(function (row) {
+          const searchText = normalizeFilterValue(row.dataset.searchText || '');
+          const matchesSearch = productsState.search === '' || searchText.indexOf(productsState.search) !== -1;
+          const matchesCategory = productsState.category === 'all' || row.dataset.categorySlug === productsState.category;
+          const matchesStatus = productsState.status === 'all'
+            || (productsState.status === 'active' && row.dataset.productStatus === 'active')
+            || (productsState.status === 'on-sale' && row.dataset.discountFilter === 'on-sale')
+            || (productsState.status === 'no-discount' && row.dataset.discountFilter === 'no-discount');
+          return matchesSearch && matchesCategory && matchesStatus;
+        });
+      }
+
+      function getVisibleRows() {
+        return getFilteredRows().filter(function (row) {
+          return !row.hidden;
+        });
+      }
+
+      function updateSelectionSummary() {
+        const checkedProducts = getCheckedProducts();
+        const checkedCount = checkedProducts.length;
+        const filteredRows = getFilteredRows();
+        const visibleRows = getVisibleRows();
+        const totalProducts = productRows.length;
+
+        if (selectedSummary) {
+          selectedSummary.textContent = 'Selected: ' + checkedCount + ' product' + (checkedCount === 1 ? '' : 's');
+        }
+
+        if (visibleSummary) {
+          visibleSummary.textContent = 'Showing ' + visibleRows.length + ' of ' + filteredRows.length + ' filtered products';
+        }
+
+        if (scopeSummary) {
+          scopeSummary.textContent = productsState.scope === 'all'
+            ? 'Scope: All Products (' + totalProducts + ')'
+            : 'Scope: Selected Products';
+        }
+
+        if (resultsMeta) {
+          resultsMeta.textContent = filteredRows.length === totalProducts
+            ? 'Showing ' + filteredRows.length + ' total products'
+            : 'Showing ' + filteredRows.length + ' filtered of ' + totalProducts + ' total products';
+        }
+
+        if (selectAllProducts) {
+          const visibleCheckboxes = visibleRows.map(function (row) {
+            return row.querySelector('.admin-product-select');
+          }).filter(Boolean);
+          const checkedVisible = visibleCheckboxes.filter(function (checkbox) { return checkbox.checked; }).length;
+          selectAllProducts.checked = visibleCheckboxes.length > 0 && checkedVisible === visibleCheckboxes.length;
+          selectAllProducts.indeterminate = checkedVisible > 0 && checkedVisible < visibleCheckboxes.length;
+        }
+
+        productRows.forEach(function (row) {
+          const checkbox = row.querySelector('.admin-product-select');
+          row.classList.toggle('is-selected', Boolean(checkbox && checkbox.checked));
+        });
+      }
+
+      function renderPagination(filteredRows) {
+        if (!paginationRoot) {
+          return;
+        }
+
+        paginationRoot.innerHTML = '';
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / productsState.rowsPerPage));
+
+        if (pageMeta) {
+          pageMeta.textContent = 'Page ' + productsState.page + ' of ' + totalPages;
+        }
+
+        function appendPageButton(label, page, disabled, isActive) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'admin-pagination-button' + (isActive ? ' is-active' : '');
+          button.textContent = label;
+          button.disabled = Boolean(disabled);
+          button.addEventListener('click', function () {
+            if (disabled || page === productsState.page) {
+              return;
+            }
+            productsState.page = page;
+            updateTableView();
+          });
+          paginationRoot.appendChild(button);
+        }
+
+        appendPageButton('Previous', Math.max(1, productsState.page - 1), productsState.page <= 1, false);
+        for (let page = 1; page <= totalPages; page += 1) {
+          appendPageButton(String(page), page, false, page === productsState.page);
+        }
+        appendPageButton('Next', Math.min(totalPages, productsState.page + 1), productsState.page >= totalPages, false);
+      }
+
+      function updateTableView() {
+        const filteredRows = getFilteredRows();
+        const totalPages = Math.max(1, Math.ceil(filteredRows.length / productsState.rowsPerPage));
+        productsState.page = Math.min(productsState.page, totalPages);
+        productsState.page = Math.max(productsState.page, 1);
+
+        const startIndex = (productsState.page - 1) * productsState.rowsPerPage;
+        const endIndex = startIndex + productsState.rowsPerPage;
+
+        productRows.forEach(function (row) {
+          row.hidden = true;
+        });
+
+        filteredRows.slice(startIndex, endIndex).forEach(function (row) {
+          row.hidden = false;
+        });
+
+        if (productsNoResults) {
+          productsNoResults.hidden = filteredRows.length !== 0;
+        }
+
+        renderPagination(filteredRows);
+        updateSelectionSummary();
+      }
+
+      function setDiscountScope(scope) {
+        productsState.scope = scope === 'all' ? 'all' : 'selected';
+        if (discountScopeInput) {
+          discountScopeInput.value = productsState.scope;
+        }
+        scopeButtons.forEach(function (button) {
+          const active = button.getAttribute('data-discount-scope') === productsState.scope;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        updateSelectionSummary();
+      }
+
+      function setDiscountPercent(value, customMode) {
+        const normalized = String(value || '').trim();
+        productsState.selectedDiscount = normalized;
+        productsState.customDiscount = Boolean(customMode);
+        if (discountPercentInput) {
+          discountPercentInput.value = normalized;
+        }
+
+        percentButtons.forEach(function (button) {
+          const active = !productsState.customDiscount && button.getAttribute('data-discount-chip') === normalized;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+
+        if (customPercentInput) {
+          customPercentInput.disabled = !productsState.customDiscount;
+          if (productsState.customDiscount) {
+            customPercentInput.value = normalized;
+          } else {
+            customPercentInput.value = '';
+          }
+        }
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          productsState.search = normalizeFilterValue(searchInput.value);
+          productsState.page = 1;
+          updateTableView();
+        });
+      }
+
+      if (statusFilter) {
+        statusFilter.addEventListener('change', function () {
+          productsState.status = statusFilter.value || 'all';
+          productsState.page = 1;
+          updateTableView();
+        });
+      }
+
+      if (rowsPerPageSelect) {
+        rowsPerPageSelect.addEventListener('change', function () {
+          productsState.rowsPerPage = Math.max(1, Number(rowsPerPageSelect.value) || 10);
+          productsState.page = 1;
+          updateTableView();
+        });
+      }
+
+      categoryButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          productsState.category = button.getAttribute('data-category-filter') || 'all';
+          productsState.page = 1;
+          categoryButtons.forEach(function (candidate) {
+            const active = candidate === button;
+            candidate.classList.toggle('is-active', active);
+            candidate.setAttribute('aria-selected', active ? 'true' : 'false');
+          });
+          updateTableView();
+        });
+      });
+
+      scopeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setDiscountScope(button.getAttribute('data-discount-scope') || 'selected');
+        });
+      });
+
+      percentButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setDiscountPercent(button.getAttribute('data-discount-chip') || '', false);
+        });
+      });
+
+      if (customPercentInput) {
+        customPercentInput.addEventListener('focus', function () {
+          productsState.customDiscount = true;
+          percentButtons.forEach(function (button) {
+            button.classList.remove('is-active');
+            button.setAttribute('aria-pressed', 'false');
+          });
+          customPercentInput.disabled = false;
+        });
+
+        customPercentInput.addEventListener('input', function () {
+          const rawValue = String(customPercentInput.value || '').trim();
+          setDiscountPercent(rawValue, true);
+        });
+      }
+
+      if (selectAllProducts) {
+        selectAllProducts.addEventListener('change', function () {
+          getVisibleRows().forEach(function (row) {
+            const checkbox = row.querySelector('.admin-product-select');
+            if (checkbox) {
+              checkbox.checked = selectAllProducts.checked;
+            }
+          });
+          updateSelectionSummary();
+        });
+      }
+
+      if (selectVisibleButton) {
+        selectVisibleButton.addEventListener('click', function () {
+          getVisibleRows().forEach(function (row) {
+            const checkbox = row.querySelector('.admin-product-select');
+            if (checkbox) {
+              checkbox.checked = true;
+            }
+          });
+          updateSelectionSummary();
+        });
+      }
+
+      if (clearSelectedButton) {
+        clearSelectedButton.addEventListener('click', function () {
+          productRows.forEach(function (row) {
+            const checkbox = row.querySelector('.admin-product-select');
+            if (checkbox) {
+              checkbox.checked = false;
+            }
+          });
+          updateSelectionSummary();
+        });
+      }
+
+      productRows.forEach(function (row) {
+        const checkbox = row.querySelector('.admin-product-select');
+        if (!checkbox) {
+          return;
+        }
+        checkbox.addEventListener('change', updateSelectionSummary);
+      });
+
+      if (bulkDiscountForm) {
+        bulkDiscountForm.addEventListener('submit', function (event) {
+          const submitter = event.submitter;
+          const action = submitter ? String(submitter.value || '').toLowerCase() : '';
+          const forceScope = submitter ? submitter.getAttribute('data-force-scope') : '';
+          const confirmMessage = submitter ? submitter.getAttribute('data-confirm-message') : '';
+          const checkedCount = getCheckedProducts().length;
+
+          if (forceScope === 'all') {
+            setDiscountScope('all');
+          }
+
+          if (confirmMessage && !window.confirm(confirmMessage)) {
+            event.preventDefault();
+            return;
+          }
+
+          if (productsState.scope !== 'all' && checkedCount === 0) {
+            window.alert('Select at least one product or switch the scope to All Products.');
+            event.preventDefault();
+            return;
+          }
+
+          if (action === 'apply') {
+            const discountValue = Number.parseInt(String(discountPercentInput && discountPercentInput.value || ''), 10);
+            if (!Number.isFinite(discountValue) || discountValue < 5 || discountValue > 50) {
+              window.alert('Choose a discount between 5% and 50% before applying.');
+              event.preventDefault();
+            }
+          }
+        });
+      }
+
+      setDiscountScope(productsState.scope);
+      updateTableView();
 
       function renderProductBarcode(svg) {
         const value = normalizeBarcodeValue(svg && svg.getAttribute('value'));
