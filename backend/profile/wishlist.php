@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/common.php';
+require_once __DIR__ . '/../admin/products-data.php';
 
 function girffonProfileWishlistNormalizePath(?string $path): string
 {
@@ -111,6 +112,12 @@ if ($productsAvailable) {
             'name' => true,
             'sku' => true,
             'price' => true,
+            'sale_price' => true,
+            'discount_enabled' => true,
+            'discount_percent' => true,
+            'discount_label' => true,
+            'discount_start_at' => true,
+            'discount_end_at' => true,
             'stock' => true,
             'status' => true,
             'image_path' => true,
@@ -129,6 +136,7 @@ if ($productsAvailable) {
         );
         $productStatement->execute($productIds);
         foreach ($productStatement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $product) {
+            $product = girffonAdminHydrateProductPricing($product);
             $productsById[(int) ($product['id'] ?? 0)] = $product;
         }
     }
@@ -138,7 +146,11 @@ $items = array_map(static function (array $item) use ($productsById): array {
     $product = $productsById[(int) ($item['product_id'] ?? 0)] ?? [];
     $name = (string) (($item['name'] ?? '') !== '' ? $item['name'] : ($product['name'] ?? 'Saved Product'));
     $sku = (string) (($item['sku'] ?? '') !== '' ? $item['sku'] : ($product['sku'] ?? ''));
-    $price = (float) (($item['price'] ?? '') !== '' ? $item['price'] : ($product['price'] ?? 0));
+    $price = (float) (($product['effective_price'] ?? '') !== ''
+        ? $product['effective_price']
+        : (($item['price'] ?? '') !== '' ? $item['price'] : ($product['price'] ?? 0)));
+    $originalPrice = (float) (($product['price'] ?? '') !== '' ? $product['price'] : $price);
+    $isOnSale = !empty($product['is_on_sale']) && $originalPrice > $price;
     $image = girffonProfileWishlistNormalizePath((string) (($item['image_path'] ?? '') !== '' ? $item['image_path'] : ($product['image_path'] ?? '')));
     $stock = (int) ($product['stock'] ?? 0);
     $status = strtolower((string) ($product['status'] ?? 'active'));
@@ -150,7 +162,15 @@ $items = array_map(static function (array $item) use ($productsById): array {
         'name' => $name,
         'sku' => $sku,
         'price' => $price,
-        'price_label' => 'EUR' . number_format($price, 2, '.', ''),
+        'price_label' => 'EUR ' . number_format($price, 2, '.', ''),
+        'original_price' => $originalPrice,
+        'original_price_label' => 'EUR ' . number_format($originalPrice, 2, '.', ''),
+        'sale_price' => $isOnSale ? $price : null,
+        'sale_price_label' => $isOnSale ? ('EUR ' . number_format($price, 2, '.', '')) : '',
+        'is_on_sale' => $isOnSale,
+        'sale_badge' => (string) ($product['sale_badge'] ?? ''),
+        'sale_caption' => (string) ($product['sale_caption'] ?? ''),
+        'display_discount_percent' => (int) ($product['display_discount_percent'] ?? 0),
         'image' => $image,
         'size' => (string) ($item['size'] ?? ''),
         'color' => (string) ($item['color'] ?? ''),

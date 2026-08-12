@@ -511,6 +511,7 @@ try {
     $emailSent = false;
     $emailError = '';
     try {
+        girffonOrderMailDebugLog(girffonMailConfig(), 'event=order_confirmation_dispatch | order_number=' . $orderNumber . ' | recipient=' . $customerEmail);
         $emailSent = girffonSendOrderConfirmationEmail([
             'customer_name' => $customerName,
             'customer_email' => $customerEmail,
@@ -522,9 +523,11 @@ try {
             'total' => $amountDue,
             'shipping_address' => implode(', ', $shippingAddressParts),
         ]);
+        girffonOrderMailDebugLog(girffonMailConfig(), 'event=order_confirmation_dispatch_result | order_number=' . $orderNumber . ' | recipient=' . $customerEmail . ' | success=' . ($emailSent ? 'true' : 'false'));
     } catch (Throwable $throwable) {
         $emailSent = false;
         $emailError = $throwable->getMessage();
+        girffonOrderMailDebugLog(girffonMailConfig(), 'event=order_confirmation_dispatch_error | order_number=' . $orderNumber . ' | recipient=' . $customerEmail . ' | success=false | error=' . $emailError);
         error_log('[GirffoN Checkout Mail] ' . $emailError);
     }
 

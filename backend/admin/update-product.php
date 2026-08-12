@@ -49,7 +49,7 @@ if ($productId <= 0) {
     girffonAdminRedirectUpdatedProduct('error', 'Invalid product selected.');
 }
 
-if ($name === '' || $sku === '' || $price <= 0 || $category === '' || $size === '' || $color === '') {
+if ($name === '' || $sku === '' || $price <= 0 || $category === '') {
     girffonAdminRedirectUpdatedProduct('error', 'Please complete all product fields.', $productId);
 }
 

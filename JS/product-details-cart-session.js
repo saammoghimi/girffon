@@ -20,6 +20,10 @@
 
   function getProductPrice() {
     const priceNode = document.getElementById('product-price');
+    const effectivePrice = Number(priceNode?.dataset?.effectivePriceEur || 0);
+    if (effectivePrice > 0) {
+      return effectivePrice;
+    }
     const basePrice = Number(priceNode?.dataset?.baseEur || priceNode?.dataset?.priceEur || 0);
     if (basePrice > 0) {
       return basePrice;
@@ -45,15 +49,17 @@
 
   function getRelatedProductPayload(card) {
     const title = card.querySelector('.gx25-title')?.textContent?.trim() || 'GirffoN Product';
-    const sku = card.getAttribute('data-product-id') || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const sku = card.getAttribute('data-product-sku') || card.getAttribute('data-product-id') || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const color = card.querySelector('.gx25-color.active')?.getAttribute('data-color') || getActiveColor();
     const image = card.querySelector('.gx25-main-image')?.getAttribute('src') || '';
+    const effectivePrice = parsePrice(card.querySelector('.gx25-price')?.getAttribute('data-effective-eur') || card.querySelector('.gx25-price')?.dataset?.effectiveEur || '0');
+    const basePrice = parsePrice(card.querySelector('.gx25-price')?.getAttribute('data-base-eur') || card.querySelector('.gx25-price')?.textContent || '0');
 
     return {
       id: sku,
       sku: sku,
       name: title,
-      price: parsePrice(card.querySelector('.gx25-price')?.getAttribute('data-base-eur') || card.querySelector('.gx25-price')?.textContent || '0'),
+      price: effectivePrice > 0 ? effectivePrice : basePrice,
       size: getActiveSize(),
       color: color,
       image: image,

@@ -223,9 +223,62 @@ body.gf-shop-page {
 }
 
 .gf-shop-card-price {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   font-size: 1.02rem;
   font-weight: 900;
   color: #222;
+}
+
+.gf-shop-card-price.gf-live-price-block {
+  min-height: 52px;
+}
+
+.gf-shop-card-price .gf-live-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gf-shop-card-price .gf-live-price-current {
+  color: #9f3418;
+}
+
+.gf-shop-card-price .gf-live-price-original {
+  color: #8d8378;
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: line-through;
+}
+
+.gf-shop-card-price .gf-live-price-caption {
+  color: var(--gf-shop-gold-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.gf-shop-sale-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(159, 52, 24, 0.92);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 18px rgba(159, 52, 24, 0.2);
+}
+
+.gf-shop-sale-badge[hidden] {
+  display: none !important;
 }
 
 .gf-shop-color-row {

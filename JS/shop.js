@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', function () {
     return;
   }
 
+  const livePricing = window.GirffonLivePricing || null;
+
   const CART_KEY = 'girffon_cart';
   const WISHLIST_KEY = 'girffon_wishlist';
   const COLOR_MAP = {
@@ -142,6 +144,26 @@ document.addEventListener('DOMContentLoaded', function () {
     return 'EUR ' + Number(value || 0).toFixed(2);
   }
 
+  function getCardPricing(card, fallbackPrice) {
+    if (livePricing && typeof livePricing.getCardPricing === 'function') {
+      return livePricing.getCardPricing(card, fallbackPrice, formatPrice);
+    }
+
+    const priceNumber = Number(fallbackPrice || 0);
+    return {
+      priceNumber: priceNumber,
+      priceText: formatPrice(priceNumber)
+    };
+  }
+
+  function applyLivePricing() {
+    if (!livePricing || typeof livePricing.applyShopCards !== 'function') {
+      return Promise.resolve();
+    }
+
+    return livePricing.applyShopCards(container);
+  }
+
   function buildImages(folderTemplate, colorCode) {
     const folder = String(folderTemplate || '').replace('{color}', colorCode);
     return [
@@ -162,29 +184,31 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  function buildWishlistItem(section, product, colorCode, image) {
+  function buildWishlistItem(section, product, colorCode, image, pricing) {
+    const priceNumber = Number(pricing && pricing.priceNumber != null ? pricing.priceNumber : product.priceEur || 0);
     return {
       id: product.id,
       title: product.title,
       name: product.title,
       image: image,
       img: image,
-      price: formatPrice(product.priceEur),
-      priceNumber: Number(product.priceEur || 0),
+      price: formatPrice(priceNumber),
+      priceNumber: priceNumber,
       color: colorCode,
       category: section.title,
       href: product.href
     };
   }
 
-  function buildCartPayload(section, product, colorCode, image) {
+  function buildCartPayload(section, product, colorCode, image, pricing) {
+    const priceNumber = Number(pricing && pricing.priceNumber != null ? pricing.priceNumber : product.priceEur || 0);
     return {
       id: product.id,
       sku: product.id,
       name: product.title,
       title: product.title,
-      price: Number(product.priceEur || 0),
-      priceNumber: Number(product.priceEur || 0),
+      price: priceNumber,
+      priceNumber: priceNumber,
       image: image,
       img: image,
       size: 'One Size',
@@ -196,8 +220,8 @@ document.addEventListener('DOMContentLoaded', function () {
     };
   }
 
-  async function addToCart(section, product, colorCode, image) {
-    const payload = buildCartPayload(section, product, colorCode, image);
+  async function addToCart(section, product, colorCode, image, pricing) {
+    const payload = buildCartPayload(section, product, colorCode, image, pricing);
 
     if (window.GirffonCartApi && typeof window.GirffonCartApi.addItem === 'function') {
       await window.GirffonCartApi.addItem({
@@ -229,7 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
     await updateTopCounts();
   }
 
-  function toggleWishlist(section, product, colorCode, image) {
+  function toggleWishlist(section, product, colorCode, image, pricing) {
     const wishlistItems = getWishlistItems();
     const existingIndex = wishlistItems.findIndex(function (item) {
       return String(item && item.id || '') === product.id;
@@ -242,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
       return false;
     }
 
-    wishlistItems.push(buildWishlistItem(section, product, colorCode, image));
+    wishlistItems.push(buildWishlistItem(section, product, colorCode, image, pricing));
     safeWriteArray(WISHLIST_KEY, wishlistItems);
     updateTopCounts();
     return true;
@@ -271,8 +295,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const heartClass = isWishlisted(product.id) ? ' is-active' : '';
 
         return '' +
-          '<article class="gf-shop-card" data-section-key="' + section.key + '" data-product-id="' + product.id + '" data-active-color="' + defaultColor + '">' +
+          '<article class="gf-shop-card" data-section-key="' + section.key + '" data-category-key="' + section.key + '" data-product-title="' + product.title + '" data-product-id="' + product.id + '" data-active-color="' + defaultColor + '" data-base-price-eur="' + product.priceEur + '">' +
             '<div class="gf-shop-card-media">' +
+              '<span class="gf-shop-sale-badge" hidden></span>' +
               '<a class="gf-shop-card-link" href="' + product.href + '" aria-label="View ' + product.title + '">' +
                 '<img class="gf-shop-card-image" src="' + defaultImage + '" alt="' + product.title + '" loading="lazy">' +
               '</a>' +
@@ -344,7 +369,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const heartButton = event.target.closest('.gf-shop-heart');
     if (heartButton) {
-      const active = toggleWishlist(section, product, activeColor, imagePath);
+      const pricing = getCardPricing(card, product.priceEur);
+      const active = toggleWishlist(section, product, activeColor, imagePath, pricing);
       heartButton.classList.toggle('is-active', active);
       const icon = heartButton.querySelector('i');
       if (icon) {
@@ -355,9 +381,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const addButton = event.target.closest('.gf-shop-add-btn');
     if (addButton) {
+      const pricing = getCardPricing(card, product.priceEur);
       addButton.disabled = true;
       try {
-        await addToCart(section, product, activeColor, imagePath);
+        await addToCart(section, product, activeColor, imagePath, pricing);
       } finally {
         addButton.disabled = false;
       }
@@ -373,9 +400,11 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
     renderSections();
+    applyLivePricing();
     updateTopCounts();
   });
 
   renderSections();
+  applyLivePricing();
   updateTopCounts();
 });

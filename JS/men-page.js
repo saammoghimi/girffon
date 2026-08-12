@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const sections = Array.from(document.querySelectorAll(".gx25-section"));
   if (!sections.length) return;
   const localeHelper = window.GFCategoryLocaleHelper ? window.GFCategoryLocaleHelper.create("men") : null;
+  const livePricing = window.GirffonLivePricing || null;
 
   const CART_KEY = "girffon_cart";
   const WISHLIST_KEY = "girffon_wishlist";
@@ -23,33 +24,66 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const colorCodes = Object.keys(colorMap);
 
+  function formatDisplayPrice(value) {
+    return localeHelper ? localeHelper.formatPrice(value) : (Number(value || 0).toFixed(2).replace('.', ',') + ' €');
+  }
+
+  function syncLivePricing() {
+    if (!livePricing || typeof livePricing.applyCategoryCards !== "function") {
+      return Promise.resolve();
+    }
+
+    return livePricing.applyCategoryCards(document, {
+      categoryKey: "men",
+      formatPrice: formatDisplayPrice
+    });
+  }
+
+  function getCardPricing(card, fallbackPrice) {
+    if (livePricing && typeof livePricing.getCardPricing === "function") {
+      return livePricing.getCardPricing(card, fallbackPrice, formatDisplayPrice);
+    }
+
+    const priceNumber = Number(fallbackPrice || 0);
+    return {
+      priceNumber: priceNumber,
+      priceText: formatDisplayPrice(priceNumber)
+    };
+  }
+
   const baseProducts = [
     {
+      sku: "FR-MEN-001",
       title: "France T-Shirt",
       priceEur: 200,
       folderTemplate: "Cart/products/tshirt-men/Men france/{color}/"
     },
     {
+      sku: "IT-MEN-002",
       title: "Italy T-Shirt",
       priceEur: 220,
       folderTemplate: "Cart/products/tshirt-men/men italy/{color}/"
     },
     {
+      sku: "US-MEN-003",
       title: "USA T-Shirt",
       priceEur: 230,
       folderTemplate: "Cart/products/tshirt-men/men usa/{color}/"
     },
     {
+      sku: "FR-WOM-101",
       title: "Women France T-Shirt",
       priceEur: 220,
       folderTemplate: "Cart/products/tshirt-women/women france/{color}/"
     },
     {
+      sku: "IT-WOM-102",
       title: "Women Italy T-Shirt",
       priceEur: 220,
       folderTemplate: "Cart/products/tshirt-women/women italy/{color}/"
     },
     {
+      sku: "JP-WOM-103",
       title: "Women Japan T-Shirt",
       priceEur: 220,
       folderTemplate: "Cart/products/tshirt-women/Women japon/{color}/"
@@ -138,6 +172,7 @@ document.addEventListener("DOMContentLoaded", function () {
     return baseProducts.map(function (base, index) {
       return {
         id: name.toLowerCase().replace(/\s+/g, "-") + "-" + (index + 1),
+        sku: base.sku || "",
         badge: localeHelper ? localeHelper.texts().badge : "New",
         sectionName: name,
         baseTitle: base.title,
@@ -164,7 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const defaultImages = buildImages(product.folderTemplate, product.defaultColor);
 
     return (
-      '<article class="gx25-card" data-product-id="' + product.id + '" data-section-name="' + product.sectionName + '" data-base-title="' + product.baseTitle + '" data-price-eur="' + product.priceEur + '">' +
+      '<article class="gx25-card" data-product-id="' + product.id + '" data-product-sku="' + product.sku + '" data-section-name="' + product.sectionName + '" data-base-title="' + product.baseTitle + '" data-base-price-eur="' + product.priceEur + '" data-price-eur="' + product.priceEur + '">' +
         '<span class="gx25-badge">' + product.badge + "</span>" +
         '<button class="gx25-fav" type="button" aria-label="Add to wishlist"><i class="fa-regular fa-heart"></i></button>' +
         '<div class="gx25-image-box">' +
@@ -327,10 +362,13 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       favBtn.addEventListener("click", function () {
+        const pricing = getCardPricing(card, product.priceEur);
+        const stableId = product.sku || product.id;
         const active = toggleWishlist({
-          id: product.id,
+          id: stableId,
           title: product.title,
-          price: product.price,
+          price: pricing.priceText,
+          priceNumber: pricing.priceNumber,
           image: imageSet[0]
         });
 
@@ -377,10 +415,13 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       addBtn.addEventListener("click", async function () {
+        const pricing = getCardPricing(card, product.priceEur);
+        const stableId = product.sku || product.id;
         await addCart({
-          id: product.id,
+          id: stableId,
           title: product.title,
-          price: product.price,
+          price: pricing.priceText,
+          priceNumber: pricing.priceNumber,
           color: selectedColor,
           image: imageSet[0],
           section: name,
@@ -399,8 +440,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (localeHelper) {
     localeHelper.applyPage(document);
     localeHelper.bindBankModal(document);
+    syncLivePricing();
     localeHelper.watch(function () {
       localeHelper.applyPage(document);
+      syncLivePricing();
     });
+  } else {
+    syncLivePricing();
   }
 });

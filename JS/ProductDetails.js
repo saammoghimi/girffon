@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+  const livePricing = window.GirffonLivePricing || null;
   const colorList = [
     { code: "Bk", name: "Black", hex: "#000000" },
     { code: "Wh", name: "White", hex: "#ffffff" },
@@ -23,6 +24,14 @@ document.addEventListener("DOMContentLoaded", function () {
     sizes: ["S", "M", "L", "XL", "XXL"],
     colorList,
     folder: "Cart/products/tshirt-men/Men france/"
+  };
+
+  let currentPricing = {
+    basePriceEur: Number(product.basePriceEur || 0),
+    effectivePriceEur: Number(product.basePriceEur || 0),
+    isOnSale: false,
+    saleBadge: "",
+    saleCaption: ""
   };
 
   const STORAGE_KEY = "gf-locale-country";
@@ -242,6 +251,76 @@ document.addEventListener("DOMContentLoaded", function () {
     }).format(converted);
   }
 
+  function setCurrentPricingFromProduct(liveProduct) {
+    const basePriceEur = Number(liveProduct && liveProduct.price != null ? liveProduct.price : product.basePriceEur || 0);
+    const effectivePriceEur = Number(liveProduct && liveProduct.effective_price != null ? liveProduct.effective_price : basePriceEur);
+    const isOnSale = Boolean(liveProduct && liveProduct.is_on_sale) && effectivePriceEur < basePriceEur;
+
+    currentPricing = {
+      basePriceEur: basePriceEur,
+      effectivePriceEur: effectivePriceEur,
+      isOnSale: isOnSale,
+      saleBadge: isOnSale ? String((liveProduct && liveProduct.sale_badge) || "SALE").trim() || "SALE" : "",
+      saleCaption: isOnSale ? String((liveProduct && liveProduct.sale_caption) || "").trim() : ""
+    };
+  }
+
+  function renderProductPrice() {
+    const basePrice = Number(currentPricing.basePriceEur || 0);
+    const effectivePrice = Number(currentPricing.effectivePriceEur || basePrice || 0);
+    const isOnSale = Boolean(currentPricing.isOnSale) && effectivePrice < basePrice;
+
+    priceEl.dataset.baseEur = basePrice.toFixed(2);
+    priceEl.dataset.priceEur = basePrice.toFixed(2);
+    priceEl.dataset.effectivePriceEur = effectivePrice.toFixed(2);
+    priceEl.dataset.saleBadge = currentPricing.saleBadge || "";
+    priceEl.dataset.saleCaption = currentPricing.saleCaption || "";
+    priceEl.classList.toggle("pd-price-sale", isOnSale);
+
+    if (!isOnSale) {
+      priceEl.textContent = formatLocalizedPrice(basePrice);
+      return;
+    }
+
+    const priceRow = [
+      '<span class="pd-price-badge">' + currentPricing.saleBadge + '</span>',
+      '<span class="pd-price-current">' + formatLocalizedPrice(effectivePrice) + '</span>',
+      '<span class="pd-price-original">' + formatLocalizedPrice(basePrice) + '</span>'
+    ].join("");
+
+    const caption = currentPricing.saleCaption
+      ? '<span class="pd-price-caption">' + currentPricing.saleCaption + '</span>'
+      : "";
+
+    priceEl.innerHTML = '<span class="pd-price-row">' + priceRow + '</span>' + caption;
+  }
+
+  function syncLiveProductPricing() {
+    if (!livePricing || typeof livePricing.loadCatalog !== "function" || typeof livePricing.findProduct !== "function") {
+      renderProductPrice();
+      return Promise.resolve();
+    }
+
+    return livePricing.loadCatalog(true).then(function () {
+      const matchedProduct = livePricing.findProduct({
+        sku: product.code,
+        name: product.title,
+        categoryKey: "men"
+      });
+
+      if (matchedProduct) {
+        setCurrentPricingFromProduct(matchedProduct);
+      } else {
+        setCurrentPricingFromProduct(null);
+      }
+
+      renderProductPrice();
+    }).catch(function () {
+      setCurrentPricingFromProduct(null);
+      renderProductPrice();
+    });
+  }
+
   function getImagesForColor(colorCode) {
     const folder = `${product.folder}${colorCode}/`;
     return {
@@ -284,7 +363,7 @@ document.addEventListener("DOMContentLoaded", function () {
   titleEl.textContent = product.title;
   codeEl.textContent = product.code;
   descEl.textContent = product.description;
-  priceEl.textContent = product.price;
+  renderProductPrice();
 
   colorBox.innerHTML = colorList.map(c => {
     const borderColor = c.code === "Wh" ? "#d8d8d8" : "rgba(0,0,0,0.15)";
@@ -368,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.title = texts.pageTitle;
     titleEl.textContent = texts.title;
     descEl.textContent = texts.description;
-    priceEl.textContent = formatLocalizedPrice(product.basePriceEur);
+    renderProductPrice();
     if (ratingCountEl) ratingCountEl.textContent = texts.ratingCount;
     if (colorsLabelEl) colorsLabelEl.textContent = texts.colorsLabel;
     if (sizesLabelEl) sizesLabelEl.textContent = texts.sizesLabel;
@@ -415,6 +494,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   renderGallery(selectedColor);
   applyProductLocale();
+  syncLiveProductPricing();
 
   colorBox.addEventListener("click", function (e) {
     const target = e.target.closest(".pd-color-dot");
@@ -489,7 +569,7 @@ document.addEventListener("DOMContentLoaded", function () {
         name: titleEl.textContent,
         title: titleEl.textContent,
         code: product.code,
-        price: Number(product.basePriceEur || 0),
+        price: Number(currentPricing.effectivePriceEur || currentPricing.basePriceEur || product.basePriceEur || 0),
         size: selectedSize,
         color: selectedColor,
         image: selectedThumb,
@@ -559,30 +639,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const gx25SectionProducts = {
     "kids-favorites": [
-      { id: "kf-1", title: "Kids Oni Black Tee", price: "€29.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Hot" },
-      { id: "kf-2", title: "Kids Street France", price: "€31.00", folderTemplate: "Cart/products/tshirt-men/men italy/{color}/", badge: "New" },
-      { id: "kf-3", title: "Kids Soft Cotton", price: "€27.00", folderTemplate: "Cart/products/tshirt-men/men usa/{color}/", badge: "Best" },
-      { id: "kf-4", title: "Kids Daily Graphic", price: "€30.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "Top" }
+      { id: "kf-1", sku: "TD-KID-201", category: "kids", title: "Kids Teddy Bear Tee", price: "€180.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Hot" },
+      { id: "kf-2", sku: "CAT-SHOP-KIDS-FUN-2", category: "kids", title: "Fun Park Tee", price: "€185.00", folderTemplate: "Cart/products/tshirt-men/men italy/{color}/", badge: "New" },
+      { id: "kf-3", sku: "UC-KID-202", category: "kids", title: "Kids Unicorn Dream Tee", price: "€190.00", folderTemplate: "Cart/products/tshirt-men/men usa/{color}/", badge: "Best" },
+      { id: "kf-4", sku: "SP-KID-203", category: "kids", title: "Kids Space Rocket Tee", price: "€195.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "Top" }
     ],
     "mini-streetwear": [
-      { id: "ms-1", title: "Mini Urban Icon", price: "€33.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Fresh" },
-      { id: "ms-2", title: "Mini Tokyo Wave", price: "€35.00", folderTemplate: "Cart/products/tshirt-women/Women japon/{color}/", badge: "Drop" },
-      { id: "ms-3", title: "Mini Natural Fit", price: "€28.00", folderTemplate: "Cart/products/tshirt-women/Women italy/{color}/", badge: "New" },
-      { id: "ms-4", title: "Mini Club Print", price: "€34.00", folderTemplate: "Cart/products/tshirt-men/men italy/{color}/", badge: "Edit" }
+      { id: "ms-1", sku: "FR-MEN-001", category: "men", title: "Men's France T-Shirt", price: "€200.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Fresh" },
+      { id: "ms-2", sku: "IT-MEN-002", category: "men", title: "Men's Italy T-Shirt", price: "€220.00", folderTemplate: "Cart/products/tshirt-men/men italy/{color}/", badge: "Drop" },
+      { id: "ms-3", sku: "FR-WOM-101", category: "women", title: "Women's France T-Shirt", price: "€220.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "New" },
+      { id: "ms-4", sku: "JP-WOM-103", category: "women", title: "Women's Japan T-Shirt", price: "€220.00", folderTemplate: "Cart/products/tshirt-women/Women japon/{color}/", badge: "Edit" }
     ],
     "kids-best-sellers": [
-      { id: "bs-1", title: "Best Seller Monster", price: "€36.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Best" },
-      { id: "bs-2", title: "Best Seller Soft Blue", price: "€34.00", folderTemplate: "Cart/products/tshirt-men/men usa/{color}/", badge: "Hot" },
-      { id: "bs-3", title: "Best Seller Grey Fit", price: "€32.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "Top" },
-      { id: "bs-4", title: "Best Seller Japan Art", price: "€38.00", folderTemplate: "Cart/products/tshirt-women/Women japon/{color}/", badge: "Pro" }
+      { id: "bs-1", sku: "US-MEN-003", category: "men", title: "Men's USA T-Shirt", price: "€230.00", folderTemplate: "Cart/products/tshirt-men/men usa/{color}/", badge: "Best" },
+      { id: "bs-2", sku: "IT-WOM-102", category: "women", title: "Women's Italy T-Shirt", price: "€220.00", folderTemplate: "Cart/products/tshirt-women/Women italy/{color}/", badge: "Hot" },
+      { id: "bs-3", sku: "CAT-SHOP-KIDS-DINO-4", category: "kids", title: "Dino Squad Tee", price: "€195.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "Top" },
+      { id: "bs-4", sku: "CAT-PAGE-KIDS-PAGE-CANDY-POP-TEE", category: "kids", title: "Candy Pop Tee", price: "€185.00", folderTemplate: "Cart/products/tshirt-women/Women japon/{color}/", badge: "Pro" }
     ],
     "gift-picks": [
-      { id: "gp-1", title: "Gift Pick Gold", price: "€25.00", folderTemplate: "Cart/products/tshirt-men/men italy/{color}/", badge: "Gift" },
-      { id: "gp-2", title: "Gift Pick Cute Line", price: "€26.00", folderTemplate: "Cart/products/tshirt-women/Women italy/{color}/", badge: "Cute" },
-      { id: "gp-3", title: "Gift Pick Urban Art", price: "€29.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Fav" },
-      { id: "gp-4", title: "Gift Pick Color Pop", price: "€28.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "Mix" }
+      { id: "gp-1", sku: "GRF-ACC-TB-402", category: "accessories", title: "Classic Tote Bag", price: "€55.00", folderTemplate: "Cart/products/tshirt-men/men italy/{color}/", badge: "Gift" },
+      { id: "gp-2", sku: "GRF-ACC-PC-403", category: "accessories", title: "Phone Case", price: "€39.00", folderTemplate: "Cart/products/tshirt-women/Women italy/{color}/", badge: "Cute" },
+      { id: "gp-3", sku: "GRF-HOM-CS-301", category: "home-living", title: "Cushion Cover", price: "€49.00", folderTemplate: "Cart/products/tshirt-men/Men france/{color}/", badge: "Fav" },
+      { id: "gp-4", sku: "GRF-HOM-MG-302", category: "home-living", title: "Ceramic Mug", price: "€39.00", folderTemplate: "Cart/products/tshirt-women/women france/{color}/", badge: "Mix" }
     ]
   };
+
+  function gx25ParseFallbackPrice(value) {
+    return Number.parseFloat(String(value || "0").replace(/[^0-9.,]/g, "").replace(",", ".")) || 0;
+  }
 
   function gx25BuildImages(folderTemplate, colorCode) {
     const folder = folderTemplate.replace("{color}", colorCode);
@@ -607,9 +691,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const images = gx25BuildImages(productItem.folderTemplate, defaultColor);
     const texts = getProductTexts();
     const badgeText = texts.badges[productItem.badge] || PRODUCT_DETAIL_I18N["en-GB"].badges[productItem.badge] || productItem.badge;
+    const fallbackPrice = gx25ParseFallbackPrice(productItem.price);
 
     return `
-      <article class="gx25-card" data-product-id="${productItem.id}" data-folder-template="${productItem.folderTemplate}" data-color="${defaultColor}" data-image-index="0">
+      <article class="gx25-card" data-product-id="${productItem.id}" data-product-sku="${productItem.sku || ''}" data-base-title="${productItem.title}" data-base-price-eur="${fallbackPrice}" data-price-eur="${fallbackPrice}" data-folder-template="${productItem.folderTemplate}" data-color="${defaultColor}" data-image-index="0">
         <span class="gx25-badge">${badgeText}</span>
         <button class="gx25-fav" type="button" aria-label="${texts.addWishlistAria}">
           <i class="fa-regular fa-heart"></i>
@@ -654,6 +739,86 @@ document.addEventListener("DOMContentLoaded", function () {
     track.innerHTML = products.map(gx25CreateCard).join("");
     track.querySelectorAll("img").forEach(preventImageActions);
 
+    function renderRecommendationPrice(priceNode, pricing) {
+      const basePrice = Number(pricing && pricing.price != null ? pricing.price : 0);
+      const effectivePrice = Number(pricing && pricing.effective_price != null ? pricing.effective_price : basePrice);
+      const isOnSale = Boolean(pricing && pricing.is_on_sale) && effectivePrice < basePrice;
+      const caption = String(pricing && pricing.sale_caption ? pricing.sale_caption : "").trim();
+
+      priceNode.dataset.baseEur = String(basePrice.toFixed(2));
+      priceNode.dataset.effectiveEur = String(effectivePrice.toFixed(2));
+      priceNode.dataset.saleCaption = caption;
+      priceNode.classList.toggle("gf-live-price-block", isOnSale);
+
+      if (!isOnSale) {
+        priceNode.textContent = formatLocalizedPrice(basePrice);
+        return;
+      }
+
+      priceNode.innerHTML = '<span class="gf-live-price-row">'
+        + '<span class="gf-live-price-current">' + formatLocalizedPrice(effectivePrice) + '</span>'
+        + '<span class="gf-live-price-original">' + formatLocalizedPrice(basePrice) + '</span>'
+        + '</span>'
+        + (caption ? '<span class="gf-live-price-caption">' + caption + '</span>' : '');
+    }
+
+    function syncRecommendationPricing() {
+      if (!livePricing || typeof livePricing.loadCatalog !== "function" || typeof livePricing.findProduct !== "function") {
+        return Promise.resolve();
+      }
+
+      return livePricing.loadCatalog(false).then(function () {
+        Array.from(track.querySelectorAll(".gx25-card")).forEach(function (card, cardIndex) {
+          const productItem = products[cardIndex] || {};
+          const matchedProduct = livePricing.findProduct({
+            sku: productItem.sku || card.dataset.productSku || "",
+            name: productItem.title || card.dataset.baseTitle || card.querySelector(".gx25-title")?.textContent || "",
+            categoryKey: productItem.category || ""
+          });
+          const priceNode = card.querySelector(".gx25-price");
+          const titleNode = card.querySelector(".gx25-title");
+          const badgeNode = card.querySelector(".gx25-badge");
+          const fallbackPrice = Number(card.dataset.basePriceEur || 0);
+
+          if (!priceNode) {
+            return;
+          }
+
+          const pricing = matchedProduct
+            ? {
+                price: Number(matchedProduct.price || fallbackPrice),
+                effective_price: Number(matchedProduct.effective_price || matchedProduct.price || fallbackPrice),
+                is_on_sale: Boolean(matchedProduct.is_on_sale),
+                sale_caption: matchedProduct.sale_caption || ""
+              }
+            : {
+                price: fallbackPrice,
+                effective_price: fallbackPrice,
+                is_on_sale: false,
+                sale_caption: ""
+              };
+
+          if (matchedProduct && titleNode) {
+            titleNode.textContent = matchedProduct.name || titleNode.textContent;
+          }
+
+          card.dataset.productSku = matchedProduct && matchedProduct.sku ? matchedProduct.sku : (productItem.sku || card.dataset.productSku || "");
+          card.dataset.basePriceEur = Number(pricing.price || 0).toFixed(2);
+          card.dataset.priceEur = Number(pricing.effective_price || pricing.price || 0).toFixed(2);
+          card.dataset.effectivePriceEur = Number(pricing.effective_price || pricing.price || 0).toFixed(2);
+          renderRecommendationPrice(priceNode, pricing);
+
+          if (badgeNode) {
+            badgeNode.textContent = pricing.is_on_sale ? "SALE" : (badgeNode.textContent || "");
+          }
+        });
+      }).catch(function () {
+        return Promise.resolve();
+      });
+    }
+
+    syncRecommendationPricing();
+
     let outerIndex = 0;
 
     function gx25MaxIndex() {
@@ -680,7 +845,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const card = e.target.closest(".gx25-card");
       if (!card) return;
 
-      const productId = card.dataset.productId;
+      const productId = card.dataset.productSku || card.dataset.productId;
       const folderTemplate = card.dataset.folderTemplate;
       const activeColor = card.dataset.color || "Bk";
       let imageIndex = Number(card.dataset.imageIndex || 0);
@@ -729,7 +894,7 @@ document.addEventListener("DOMContentLoaded", function () {
             id: productId,
             sku: productId,
             name: card.querySelector(".gx25-title").textContent,
-            price: Number(card.dataset.priceEur || 0),
+            price: Number(card.dataset.effectivePriceEur || card.dataset.priceEur || 0),
             size: "Kids",
             color: activeColor,
             image: image.src,

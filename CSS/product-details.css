@@ -103,6 +103,48 @@
   color: #111;
 }
 
+.pd-price-sale {
+  display: grid;
+  gap: 8px;
+}
+
+.pd-price-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pd-price-current {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.pd-price-original {
+  color: #767676;
+  text-decoration: line-through;
+  font-size: 1.1rem;
+}
+
+.pd-price-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #d62828;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.pd-price-caption {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #b65a16;
+}
+
 .pd-colors-label,
 .pd-sizes-label {
   margin: 18px 0 12px;

@@ -325,7 +325,7 @@
     }
 
     function composeTitle(sectionName, productName) {
-      return translateSection(sectionName) + " - " + translateProduct(productName);
+      return translateProduct(productName);
     }
 
     function applyCardTexts(root) {

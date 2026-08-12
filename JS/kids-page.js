@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const sections = Array.from(document.querySelectorAll(".gx25-section"));
   if (!sections.length) return;
   const localeHelper = window.GFCategoryLocaleHelper ? window.GFCategoryLocaleHelper.create("kids") : null;
+  const livePricing = window.GirffonLivePricing || null;
 
   const CART_KEY = "girffon_cart";
   const WISHLIST_KEY = "girffon_wishlist";
@@ -22,6 +23,33 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   const colorCodes = Object.keys(colorMap);
+
+  function formatDisplayPrice(value) {
+    return localeHelper ? localeHelper.formatPrice(value) : (Number(value || 0).toFixed(2).replace('.', ',') + ' €');
+  }
+
+  function syncLivePricing() {
+    if (!livePricing || typeof livePricing.applyCategoryCards !== "function") {
+      return Promise.resolve();
+    }
+
+    return livePricing.applyCategoryCards(document, {
+      categoryKey: "kids",
+      formatPrice: formatDisplayPrice
+    });
+  }
+
+  function getCardPricing(card, fallbackPrice) {
+    if (livePricing && typeof livePricing.getCardPricing === "function") {
+      return livePricing.getCardPricing(card, fallbackPrice, formatDisplayPrice);
+    }
+
+    const priceNumber = Number(fallbackPrice || 0);
+    return {
+      priceNumber: priceNumber,
+      priceText: formatDisplayPrice(priceNumber)
+    };
+  }
 
   const baseProducts = [
     {
@@ -158,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const images = buildImages(product.folderTemplate, product.defaultColor);
 
     return (
-      '<article class="gx25-card" data-product-id="' + product.id + '" data-section-name="' + product.sectionName + '" data-base-title="' + product.baseTitle + '" data-price-eur="' + product.priceEur + '">' +
+      '<article class="gx25-card" data-product-id="' + product.id + '" data-section-name="' + product.sectionName + '" data-base-title="' + product.baseTitle + '" data-base-price-eur="' + product.priceEur + '" data-price-eur="' + product.priceEur + '">' +
         '<span class="gx25-badge">' + product.badge + "</span>" +
         '<button class="gx25-fav" type="button" aria-label="Add to wishlist"><i class="fa-regular fa-heart"></i></button>' +
         '<div class="gx25-image-box">' +
@@ -321,10 +349,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       favBtn.addEventListener("click", function () {
+        const pricing = getCardPricing(card, product.priceEur);
         const active = toggleWishlist({
           id: product.id,
           title: product.title,
-          price: product.price,
+          price: pricing.priceText,
+          priceNumber: pricing.priceNumber,
           image: imageSet[0]
         });
 
@@ -371,10 +401,12 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       addBtn.addEventListener("click", async function () {
+        const pricing = getCardPricing(card, product.priceEur);
         await addCart({
           id: product.id,
           title: product.title,
-          price: product.price,
+          price: pricing.priceText,
+          priceNumber: pricing.priceNumber,
           color: selectedColor,
           image: imageSet[0],
           section: name,
@@ -393,8 +425,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (localeHelper) {
     localeHelper.applyPage(document);
     localeHelper.bindBankModal(document);
+    syncLivePricing();
     localeHelper.watch(function () {
       localeHelper.applyPage(document);
+      syncLivePricing();
     });
+  } else {
+    syncLivePricing();
   }
 });

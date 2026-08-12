@@ -44,7 +44,7 @@ $color = trim((string) ($_POST['color'] ?? ''));
 $status = girffonAdminNormalizeProductStatus((string) ($_POST['status'] ?? 'active'));
 $imagePath = trim((string) ($_POST['image'] ?? $_POST['imageUrl'] ?? ''));
 
-if ($name === '' || $sku === '' || $price <= 0 || $category === '' || $size === '' || $color === '') {
+if ($name === '' || $sku === '' || $price <= 0 || $category === '') {
     girffonAdminRedirectProduct('error', 'Please complete all product fields.');
 }
 

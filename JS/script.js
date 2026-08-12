@@ -1,3 +1,371 @@
+(function () {
+  if (window.GirffonLivePricing) {
+    return;
+  }
+
+  const ENDPOINT = "backend/utils/storefront-live-pricing.php";
+  const CATEGORY_ALIASES = {
+    men: ["men", "menswear", "girffon menswear"],
+    women: ["women", "womenswear", "girffon womenswear"],
+    kids: ["kids", "kids babies", "kids and babies", "kidswear", "girffon kidswear"],
+    accessories: ["accessories", "girffon accessories"],
+    "home-living": ["home living", "home and living", "home living decor", "girffon home living"]
+  };
+
+  let catalogPromise = null;
+  let catalogIndex = null;
+
+  function normalizeValue(value) {
+    return String(value || "")
+      .toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ");
+  }
+
+  function toPriceNumber(value) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function defaultFormatPrice(value) {
+    return "EUR " + Number(value || 0).toFixed(2);
+  }
+
+  function uniqueValues(values) {
+    return Array.from(new Set(values.filter(Boolean)));
+  }
+
+  function categoryHints(categoryKey) {
+    const normalizedKey = normalizeValue(categoryKey);
+    const baseHints = CATEGORY_ALIASES[categoryKey] || CATEGORY_ALIASES[normalizedKey.replace(/ /g, "-")] || [];
+    return uniqueValues([normalizedKey].concat(baseHints.map(normalizeValue)));
+  }
+
+  function looseName(value, categoryKey) {
+    let normalized = normalizeValue(value);
+    const normalizedCategory = normalizeValue(categoryKey);
+    const prefixMap = {
+      men: ["mens ", "men s ", "men "],
+      women: ["womens ", "women s ", "women "],
+      kids: ["kids ", "kid "]
+    };
+    const prefixes = prefixMap[normalizedCategory] || [];
+
+    for (let index = 0; index < prefixes.length; index += 1) {
+      if (normalized.startsWith(prefixes[index])) {
+        normalized = normalized.slice(prefixes[index].length).trim();
+        break;
+      }
+    }
+
+    return normalized;
+  }
+
+  function buildIndex(products) {
+    const bySku = Object.create(null);
+    const byBarcode = Object.create(null);
+    const byName = Object.create(null);
+    const byCategoryName = Object.create(null);
+
+    products.forEach(function (product) {
+      const normalizedSku = normalizeValue(product.sku);
+      const normalizedBarcode = normalizeValue(product.barcode);
+      const normalizedName = normalizeValue(product.name);
+      const normalizedCategory = normalizeValue(product.category);
+      const normalizedLooseName = looseName(product.name, product.category);
+
+      if (normalizedSku) {
+        bySku[normalizedSku] = product;
+      }
+
+      if (normalizedBarcode) {
+        byBarcode[normalizedBarcode] = product;
+      }
+
+      if (normalizedName) {
+        if (!Array.isArray(byName[normalizedName])) {
+          byName[normalizedName] = [];
+        }
+        byName[normalizedName].push(product);
+      }
+
+      if (normalizedName && normalizedCategory) {
+        const key = normalizedCategory + "|" + normalizedName;
+        if (!Array.isArray(byCategoryName[key])) {
+          byCategoryName[key] = [];
+        }
+        byCategoryName[key].push(product);
+      }
+
+      if (normalizedLooseName && normalizedCategory) {
+        const looseKey = normalizedCategory + "|" + normalizedLooseName;
+        if (!Array.isArray(byCategoryName[looseKey])) {
+          byCategoryName[looseKey] = [];
+        }
+        byCategoryName[looseKey].push(product);
+      }
+    });
+
+    return {
+      products: products,
+      bySku: bySku,
+      byBarcode: byBarcode,
+      byName: byName,
+      byCategoryName: byCategoryName
+    };
+  }
+
+  function loadCatalog(forceRefresh) {
+    if (catalogPromise && !forceRefresh) {
+      return catalogPromise;
+    }
+
+    catalogPromise = window.fetch(ENDPOINT, {
+      method: "GET",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json"
+      }
+    }).then(function (response) {
+      if (!response.ok) {
+        throw new Error("live-pricing-http-" + response.status);
+      }
+      return response.json();
+    }).then(function (payload) {
+      const products = payload && Array.isArray(payload.products) ? payload.products : [];
+      catalogIndex = buildIndex(products);
+      return catalogIndex;
+    }).catch(function (_error) {
+      catalogIndex = buildIndex([]);
+      return catalogIndex;
+    });
+
+    return catalogPromise;
+  }
+
+  function findProduct(details) {
+    if (!catalogIndex) {
+      return null;
+    }
+
+    const normalizedSku = normalizeValue(details && details.sku);
+    if (normalizedSku && catalogIndex.bySku[normalizedSku]) {
+      return catalogIndex.bySku[normalizedSku];
+    }
+
+    const normalizedBarcode = normalizeValue(details && details.barcode);
+    if (normalizedBarcode && catalogIndex.byBarcode[normalizedBarcode]) {
+      return catalogIndex.byBarcode[normalizedBarcode];
+    }
+
+    const normalizedName = normalizeValue(details && (details.name || details.baseTitle || details.title));
+    if (!normalizedName) {
+      return null;
+    }
+    const looseNormalizedName = looseName(details && (details.name || details.baseTitle || details.title), details && details.categoryKey);
+
+    const hints = categoryHints(details && details.categoryKey);
+    for (let index = 0; index < hints.length; index += 1) {
+      const key = hints[index] + "|" + normalizedName;
+      const matches = catalogIndex.byCategoryName[key];
+      if (Array.isArray(matches) && matches.length) {
+        return matches[0];
+      }
+
+      if (looseNormalizedName && looseNormalizedName !== normalizedName) {
+        const looseKey = hints[index] + "|" + looseNormalizedName;
+        const looseMatches = catalogIndex.byCategoryName[looseKey];
+        if (Array.isArray(looseMatches) && looseMatches.length) {
+          return looseMatches[0];
+        }
+      }
+    }
+
+    const byNameMatches = catalogIndex.byName[normalizedName];
+    if (Array.isArray(byNameMatches) && byNameMatches.length) {
+      return byNameMatches[0];
+    }
+
+    return null;
+  }
+
+  function getCardPricing(card, fallbackPrice, formatPrice) {
+    const priceNumber = toPriceNumber(card && card.dataset ? card.dataset.effectivePriceEur : null);
+    const basePriceNumber = toPriceNumber(card && card.dataset ? card.dataset.basePriceEur : null);
+    const resolvedPrice = priceNumber !== null ? priceNumber : (toPriceNumber(fallbackPrice) || 0);
+    const resolvedBasePrice = basePriceNumber !== null ? basePriceNumber : resolvedPrice;
+    const formatter = typeof formatPrice === "function" ? formatPrice : defaultFormatPrice;
+
+    return {
+      priceNumber: resolvedPrice,
+      basePriceNumber: resolvedBasePrice,
+      priceText: formatter(resolvedPrice),
+      basePriceText: formatter(resolvedBasePrice),
+      isOnSale: resolvedBasePrice > resolvedPrice
+    };
+  }
+
+  function renderPriceBlock(priceNode, pricing, formatPrice) {
+    const formatter = typeof formatPrice === "function" ? formatPrice : defaultFormatPrice;
+    const basePrice = toPriceNumber(pricing.price);
+    const effectivePrice = toPriceNumber(pricing.effective_price);
+    const isOnSale = Boolean(pricing.is_on_sale) && basePrice !== null && effectivePrice !== null && effectivePrice < basePrice;
+    const caption = String(pricing.sale_caption || "").trim();
+
+    priceNode.innerHTML = "";
+    priceNode.classList.toggle("gf-live-price-block", isOnSale);
+    if (basePrice !== null) {
+      priceNode.dataset.baseEur = String(basePrice.toFixed(2));
+    }
+    if (effectivePrice !== null) {
+      priceNode.dataset.effectiveEur = String(effectivePrice.toFixed(2));
+    }
+    priceNode.dataset.saleCaption = caption;
+
+    if (!isOnSale || effectivePrice === null) {
+      priceNode.textContent = formatter(effectivePrice !== null ? effectivePrice : basePrice || 0);
+      return;
+    }
+
+    const row = document.createElement("span");
+    row.className = "gf-live-price-row";
+
+    const currentNode = document.createElement("span");
+    currentNode.className = "gf-live-price-current";
+    currentNode.textContent = formatter(effectivePrice);
+
+    const originalNode = document.createElement("span");
+    originalNode.className = "gf-live-price-original";
+    originalNode.textContent = formatter(basePrice);
+
+    row.appendChild(currentNode);
+    row.appendChild(originalNode);
+    priceNode.appendChild(row);
+
+    if (caption) {
+      const captionNode = document.createElement("span");
+      captionNode.className = "gf-live-price-caption";
+      captionNode.textContent = caption;
+      priceNode.appendChild(captionNode);
+    }
+  }
+
+  function applyBadge(card, pricing, badgeSelector) {
+    const badge = card.querySelector(badgeSelector);
+    if (!badge) {
+      return;
+    }
+
+    if (!card.dataset.defaultBadgeText) {
+      card.dataset.defaultBadgeText = badge.textContent || "";
+    }
+
+    if (pricing.is_on_sale) {
+      badge.textContent = String(pricing.sale_badge || "SALE").trim() || "SALE";
+      badge.hidden = false;
+      card.classList.add("is-on-sale");
+      return;
+    }
+
+    card.classList.remove("is-on-sale");
+    if (badgeSelector === ".gf-shop-sale-badge") {
+      badge.hidden = true;
+      badge.textContent = "";
+      return;
+    }
+
+    badge.textContent = card.dataset.defaultBadgeText;
+  }
+
+  function applyCard(card, details, options) {
+    const priceNode = card.querySelector(options.priceSelector);
+    if (!priceNode) {
+      return null;
+    }
+
+    const titleNode = card.querySelector(options.titleSelector || ".gx25-title");
+
+    const matchedProduct = findProduct(details);
+    if (!matchedProduct) {
+      return null;
+    }
+
+    const fallbackPrice = toPriceNumber(card.dataset.basePriceEur) || toPriceNumber(card.dataset.priceEur) || toPriceNumber(details.basePriceEur) || 0;
+    const basePrice = toPriceNumber(matchedProduct.price);
+    const effectivePrice = toPriceNumber(matchedProduct.effective_price);
+    const resolvedBasePrice = basePrice !== null ? basePrice : fallbackPrice;
+    const resolvedEffectivePrice = effectivePrice !== null ? effectivePrice : resolvedBasePrice;
+    const pricing = Object.assign({}, matchedProduct, {
+      price: resolvedBasePrice,
+      effective_price: resolvedEffectivePrice,
+      is_on_sale: Boolean(matchedProduct.is_on_sale) && resolvedEffectivePrice < resolvedBasePrice
+    });
+    const formatter = typeof options.formatPrice === "function" ? options.formatPrice : defaultFormatPrice;
+
+    card.dataset.basePriceEur = resolvedBasePrice.toFixed(2);
+    card.dataset.priceEur = resolvedEffectivePrice.toFixed(2);
+    card.dataset.effectivePriceEur = resolvedEffectivePrice.toFixed(2);
+    card.dataset.priceDisplay = formatter(resolvedEffectivePrice);
+
+    if (titleNode && matchedProduct.name) {
+      titleNode.textContent = matchedProduct.name;
+    }
+
+    renderPriceBlock(priceNode, pricing, formatter);
+    applyBadge(card, pricing, options.badgeSelector);
+
+    return pricing;
+  }
+
+  function applyCategoryCards(root, options) {
+    const scope = root || document;
+    const settings = options || {};
+
+    return loadCatalog(false).then(function () {
+      scope.querySelectorAll(".gx25-card").forEach(function (card) {
+        applyCard(card, {
+          categoryKey: settings.categoryKey,
+          name: card.dataset.baseTitle || card.querySelector(".gx25-title")?.textContent || "",
+          basePriceEur: card.dataset.basePriceEur || card.dataset.priceEur || 0
+        }, {
+          priceSelector: ".gx25-price",
+          badgeSelector: ".gx25-badge",
+          formatPrice: settings.formatPrice
+        });
+      });
+    });
+  }
+
+  function applyShopCards(root) {
+    const scope = root || document;
+
+    return loadCatalog(false).then(function () {
+      scope.querySelectorAll(".gf-shop-card").forEach(function (card) {
+        applyCard(card, {
+          categoryKey: card.dataset.categoryKey || "",
+          name: card.dataset.productTitle || card.querySelector(".gf-shop-card-title")?.textContent || "",
+          basePriceEur: card.dataset.basePriceEur || 0
+        }, {
+          priceSelector: ".gf-shop-card-price",
+          badgeSelector: ".gf-shop-sale-badge",
+          formatPrice: defaultFormatPrice
+        });
+      });
+    });
+  }
+
+  window.GirffonLivePricing = {
+    loadCatalog: loadCatalog,
+    findProduct: findProduct,
+    applyCategoryCards: applyCategoryCards,
+    applyShopCards: applyShopCards,
+    getCardPricing: getCardPricing,
+    normalizeValue: normalizeValue
+  };
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   const items = document.querySelectorAll(".menu-item");
   let activeBox = null;
@@ -361,13 +729,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const image = card.querySelector(".gx25-main-image")?.getAttribute("src") || "";
     const title = card.querySelector(".gx25-title")?.textContent?.trim() || "Product";
-    const priceText = card.querySelector(".gx25-price")?.textContent || "0";
+    const priceText = card.dataset.priceDisplay || card.querySelector(".gx25-price")?.textContent || "0";
     const activeColor = card.querySelector(".gx25-color.active")?.dataset.color || "";
-    const itemId = card.dataset.productId || title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const priceNumber = Number.parseFloat(String(priceText).replace(/[^0-9.,]/g, "").replace(",", ".")) || 0;
+    const stableSku = card.dataset.productSku || card.dataset.sku || "";
+    const itemId = stableSku || card.dataset.productId || title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const datasetPrice = Number.parseFloat(String(card.dataset.effectivePriceEur || card.dataset.priceEur || ""));
+    const priceNumber = Number.isFinite(datasetPrice)
+      ? datasetPrice
+      : (Number.parseFloat(String(priceText).replace(/[^0-9.,]/g, "").replace(",", ".")) || 0);
 
     return {
       id: itemId,
+      sku: itemId,
+      code: itemId,
       title: title,
       image: image,
       price: priceText,

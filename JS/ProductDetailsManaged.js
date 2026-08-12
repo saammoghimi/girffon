@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   const store = window.GIRFFON_PRODUCT_DETAILS_STORE;
+  const livePricing = window.GirffonLivePricing || null;
   if (!store) return;
 
   const settings = store.getProductDetailsSettings();
@@ -103,6 +104,55 @@ document.addEventListener('DOMContentLoaded', function () {
     } catch (_error) {
       return String(currency || 'EUR') + ' ' + Number(value || 0).toFixed(2);
     }
+  }
+
+  let currentPricing = {
+    basePriceEur: Number(settings.pricing.oldPrice || settings.pricing.price || 0),
+    effectivePriceEur: Number(settings.pricing.price || 0),
+    isOnSale: Number(settings.pricing.oldPrice || 0) > Number(settings.pricing.price || 0),
+    saleBadge: Number(settings.pricing.discount || 0) > 0 ? 'SALE' : '',
+    saleCaption: Number(settings.pricing.discount || 0) > 0 ? String(settings.pricing.discount) + '% OFF' : ''
+  };
+
+  function setLivePricingState(product) {
+    if (!product) {
+      currentPricing = {
+        basePriceEur: Number(settings.pricing.oldPrice || settings.pricing.price || 0),
+        effectivePriceEur: Number(settings.pricing.price || 0),
+        isOnSale: Number(settings.pricing.oldPrice || 0) > Number(settings.pricing.price || 0),
+        saleBadge: Number(settings.pricing.discount || 0) > 0 ? 'SALE' : '',
+        saleCaption: Number(settings.pricing.discount || 0) > 0 ? String(settings.pricing.discount) + '% OFF' : ''
+      };
+      return;
+    }
+
+    const basePriceEur = Number(product.price != null ? product.price : settings.pricing.oldPrice || settings.pricing.price || 0);
+    const effectivePriceEur = Number(product.effective_price != null ? product.effective_price : settings.pricing.price || basePriceEur);
+    const isOnSale = Boolean(product.is_on_sale) && effectivePriceEur < basePriceEur;
+    currentPricing = {
+      basePriceEur: basePriceEur,
+      effectivePriceEur: effectivePriceEur,
+      isOnSale: isOnSale,
+      saleBadge: isOnSale ? String(product.sale_badge || 'SALE').trim() || 'SALE' : '',
+      saleCaption: isOnSale ? String(product.sale_caption || '').trim() : ''
+    };
+  }
+
+  function getEffectivePriceEur() {
+    return Number(currentPricing.effectivePriceEur || 0);
+  }
+
+  function getBasePriceEur() {
+    return Number(currentPricing.basePriceEur || 0);
+  }
+
+  function getDisplayDiscountPercent() {
+    const basePrice = getBasePriceEur();
+    const effectivePrice = getEffectivePriceEur();
+    if (!(currentPricing.isOnSale && basePrice > effectivePrice && basePrice > 0)) {
+      return 0;
+    }
+    return Math.round((1 - (effectivePrice / basePrice)) * 100);
   }
   
   function getReviewCount() {
@@ -225,7 +275,7 @@ document.addEventListener('DOMContentLoaded', function () {
         '@type': 'Offer',
         url: canonicalUrl,
         priceCurrency: (settings.pricing || {}).currency || 'EUR',
-        price: Number((settings.pricing || {}).price || 0),
+        price: getEffectivePriceEur(),
         availability: String((((seo.schema || {}).availability) || 'https://schema.org/InStock')).trim() || 'https://schema.org/InStock',
         itemCondition: String((((seo.schema || {}).condition) || 'https://schema.org/NewCondition')).trim() || 'https://schema.org/NewCondition'
       }
@@ -305,16 +355,44 @@ document.addEventListener('DOMContentLoaded', function () {
   function setPrice() {
     const livePriceEl = document.getElementById('product-price');
     if (!livePriceEl) return;
-    const current = formatLocalizedAmount(settings.pricing.price);
-    const oldPrice = Number(settings.pricing.oldPrice || 0);
-    const discount = Number(settings.pricing.discount || 0);
+    const current = formatLocalizedAmount(getEffectivePriceEur());
+    const oldPrice = currentPricing.isOnSale ? getBasePriceEur() : 0;
+    const discount = getDisplayDiscountPercent();
+    const caption = String(currentPricing.saleCaption || '').trim();
     livePriceEl.innerHTML = '<div class="pd-managed-price">'
       + '<span class="pd-current">' + current + '</span>'
       + (oldPrice > 0 ? '<span class="pd-old">' + formatLocalizedAmount(oldPrice) + '</span>' : '')
-      + (discount > 0 ? '<span class="pd-discount">-' + discount + '%</span>' : '')
-      + '</div>';
-    livePriceEl.dataset.baseEur = String(Number(settings.pricing.price || 0));
+      + (discount > 0 ? '<span class="pd-discount">' + String(currentPricing.saleBadge || 'SALE') + '</span>' : '')
+      + '</div>'
+      + (caption ? '<div class="pd-managed-price-caption">' + caption + '</div>' : '');
+    livePriceEl.dataset.baseEur = String(getBasePriceEur());
+    livePriceEl.dataset.priceEur = String(getBasePriceEur());
+    livePriceEl.dataset.effectivePriceEur = String(getEffectivePriceEur());
     livePriceEl.dataset.managedPrice = 'true';
+  }
+
+  function syncManagedLivePricing() {
+    if (!livePricing || typeof livePricing.loadCatalog !== 'function' || typeof livePricing.findProduct !== 'function') {
+      setLivePricingState(null);
+      setPrice();
+      applyProductHeadSeo();
+      return Promise.resolve();
+    }
+
+    return livePricing.loadCatalog(true).then(function () {
+      const matchedProduct = livePricing.findProduct({
+        sku: settings.sku,
+        name: settings.productName,
+        categoryKey: settings.category || (((settings.seo || {}).schema || {}).category) || ''
+      });
+      setLivePricingState(matchedProduct || null);
+      setPrice();
+      applyProductHeadSeo();
+    }).catch(function () {
+      setLivePricingState(null);
+      setPrice();
+      applyProductHeadSeo();
+    });
   }
 
   function setDescriptions() {
@@ -473,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function () {
             name: settings.productName,
       actionRow.appendChild(buyNowBtn);
     }
-            price: Number(settings.pricing.price || 0),
+            price: getEffectivePriceEur(),
     if (settings.actions.wishlistActive) {
       const wishlistBtn = document.createElement('button');
       wishlistBtn.type = 'button';
@@ -496,7 +574,7 @@ document.addEventListener('DOMContentLoaded', function () {
               list.push({
                 title: entry.title,
                 code: entry.code,
-                price: formatPrice(settings.pricing.price, settings.pricing.currency),
+                price: formatPrice(getEffectivePriceEur(), settings.pricing.currency),
                 size: entry.size,
                 color: entry.color,
                 image: entry.image,
@@ -568,7 +646,7 @@ document.addEventListener('DOMContentLoaded', function () {
         id: settings.sku,
         sku: settings.sku,
         name: settings.productName,
-        price: Number(settings.pricing.price || 0),
+        price: getEffectivePriceEur(),
         size: selectedSize,
         color: selectedColor,
         image: currentMedia[currentIndex] ? currentMedia[currentIndex].thumb : '',
@@ -658,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const items = group.items || [];
 
     track.innerHTML = items.map(function (item) {
-      return '<article class="gx25-card" data-product-id="' + item.sku + '" data-image-index="0">'
+      return '<article class="gx25-card" data-product-id="' + item.sku + '" data-product-sku="' + item.sku + '" data-base-title="' + item.title + '" data-base-price-eur="' + Number(item.price || 0) + '" data-price-eur="' + Number(item.price || 0) + '" data-image-index="0">'
         + '<span class="gx25-badge">' + item.badge + '</span>'
         + '<button class="gx25-fav" type="button" aria-label="Add to wishlist"><i class="fa-regular fa-heart"></i></button>'
         + '<div class="gx25-image-box">'
@@ -667,11 +745,92 @@ document.addEventListener('DOMContentLoaded', function () {
         + '<button class="gx25-inner-nav gx25-inner-next" type="button" aria-label="Next image"><span>&#10095;</span></button>'
         + '</div>'
         + '<h3 class="gx25-title">' + item.title + '</h3>'
-        + '<p class="gx25-price" data-base-eur="' + Number(item.price || 0) + '">' + formatLocalizedAmount(item.price) + '</p>'
+        + '<p class="gx25-price" data-base-eur="' + Number(item.price || 0) + '" data-effective-eur="' + Number(item.price || 0) + '">' + formatLocalizedAmount(item.price) + '</p>'
         + '<div class="gx25-colors"></div>'
         + '<button class="gx25-enter" type="button">Add To Cart</button>'
         + '</article>';
     }).join('');
+
+    function renderRelatedPrice(priceNode, pricing) {
+      const basePrice = Number(pricing && pricing.price != null ? pricing.price : 0);
+      const effectivePrice = Number(pricing && pricing.effective_price != null ? pricing.effective_price : basePrice);
+      const isOnSale = Boolean(pricing && pricing.is_on_sale) && effectivePrice < basePrice;
+      const caption = String(pricing && pricing.sale_caption ? pricing.sale_caption : '').trim();
+
+      priceNode.dataset.baseEur = String(basePrice.toFixed(2));
+      priceNode.dataset.effectiveEur = String(effectivePrice.toFixed(2));
+      priceNode.dataset.saleCaption = caption;
+      priceNode.classList.toggle('gf-live-price-block', isOnSale);
+
+      if (!isOnSale) {
+        priceNode.textContent = formatLocalizedAmount(basePrice);
+        return;
+      }
+
+      priceNode.innerHTML = '<span class="gf-live-price-row">'
+        + '<span class="gf-live-price-current">' + formatLocalizedAmount(effectivePrice) + '</span>'
+        + '<span class="gf-live-price-original">' + formatLocalizedAmount(basePrice) + '</span>'
+        + '</span>'
+        + (caption ? '<span class="gf-live-price-caption">' + caption + '</span>' : '');
+    }
+
+    function syncManagedRelatedPricing() {
+      if (!livePricing || typeof livePricing.loadCatalog !== 'function' || typeof livePricing.findProduct !== 'function') {
+        return Promise.resolve();
+      }
+
+      return livePricing.loadCatalog(false).then(function () {
+        track.querySelectorAll('.gx25-card').forEach(function (card) {
+          const productId = card.getAttribute('data-product-id') || '';
+          const productItem = items.find(function (item) { return item.sku === productId; }) || items[0];
+          const matchedProduct = livePricing.findProduct({
+            sku: productItem.sku || card.dataset.productSku || '',
+            name: productItem.title || card.dataset.baseTitle || '',
+            categoryKey: productItem.category || group.title || ''
+          });
+          const priceNode = card.querySelector('.gx25-price');
+          const titleNode = card.querySelector('.gx25-title');
+          const badgeNode = card.querySelector('.gx25-badge');
+          const fallbackPrice = Number(card.dataset.basePriceEur || 0);
+
+          if (!priceNode) {
+            return;
+          }
+
+          const pricing = matchedProduct
+            ? {
+                price: Number(matchedProduct.price || fallbackPrice),
+                effective_price: Number(matchedProduct.effective_price || matchedProduct.price || fallbackPrice),
+                is_on_sale: Boolean(matchedProduct.is_on_sale),
+                sale_caption: matchedProduct.sale_caption || ''
+              }
+            : {
+                price: fallbackPrice,
+                effective_price: fallbackPrice,
+                is_on_sale: false,
+                sale_caption: ''
+              };
+
+          if (matchedProduct && titleNode) {
+            titleNode.textContent = matchedProduct.name || titleNode.textContent;
+          }
+
+          card.dataset.productSku = matchedProduct && matchedProduct.sku ? matchedProduct.sku : (productItem.sku || card.dataset.productSku || '');
+          card.dataset.basePriceEur = Number(pricing.price || 0).toFixed(2);
+          card.dataset.priceEur = Number(pricing.effective_price || pricing.price || 0).toFixed(2);
+          card.dataset.effectivePriceEur = Number(pricing.effective_price || pricing.price || 0).toFixed(2);
+          renderRelatedPrice(priceNode, pricing);
+
+          if (badgeNode) {
+            badgeNode.textContent = pricing.is_on_sale ? 'SALE' : (productItem.badge || badgeNode.textContent || '');
+          }
+        });
+      }).catch(function () {
+        return Promise.resolve();
+      });
+    }
+
+    syncManagedRelatedPricing();
 
     let index = 0;
     function visibleCards() {
@@ -713,10 +872,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
           const cart = await window.GirffonCartApi.addItem({
-            id: productItem.sku,
-            sku: productItem.sku,
-            name: productItem.title,
-            price: Number(productItem.price || 0),
+            id: card.dataset.productSku || productItem.sku,
+            sku: card.dataset.productSku || productItem.sku,
+            name: card.querySelector('.gx25-title')?.textContent || productItem.title,
+            price: Number(card.dataset.effectivePriceEur || card.dataset.priceEur || productItem.price || 0),
             color: selectedColor,
             size: selectedSize,
             image: productItem.imageUrl,
@@ -732,8 +891,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       favBtn.addEventListener('click', function () {
         const list = safeReadArray('girffon_wishlist');
-        if (!list.some(function (entry) { return entry.code === productItem.sku; })) {
-          list.push({ id: productItem.sku, code: productItem.sku, title: productItem.title, price: formatPrice(productItem.price, settings.pricing.currency), image: productItem.imageUrl });
+        const resolvedSku = card.dataset.productSku || productItem.sku;
+        if (!list.some(function (entry) { return entry.code === resolvedSku; })) {
+          list.push({ id: resolvedSku, code: resolvedSku, title: card.querySelector('.gx25-title')?.textContent || productItem.title, price: formatPrice(Number(card.dataset.effectivePriceEur || card.dataset.priceEur || productItem.price || 0), settings.pricing.currency), priceNumber: Number(card.dataset.effectivePriceEur || card.dataset.priceEur || productItem.price || 0), image: productItem.imageUrl });
           safeWriteArray('girffon_wishlist', list);
           refreshHeaderCounts();
         }
@@ -749,6 +909,7 @@ document.addEventListener('DOMContentLoaded', function () {
   renderGallery(selectedColor);
   renderRelatedSections();
   refreshHeaderCounts();
+  syncManagedLivePricing();
 
   function reapplyManagedOverrides() {
     applyManagedTextualContent();

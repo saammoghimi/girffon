@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../config/mail.php';
 
+const GIRFFON_ORDER_MAIL_LOG = __DIR__ . '/../logs/order-confirmation-mail.log';
+
 function girffonLoadPhpMailer(): void
 {
     static $loaded = false;
@@ -205,11 +207,43 @@ function girffonOrderMailDebugLog(array $mailConfig, string $message): void
 {
     $target = trim((string) ($mailConfig['debug_log'] ?? ''));
     if ($target === '') {
-        error_log('[GirffoN Mail] ' . $message);
+        $target = GIRFFON_ORDER_MAIL_LOG;
+    }
+
+    $directory = dirname($target);
+    if ($directory !== '' && !is_dir($directory)) {
+        @mkdir($directory, 0777, true);
+    }
+
+    if ($directory === '' || is_dir($directory)) {
+        error_log('[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL, 3, $target);
         return;
     }
 
-    error_log('[' . date('Y-m-d H:i:s') . '] ' . $message . PHP_EOL, 3, $target);
+    error_log('[GirffoN Mail] ' . $message);
+}
+
+function girffonOrderMailLogContext(array $mailConfig, array $context): void
+{
+    $parts = [];
+    foreach ($context as $key => $value) {
+        if ($value === null) {
+            continue;
+        }
+
+        if (is_bool($value)) {
+            $value = $value ? 'true' : 'false';
+        } elseif (is_scalar($value)) {
+            $value = (string) $value;
+        } else {
+            $encoded = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $value = is_string($encoded) ? $encoded : '[unserializable]';
+        }
+
+        $parts[] = $key . '=' . $value;
+    }
+
+    girffonOrderMailDebugLog($mailConfig, implode(' | ', $parts));
 }
 
 function girffonSmtpReadResponse($socket, array $expectedCodes): string
@@ -361,16 +395,71 @@ function girffonSendOrderConfirmationEmail(array $mailData): bool
         'text' => $rendered['text'],
     ];
 
-    if (($mailConfig['transport'] ?? 'mail') === 'smtp') {
+    $transport = ($mailConfig['transport'] ?? 'mail') === 'smtp' ? 'smtp' : 'mail';
+    girffonOrderMailLogContext($mailConfig, [
+        'event' => 'order_confirmation_attempt',
+        'transport' => $transport,
+        'recipient' => (string) ($message['to_email'] ?? ''),
+        'order_number' => (string) ($mailData['order_number'] ?? ''),
+        'from' => (string) ($mailConfig['from_email'] ?? ''),
+        'reply_to' => (string) ($mailConfig['reply_to_email'] ?? ''),
+    ]);
+
+    if ($transport === 'smtp') {
         try {
-            return girffonSendMailWithPhpMailer($mailConfig, $message);
+            $result = girffonSendMailWithPhpMailer($mailConfig, $message);
+            girffonOrderMailLogContext($mailConfig, [
+                'event' => 'order_confirmation_result',
+                'transport' => 'smtp-phpmailer',
+                'recipient' => (string) ($message['to_email'] ?? ''),
+                'order_number' => (string) ($mailData['order_number'] ?? ''),
+                'success' => $result,
+            ]);
+            return $result;
         } catch (Throwable $throwable) {
-            girffonOrderMailDebugLog($mailConfig, 'PHPMailer SMTP failed: ' . $throwable->getMessage());
-            return girffonSendMailWithSocketSmtp($mailConfig, $message);
+            girffonOrderMailLogContext($mailConfig, [
+                'event' => 'order_confirmation_transport_error',
+                'transport' => 'smtp-phpmailer',
+                'recipient' => (string) ($message['to_email'] ?? ''),
+                'order_number' => (string) ($mailData['order_number'] ?? ''),
+                'success' => false,
+                'error' => $throwable->getMessage(),
+            ]);
+
+            try {
+                $result = girffonSendMailWithSocketSmtp($mailConfig, $message);
+                girffonOrderMailLogContext($mailConfig, [
+                    'event' => 'order_confirmation_result',
+                    'transport' => 'smtp-socket',
+                    'recipient' => (string) ($message['to_email'] ?? ''),
+                    'order_number' => (string) ($mailData['order_number'] ?? ''),
+                    'success' => $result,
+                ]);
+                return $result;
+            } catch (Throwable $fallbackThrowable) {
+                girffonOrderMailLogContext($mailConfig, [
+                    'event' => 'order_confirmation_transport_error',
+                    'transport' => 'smtp-socket',
+                    'recipient' => (string) ($message['to_email'] ?? ''),
+                    'order_number' => (string) ($mailData['order_number'] ?? ''),
+                    'success' => false,
+                    'error' => $fallbackThrowable->getMessage(),
+                ]);
+                throw $fallbackThrowable;
+            }
         }
     }
 
-    return girffonSendMailWithPhpMail($mailConfig, $message);
+    $result = girffonSendMailWithPhpMail($mailConfig, $message);
+    girffonOrderMailLogContext($mailConfig, [
+        'event' => 'order_confirmation_result',
+        'transport' => 'mail',
+        'recipient' => (string) ($message['to_email'] ?? ''),
+        'order_number' => (string) ($mailData['order_number'] ?? ''),
+        'success' => $result,
+    ]);
+
+    return $result;
 }
 
 function girffonRenderCustomDesignPaymentEmail(array $mailData, array $mailConfig): array

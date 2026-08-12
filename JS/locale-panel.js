@@ -2647,9 +2647,30 @@
       }
 
       const baseEur = Number.parseFloat(priceNode.dataset.baseEur || "");
-      if (Number.isFinite(baseEur)) {
-        priceNode.textContent = formatByLocale(baseEur, countryCode);
+      const effectiveRaw = priceNode.dataset.effectiveEur || priceNode.getAttribute("data-effective-eur") || "";
+      const effectiveEur = Number.parseFloat(effectiveRaw);
+      const saleCaption = String(priceNode.dataset.saleCaption || "").trim();
+      const isOnSale = Number.isFinite(baseEur)
+        && Number.isFinite(effectiveEur)
+        && effectiveEur > 0
+        && effectiveEur < baseEur;
+
+      if (!Number.isFinite(baseEur)) {
+        return;
       }
+
+      if (!isOnSale) {
+        priceNode.classList.remove("gf-live-price-block");
+        priceNode.textContent = formatByLocale(baseEur, countryCode);
+        return;
+      }
+
+      priceNode.classList.add("gf-live-price-block");
+      priceNode.innerHTML = '<span class="gf-live-price-row">'
+        + '<span class="gf-live-price-current">' + formatByLocale(effectiveEur, countryCode) + '</span>'
+        + '<span class="gf-live-price-original">' + formatByLocale(baseEur, countryCode) + '</span>'
+        + '</span>'
+        + (saleCaption ? '<span class="gf-live-price-caption">' + saleCaption + '</span>' : '');
     });
   }
 

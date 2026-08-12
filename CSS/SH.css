@@ -150,6 +150,46 @@
   color:#8e8e8e;
 }
 
+.gx25-price.gf-live-price-block{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+}
+
+.gx25-price .gf-live-price-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.gx25-price .gf-live-price-current{
+  color:#9f3418;
+  font-weight:700;
+}
+
+.gx25-price .gf-live-price-original{
+  color:#9d9d9d;
+  font-size:.92em;
+  text-decoration:line-through;
+}
+
+.gx25-price .gf-live-price-caption{
+  color:#b5881b;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.gx25-card.is-on-sale .gx25-badge{
+  color:#9f3418;
+  font-weight:700;
+  letter-spacing:.08em;
+}
+
 .gx25-colors{
   display:flex;
   justify-content:center;
