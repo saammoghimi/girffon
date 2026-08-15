@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../config/database.php";
 require_once __DIR__ . "/custom-design-orders-data.php";
+require_once __DIR__ . "/../utils/gift-card-service.php";
 
 function girffonAdminDashboardLogPath(string $fileName): string
 {
@@ -1905,6 +1906,25 @@ function girffonAdminCountMembers(PDO $pdo): int
         $statement = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'customer'");
         return $statement ? (int) $statement->fetchColumn() : 0;
     } catch (PDOException $exception) {
+        return 0;
+    }
+}
+
+function girffonAdminCountSoldGiftCards(PDO $pdo): int
+{
+    try {
+        girffonGiftCardEnsureSchema($pdo);
+        girffonGiftCardUpdateExpiredStatus($pdo);
+
+        $statement = $pdo->query(
+            "SELECT COUNT(*)
+             FROM gift_cards
+             WHERE order_id IS NOT NULL
+               AND status IN ('active', 'used', 'expired')"
+        );
+
+        return $statement ? (int) $statement->fetchColumn() : 0;
+    } catch (Throwable $exception) {
         return 0;
     }
 }

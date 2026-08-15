@@ -14,6 +14,7 @@ if (is_file($adminDashboardSettingsFile)) {
 
 $adminProductCount = girffonAdminCountProducts($pdo);
 $adminMemberCount = girffonAdminCountMembers($pdo);
+$adminGiftCardsSoldCount = girffonAdminCountSoldGiftCards($pdo);
 $adminOrderCount = girffonAdminCountOrders($pdo);
 $adminInvoiceCount = girffonAdminCountInvoices($pdo);
 $adminUnreadMessageCount = girffonAdminCountUnreadMessages($pdo);
@@ -198,6 +199,11 @@ $adminVisitorDeviceMax = $computeAdminAnalyticsMax($adminVisitorDevices);
           <span>Total Members</span>
           <strong id="adminTotalMembers"><?php echo $escapeAdminDashboard($adminMemberCount); ?></strong>
           <p class="admin-status">Registered customer accounts in the database.</p>
+        </article>
+        <article class="admin-stat-card">
+          <span>Gift Cards Sold</span>
+          <strong id="adminGiftCardsSold"><?php echo $escapeAdminDashboard($adminGiftCardsSoldCount); ?></strong>
+          <p class="admin-status">Gift cards successfully paid and issued.</p>
         </article>
         <article class="admin-stat-card">
           <span>Total Orders</span>
