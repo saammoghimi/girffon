@@ -431,17 +431,12 @@ if ($adminIdentity === '') {
         <p>Birthday candidate verification and send-readiness checks for the GirffoN admin team.</p>
       </div>
 
-      <nav class="admin-nav">
-        <a class="admin-nav-link" href="/GirffoN/admin-dashboard.php" aria-label="Dashboard" title="Dashboard"><span class="admin-nav-link-index">1. </span><span class="admin-nav-link-label">Dashboard</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-products.php" aria-label="Products" title="Products"><span class="admin-nav-link-index">2. </span><span class="admin-nav-link-label">Products</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-orders.php" aria-label="Orders" title="Orders"><span class="admin-nav-link-index">3. </span><span class="admin-nav-link-label">Orders</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-invoices.php" aria-label="Invoices" title="Invoices"><span class="admin-nav-link-index">4. </span><span class="admin-nav-link-label">Invoices</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-messages.php" aria-label="Messages" title="Messages"><span class="admin-nav-link-index">5. </span><span class="admin-nav-link-label">Messages</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-users.php" aria-label="Users" title="Users"><span class="admin-nav-link-index">6. </span><span class="admin-nav-link-label">Users</span></a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter"><span class="admin-nav-link-index">7. </span><span class="admin-nav-link-label">Newsletter</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders"><span class="admin-nav-link-index">8. </span><span class="admin-nav-link-label">Custom Design Orders</span></a>
-        <a class="admin-nav-link" href="/GirffoN/admin-settings.php" aria-label="Settings" title="Settings"><span class="admin-nav-link-index">9. </span><span class="admin-nav-link-label">Settings</span></a>
-      </nav>
+      <?php
+      $adminNavCurrentPage = 'newsletter';
+      $adminNavBasePath = '/GirffoN';
+      $adminNavVisibleKeys = ['dashboard', 'products', 'orders', 'invoices', 'messages', 'users', 'newsletter', 'custom_orders', 'settings'];
+      require dirname(__DIR__, 2) . '/includes/admin-nav.php';
+      ?>
 
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">

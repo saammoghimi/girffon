@@ -100,18 +100,11 @@ $customDesignAddDesign = is_array($customDesignOrder['add_design'] ?? null) ? $c
         <span class="admin-brand" aria-label="GirffoN logo"><img class="admin-brand-logo" src="Image/Logo/logo for gif.png" alt="GirffoN Logo"></span>
         <p>Review custom design orders separately from cart, checkout, and invoice systems.</p>
       </div>
-      <nav class="admin-nav">
-        <a class="admin-nav-link" href="admin-dashboard.php" aria-label="Dashboard" title="Dashboard"><span class="admin-nav-link-index">1. </span><span class="admin-nav-link-label">Dashboard</span></a>
-        <a class="admin-nav-link" href="admin-products.php" aria-label="Products" title="Products"><span class="admin-nav-link-index">2. </span><span class="admin-nav-link-label">Products</span></a>
-        <a class="admin-nav-link" href="admin-orders.php" aria-label="Orders" title="Orders"><span class="admin-nav-link-index">3. </span><span class="admin-nav-link-label">Orders</span></a>
-        <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices"><span class="admin-nav-link-index">4. </span><span class="admin-nav-link-label">Invoices</span></a>
-        <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages"><span class="admin-nav-link-index">5. </span><span class="admin-nav-link-label">Messages</span></a>
-        <a class="admin-nav-link" href="admin-users.php" aria-label="Users" title="Users"><span class="admin-nav-link-index">6. </span><span class="admin-nav-link-label">Users</span></a>
-        <a class="admin-nav-link" href="admin-newsletter.php" aria-label="Newsletter" title="Newsletter"><span class="admin-nav-link-index">7. </span><span class="admin-nav-link-label">Newsletter</span></a>
-        <a class="admin-nav-link is-active" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders"><span class="admin-nav-link-index">8. </span><span class="admin-nav-link-label">Custom Design Orders</span></a>
-        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings"><span class="admin-nav-link-index">9. </span><span class="admin-nav-link-label">Settings</span></a>
-        <a class="admin-nav-link" href="admin-gift-cards.php" aria-label="Gift Cards" title="Gift Cards"><span class="admin-nav-link-index">10. </span><span class="admin-nav-link-label">Gift Cards</span></a>
-      </nav>
+      <?php
+      $adminNavCurrentPage = 'custom_orders';
+      $adminNavBasePath = '';
+      require __DIR__ . '/includes/admin-nav.php';
+      ?>
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card"><strong>Order Review</strong><p class="admin-panel-note">Use this detail page to inspect each custom design before production.</p></section>
         <button class="admin-logout-button" type="button" data-admin-logout>Logout</button>

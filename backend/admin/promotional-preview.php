@@ -119,16 +119,12 @@ $previewDocument = (string) ($previewMessage['preview_html'] ?? '');
         <p>Catalog campaign control for subscribed customers and member email preferences.</p>
       </div>
 
-      <nav class="admin-nav">
-        <a class="admin-nav-link" href="/GirffoN/admin-dashboard.php" aria-label="Dashboard" title="Dashboard">1. Dashboard</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-products.php" aria-label="Products" title="Products">2. Products</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-orders.php" aria-label="Orders" title="Orders">3. Orders</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link is-active" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
-      </nav>
+      <?php
+      $adminNavCurrentPage = 'newsletter';
+      $adminNavBasePath = '/GirffoN';
+      $adminNavVisibleKeys = ['dashboard', 'products', 'orders', 'invoices', 'messages', 'users', 'newsletter', 'custom_orders'];
+      require dirname(__DIR__, 2) . '/includes/admin-nav.php';
+      ?>
 
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">

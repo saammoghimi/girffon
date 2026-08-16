@@ -7,6 +7,7 @@
 
   const PAGE_TITLES = {
     dashboard: "Dashboard",
+    homepage: "Homepage",
     products: "Products",
     orders: "Orders",
     invoices: "Invoices",

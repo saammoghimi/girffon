@@ -54,18 +54,11 @@ if ($adminUserFullName === '') {
         </span>
         <p>User profile connected to the live admin database.</p>
       </div>
-      <nav class="admin-nav">
-        <a class="admin-nav-link" href="admin-dashboard.php" aria-label="Dashboard" title="Dashboard">1. Dashboard</a>
-        <a class="admin-nav-link" href="admin-products.php" aria-label="Products" title="Products">2. Products</a>
-        <a class="admin-nav-link" href="admin-orders.php" aria-label="Orders" title="Orders">3. Orders</a>
-        <a class="admin-nav-link" href="admin-invoices.php" aria-label="Invoices" title="Invoices">4. Invoices</a>
-        <a class="admin-nav-link" href="admin-messages.php" aria-label="Messages" title="Messages">5. Messages</a>
-        <a class="admin-nav-link is-active" href="admin-users.php" aria-label="Users" title="Users">6. Users</a>
-        <a class="admin-nav-link" href="/GirffoN/admin-newsletter.php" aria-label="Newsletter" title="Newsletter">7. Newsletter</a>
-        <a class="admin-nav-link" href="admin-custom-orders.php" aria-label="Custom Design Orders" title="Custom Design Orders">8. Custom Design Orders</a>
-        <a class="admin-nav-link" href="admin-settings.php" aria-label="Settings" title="Settings">9. Settings</a>
-        <a class="admin-nav-link" href="admin-gift-cards.php" aria-label="Gift Cards" title="Gift Cards">10. Gift Cards</a>
-      </nav>
+      <?php
+      $adminNavCurrentPage = 'users';
+      $adminNavBasePath = '';
+      require __DIR__ . '/includes/admin-nav.php';
+      ?>
       <div class="admin-sidebar-footer">
         <section class="admin-sidebar-card">
           <strong>User Profile</strong>

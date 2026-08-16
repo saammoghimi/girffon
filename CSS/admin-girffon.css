@@ -430,6 +430,10 @@ body.admin-page {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.5 8.5h9a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2Z'/%3E%3Cpath d='M9.5 8.5V7a2.5 2.5 0 0 1 5 0v1.5'/%3E%3Cpath d='M12 10.75v1.5'/%3E%3Cpath d='M6 12.5H4.5M19.5 12.5H18'/%3E%3C/svg%3E");
 }
 
+.admin-nav-link:nth-child(11)::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232b241b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 11.5 12 5l8.5 6.5'/%3E%3Cpath d='M6.5 10.5V19h11v-8.5'/%3E%3Cpath d='M9.5 14.5h5'/%3E%3Cpath d='M10.5 19v-4h3V19'/%3E%3C/svg%3E");
+}
+
 .admin-sidebar-footer {
   display: grid;
   gap: 10px;
