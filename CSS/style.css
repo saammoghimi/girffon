@@ -421,6 +421,14 @@ main {
   gap: 6px;
 }
 
+.footer-connect-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  width: min(100% - 32px, 900px);
+}
+
 .footer-social {
   display: flex;
   gap: 12px;
@@ -430,6 +438,198 @@ main {
   color: #000;
   font-size: 15px;
   text-decoration: none;
+}
+
+.footer-app-download {
+  padding-left: 32px;
+  border-left: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.footer-app-download h3 {
+  margin: 0 0 8px;
+  color: #000;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.footer-app-download h3 strong {
+  color: #fff;
+  font-weight: 800;
+}
+
+.footer-app-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-app-button {
+  min-width: 126px;
+  min-height: 46px;
+  padding: 5px 12px;
+  border: 1px solid #000;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+}
+
+.footer-app-button:hover {
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.footer-app-button i {
+  font-size: 28px;
+}
+
+.footer-app-button-android i,
+.footer-app-button-android span {
+  color: #477c00;
+}
+
+.footer-app-button span {
+  display: flex;
+  flex-direction: column;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.footer-app-button small {
+  color: #000;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+body.gf-app-modal-open {
+  overflow: hidden;
+}
+
+.gf-app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2700;
+  background: rgba(7, 11, 16, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.gf-app-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 2710;
+  width: min(92vw, 640px);
+  padding: 30px 38px 34px;
+  border: 1px solid #d8d8d8;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  color: #25282b;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -48%);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.gf-app-modal[data-visible="true"] {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+}
+
+.gf-app-modal-logo {
+  display: block;
+  width: 132px;
+  height: 52px;
+  object-fit: contain;
+  object-position: left center;
+  margin-bottom: 18px;
+}
+
+.gf-app-modal-close {
+  position: absolute;
+  top: 22px;
+  right: 24px;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  color: #777;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.gf-app-modal-close:hover {
+  color: #111;
+}
+
+.gf-app-modal h2 {
+  margin: 0 0 16px;
+  color: #25282b;
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.gf-app-modal-description {
+  margin: 0;
+  color: #6d7175;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.gf-app-modal-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 46px;
+  margin-top: 18px;
+}
+
+.gf-app-qr-placeholder {
+  flex: 0 0 120px;
+  width: 120px;
+  height: 120px;
+  border: 1px solid #bfc3c7;
+  background: #fff;
+}
+
+.gf-app-store-badge {
+  min-width: 164px;
+  min-height: 54px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: #111;
+  color: #fff;
+  box-shadow: inset 0 0 0 1px #555;
+}
+
+.gf-app-store-badge i {
+  font-size: 29px;
+}
+
+.gf-app-store-google i {
+  color: #72d572;
+}
+
+.gf-app-store-badge span {
+  display: flex;
+  flex-direction: column;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.gf-app-store-badge small {
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.3;
 }
 
 .footer-bottom p {
@@ -985,6 +1185,65 @@ body.gf-footer-panel-open {
 
   .footer-social a {
     font-size: 14px;
+  }
+
+  .footer-connect-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-app-download {
+    width: 100%;
+    padding: 10px 0 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.4);
+    border-left: 0;
+  }
+
+  .footer-app-buttons {
+    justify-content: center;
+  }
+
+  .footer-app-button {
+    min-width: 120px;
+  }
+
+  .gf-app-modal {
+    padding: 24px 22px 28px;
+  }
+
+  .gf-app-modal-logo {
+    width: 112px;
+    height: 44px;
+    margin-bottom: 14px;
+  }
+
+  .gf-app-modal h2 {
+    padding-right: 28px;
+    font-size: 24px;
+  }
+
+  .gf-app-modal-description {
+    font-size: 14px;
+  }
+
+  .gf-app-modal-content {
+    gap: 20px;
+  }
+
+  .gf-app-qr-placeholder {
+    flex-basis: 104px;
+    width: 104px;
+    height: 104px;
+  }
+
+  .gf-app-store-badge {
+    min-width: 145px;
+    min-height: 50px;
+    padding: 6px 10px;
+  }
+
+  .gf-app-store-badge span {
+    font-size: 17px;
   }
 
   .logo-area img,

@@ -55,6 +55,11 @@ $adminNavItems = [
         'label' => 'Homepage',
         'file' => 'admin-homepage.php',
     ],
+    'mobile_app' => [
+        'number' => '12.',
+        'label' => 'Mobile App',
+        'file' => 'admin-mobile-app.php',
+    ],
 ];
 
 $adminNavCurrentPage = isset($adminNavCurrentPage) ? (string) $adminNavCurrentPage : '';

@@ -367,6 +367,159 @@
 })();
 
 document.addEventListener("DOMContentLoaded", () => {
+  function initializeFooterAppDownload() {
+    const social = document.querySelector(".footer-social");
+
+    if (!social) {
+      return;
+    }
+
+    if (!social.closest(".footer-connect-row")) {
+      social.querySelectorAll('[title="Android App"], [title="iOS App"]').forEach((link) => link.remove());
+
+      const connectRow = document.createElement("div");
+      connectRow.className = "footer-connect-row";
+      social.before(connectRow);
+      connectRow.append(social);
+
+      const appDownload = document.createElement("div");
+      appDownload.className = "footer-app-download";
+      appDownload.setAttribute("aria-label", "Download GIRFFON App");
+
+      const heading = document.createElement("h3");
+      heading.append("Download ");
+      const brand = document.createElement("strong");
+      brand.textContent = "GIRFFON";
+      heading.append(brand, " App");
+
+      const buttons = document.createElement("div");
+      buttons.className = "footer-app-buttons";
+
+      [
+        { platform: "Android", icon: "fa-android", className: " footer-app-button-android" },
+        { platform: "iOS", icon: "fa-apple", className: "" }
+      ].forEach(({ platform, icon, className }) => {
+        const link = document.createElement("a");
+        link.href = "#";
+        link.className = `footer-app-button${className}`;
+        link.setAttribute("aria-label", `Download GIRFFON for ${platform}`);
+
+        const iconElement = document.createElement("i");
+        iconElement.className = `fa-brands ${icon}`;
+        iconElement.setAttribute("aria-hidden", "true");
+
+        const label = document.createElement("span");
+        const prefix = document.createElement("small");
+        prefix.textContent = "Download for";
+        label.append(prefix, platform);
+        link.append(iconElement, label);
+        buttons.append(link);
+      });
+
+      appDownload.append(heading, buttons);
+      connectRow.append(appDownload);
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "gf-app-modal-overlay";
+    overlay.hidden = true;
+
+    const modal = document.createElement("section");
+    modal.className = "gf-app-modal";
+    modal.dataset.visible = "false";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-hidden", "true");
+    modal.setAttribute("aria-labelledby", "gfAppModalTitle");
+
+    const logo = document.createElement("img");
+    logo.className = "gf-app-modal-logo";
+    logo.src = "Image/Logo/Logo.png";
+    logo.alt = "GIRFFON";
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "gf-app-modal-close";
+    closeButton.setAttribute("aria-label", "Close app download dialog");
+    closeButton.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+
+    const title = document.createElement("h2");
+    title.id = "gfAppModalTitle";
+    title.textContent = "Download the GIRFFON app";
+
+    const description = document.createElement("p");
+    description.className = "gf-app-modal-description";
+
+    const content = document.createElement("div");
+    content.className = "gf-app-modal-content";
+
+    const qrPlaceholder = document.createElement("div");
+    qrPlaceholder.className = "gf-app-qr-placeholder";
+    qrPlaceholder.setAttribute("role", "img");
+    qrPlaceholder.setAttribute("aria-label", "QR code image will be added later");
+
+    const storeBadge = document.createElement("div");
+    storeBadge.className = "gf-app-store-badge";
+
+    content.append(qrPlaceholder, storeBadge);
+    modal.append(logo, closeButton, title, description, content);
+    document.body.append(overlay, modal);
+
+    let lastFocusedElement = null;
+
+    function closeAppModal() {
+      overlay.hidden = true;
+      modal.dataset.visible = "false";
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("gf-app-modal-open");
+      lastFocusedElement?.focus();
+    }
+
+    function openAppModal(platform) {
+      const isAndroid = platform === "Android";
+      description.textContent = isAndroid
+        ? "Scan the QR code to download the GIRFFON app on Google Play."
+        : "Scan the QR code to download the GIRFFON app from the Apple App Store.";
+      storeBadge.className = `gf-app-store-badge ${isAndroid ? "gf-app-store-google" : "gf-app-store-apple"}`;
+      storeBadge.replaceChildren();
+
+      const badgeIcon = document.createElement("i");
+      badgeIcon.className = `fa-brands ${isAndroid ? "fa-google-play" : "fa-apple"}`;
+      badgeIcon.setAttribute("aria-hidden", "true");
+
+      const badgeText = document.createElement("span");
+      const badgePrefix = document.createElement("small");
+      badgePrefix.textContent = isAndroid ? "GET IT ON" : "Download on the";
+      badgeText.append(badgePrefix, isAndroid ? "Google Play" : "App Store");
+      storeBadge.append(badgeIcon, badgeText);
+
+      lastFocusedElement = document.activeElement;
+      overlay.hidden = false;
+      modal.dataset.visible = "true";
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("gf-app-modal-open");
+      closeButton.focus();
+    }
+
+    document.querySelectorAll(".footer-app-button").forEach((button) => {
+      const platform = button.classList.contains("footer-app-button-android") ? "Android" : "iOS";
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        openAppModal(platform);
+      });
+    });
+
+    closeButton.addEventListener("click", closeAppModal);
+    overlay.addEventListener("click", closeAppModal);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && modal.dataset.visible === "true") {
+        closeAppModal();
+      }
+    });
+  }
+
+  initializeFooterAppDownload();
+
   const items = document.querySelectorAll(".menu-item");
   let activeBox = null;
   let timer;
