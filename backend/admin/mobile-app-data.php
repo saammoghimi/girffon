@@ -9,12 +9,12 @@ function girffonMobileAppContentDefinitions(): array
         'home-banner-3' => ['home', 'banner', 'Banner 3'],
         'home-banner-4' => ['home', 'banner', 'Banner 4'],
         'home-banner-5' => ['home', 'banner', 'Banner 5'],
-        'home-category-men' => ['home', 'category-buttons', 'Men'],
-        'home-category-women' => ['home', 'category-buttons', 'Women'],
-        'home-category-boys' => ['home', 'category-buttons', 'Boys'],
-        'home-category-girls' => ['home', 'category-buttons', 'Girls'],
-        'home-category-accessories' => ['home', 'category-buttons', 'Accessories'],
-        'home-category-custom' => ['home', 'category-buttons', 'Custom Design'],
+        'home-category-men' => ['home', 'category-buttons', 'Men', 1],
+        'home-category-women' => ['home', 'category-buttons', 'Women', 2],
+        'home-category-boys' => ['home', 'category-buttons', 'Kids', 3],
+        'home-category-girls' => ['home', 'category-buttons', 'Animation', 4],
+        'home-category-accessories' => ['home', 'category-buttons', 'Animal Designs', 5],
+        'home-category-custom' => ['home', 'category-buttons', 'Accessories', 6],
         'home-shopping-cart' => ['home', 'shopping-cart', 'Shopping Cart'],
         'home-custom-design' => ['home', 'custom-design', 'Custom Design'],
         'home-catalog' => ['home', 'catalog', 'Catalog'],
@@ -37,6 +37,7 @@ function girffonMobileAppContentDefinitions(): array
         'group' => $definition[0],
         'area' => $definition[1],
         'label' => $definition[2],
+        'slot' => $definition[3] ?? null,
     ], $definitions);
 }
 
@@ -372,6 +373,8 @@ function girffonMobilePublishedConfiguration(PDO $pdo): array
             continue;
         }
         $payload['key'] = $row['section_key'];
+        $payload['slot'] = $definitions[$row['section_key']]['slot'];
+        $payload['is_published'] = true;
         $payload['revision'] = (int) $row['revision'];
         $payload['published_at'] = $row['published_at'];
         $groups[$row['content_group']][] = $payload;
@@ -380,7 +383,15 @@ function girffonMobilePublishedConfiguration(PDO $pdo): array
         }
     }
     foreach ($groups as &$items) {
-        usort($items, static fn(array $left, array $right): int => ((int) ($left['display_order'] ?? 0)) <=> ((int) ($right['display_order'] ?? 0)));
+        usort($items, static function (array $left, array $right): int {
+            $leftOrder = $left['content_area'] === 'category-buttons' && $left['slot'] !== null
+                ? (int) $left['slot']
+                : (int) ($left['display_order'] ?? 0);
+            $rightOrder = $right['content_area'] === 'category-buttons' && $right['slot'] !== null
+                ? (int) $right['slot']
+                : (int) ($right['display_order'] ?? 0);
+            return $leftOrder <=> $rightOrder;
+        });
     }
     unset($items);
 
