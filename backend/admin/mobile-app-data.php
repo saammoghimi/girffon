@@ -20,6 +20,7 @@ function girffonMobileAppContentDefinitions(): array
         'home-catalog' => ['home', 'catalog', 'Catalog'],
         'home-gift-cards' => ['home', 'gift-cards', 'Gift Cards'],
         'home-bundles' => ['home', 'bundles', 'Bundles'],
+        'home-new-arrivals' => ['home', 'new-arrivals', 'New Arrivals'],
         'shop-category-men' => ['shop', 'category-buttons', 'Men'],
         'shop-category-women' => ['shop', 'category-buttons', 'Women'],
         'shop-category-boys' => ['shop', 'category-buttons', 'Boys'],
@@ -206,6 +207,15 @@ function girffonAdminSaveMobileContent(PDO $pdo, array $input, int $adminId, str
     $payload['content_area'] = $definitions[$sectionKey]['area'];
     if ($payload['section_name'] === '') {
         throw new InvalidArgumentException('Section name is required.');
+    }
+    if ($sectionKey === 'home-new-arrivals') {
+        $productLimit = filter_var($payload['settings']['product_limit'] ?? null, FILTER_VALIDATE_INT, [
+            'options' => ['min_range' => 1],
+        ]);
+        if ($productLimit === false) {
+            throw new InvalidArgumentException('New Arrivals product limit must be a positive integer.');
+        }
+        $payload['settings']['product_limit'] = $productLimit;
     }
     foreach (['start_at', 'end_at'] as $dateField) {
         if ($payload[$dateField] !== '' && strtotime($payload[$dateField]) === false) {
@@ -403,6 +413,7 @@ function girffonMobilePublishedConfiguration(PDO $pdo): array
         'catalog' => [],
         'gift-cards' => [],
         'bundles' => [],
+        'new-arrivals' => [],
     ];
     foreach ($groups['home'] ?? [] as $item) {
         $area = (string) ($item['content_area'] ?? '');
