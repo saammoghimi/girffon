@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/products-data.php';
 
 function girffonMobileAppContentDefinitions(): array
 {
@@ -25,10 +26,11 @@ function girffonMobileAppContentDefinitions(): array
         'shop-category-women' => ['shop', 'category-buttons', 'Women'],
         'shop-category-boys' => ['shop', 'category-buttons', 'Boys'],
         'shop-category-girls' => ['shop', 'category-buttons', 'Girls'],
-        'shop-category-accessories' => ['shop', 'category-buttons', 'Accessories'],
-        'shop-category-new' => ['shop', 'category-buttons', 'New Arrivals'],
+        'shop-category-mugs' => ['shop', 'category-buttons', 'Mugs'],
+        'shop-category-decoration' => ['shop', 'category-buttons', 'Decoration'],
         'shop-by-product' => ['shop', 'shop-by-product', 'Shop By Product'],
-        'shop-shopping-cart' => ['shop', 'shopping-cart', 'Shopping Cart'],
+        'shop-new-arrivals' => ['shop', 'new-arrivals', 'New Arrivals'],
+        'shop-best-sellers' => ['shop', 'best-sellers', 'Best Sellers'],
         'shop-make-it-yours' => ['shop', 'make-it-yours', 'Make It Yours'],
         'shop-gift-cards' => ['shop', 'gift-cards', 'Gift Cards'],
         'shop-bundle' => ['shop', 'bundle', 'Bundle'],
@@ -49,6 +51,19 @@ function girffonMobileAppHomeDefaults(): array
         $sections[$key] = $definition['label'];
     }
     return $sections;
+}
+
+function girffonMobileProductLimit($value, bool $strict = false): int
+{
+    $limit = (int) $value;
+    if ($limit >= 1 && $limit <= 60) {
+        return $limit;
+    }
+    if ($strict) {
+        throw new InvalidArgumentException('Product limit must be between 1 and 60.');
+    }
+
+    return 4;
 }
 
 function girffonAdminEnsureMobileAppHomeTable(PDO $pdo): bool
@@ -208,14 +223,60 @@ function girffonAdminSaveMobileContent(PDO $pdo, array $input, int $adminId, str
     if ($payload['section_name'] === '') {
         throw new InvalidArgumentException('Section name is required.');
     }
-    if ($sectionKey === 'home-new-arrivals') {
-        $productLimit = filter_var($payload['settings']['product_limit'] ?? null, FILTER_VALIDATE_INT, [
-            'options' => ['min_range' => 1],
-        ]);
-        if ($productLimit === false) {
-            throw new InvalidArgumentException('New Arrivals product limit must be a positive integer.');
+    if (in_array($sectionKey, ['home-new-arrivals', 'shop-new-arrivals', 'shop-best-sellers'], true)) {
+        $productLimit = girffonMobileProductLimit($payload['settings']['product_limit'] ?? 4, true);
+        $productSource = strtolower(trim((string) ($payload['settings']['product_source'] ?? 'automatic')));
+        if (!in_array($productSource, ['automatic', 'manual'], true)) {
+            throw new InvalidArgumentException('Product source must be automatic or manual.');
+        }
+        $manualProductIds = [];
+        foreach ((array) ($payload['settings']['manual_product_ids'] ?? []) as $productId) {
+            $productId = (int) $productId;
+            if ($productId > 0 && !in_array($productId, $manualProductIds, true)) {
+                $manualProductIds[] = $productId;
+            }
+        }
+        if ($publish && !empty($payload['is_enabled']) && $productSource === 'manual' && !$manualProductIds) {
+            throw new InvalidArgumentException('Select at least one product before publishing manual product cards.');
+        }
+        if ($publish && !empty($payload['is_enabled']) && $sectionKey === 'shop-best-sellers' && $productSource === 'automatic' && !girffonMobileBestSellerProductIds($pdo)) {
+            throw new InvalidArgumentException('Automatic Best Sellers is unavailable because order items are not linked to catalog products. Choose Manual selection to publish.');
         }
         $payload['settings']['product_limit'] = $productLimit;
+        $payload['settings']['product_source'] = $productSource;
+        $payload['settings']['manual_product_ids'] = array_slice($manualProductIds, 0, 60);
+    }
+    if ($sectionKey === 'shop-by-product') {
+        $items = [];
+        foreach (($payload['settings']['items'] ?? []) as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $name = trim((string) ($item['name'] ?? ''));
+            $destination = trim((string) ($item['destination'] ?? ''));
+            if ($name === '' || $destination === '') {
+                continue;
+            }
+            $image = trim((string) ($item['image'] ?? $item['icon'] ?? ''));
+            $extension = strtolower(pathinfo(parse_url($image, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION));
+            if (in_array($extension, ['mp4', 'webm', 'mov', 'm4v'], true)) {
+                throw new InvalidArgumentException('Shop By Product items support images only.');
+            }
+            $isEnabled = !empty($item['is_enabled']);
+            if ($publish && !empty($payload['is_enabled']) && $isEnabled && $image === '') {
+                throw new InvalidArgumentException('Each enabled Shop By Product item needs an image before publishing.');
+            }
+            $items[] = [
+                'name' => mb_substr($name, 0, 120),
+                'icon' => mb_substr($image, 0, 500),
+                'image' => mb_substr($image, 0, 500),
+                'destination' => mb_substr($destination, 0, 500),
+                'display_order' => max(0, min(65535, (int) ($item['display_order'] ?? 0))),
+                'is_enabled' => $isEnabled ? 1 : 0,
+            ];
+        }
+        usort($items, static fn(array $left, array $right): int => $left['display_order'] <=> $right['display_order']);
+        $payload['settings']['items'] = $items;
     }
     foreach (['start_at', 'end_at'] as $dateField) {
         if ($payload[$dateField] !== '' && strtotime($payload[$dateField]) === false) {
@@ -355,6 +416,106 @@ function girffonAdminMobileUploadImage(array $file): string
     return $relativeDirectory . '/' . $fileName;
 }
 
+function girffonMobileCatalogProductCards(PDO $pdo, int $limit): array
+{
+    return array_map(static fn(array $product): array => [
+        'id' => (int) ($product['id'] ?? 0),
+        'sku' => (string) ($product['sku'] ?? ''),
+        'name' => (string) ($product['name'] ?? ''),
+        'image' => (string) ($product['image'] ?? ''),
+        'price' => (float) ($product['effective_price'] ?? $product['price'] ?? 0),
+        'product_link' => (string) ($product['detail_url'] ?? ''),
+    ], girffonAdminFetchProducts($pdo, $limit));
+}
+
+function girffonMobileBestSellerProductIds(PDO $pdo): array
+{
+    try {
+        $statement = $pdo->query(
+            "SELECT products.id, SUM(order_items.quantity) AS sold_quantity
+             FROM order_items
+             INNER JOIN orders ON orders.id = order_items.order_id
+             INNER JOIN products ON (
+                 (NULLIF(TRIM(order_items.sku), '') IS NOT NULL AND products.sku = order_items.sku)
+                 OR (NULLIF(TRIM(order_items.product_id), '') IS NOT NULL AND products.sku = order_items.product_id)
+                 OR (order_items.product_id REGEXP '^[0-9]+$' AND products.id = CAST(order_items.product_id AS UNSIGNED))
+             )
+             WHERE LOWER(COALESCE(orders.payment_status, '')) = 'paid'
+               AND LOWER(COALESCE(orders.order_status, '')) NOT IN ('cancelled', 'canceled', 'refunded')
+             GROUP BY products.id
+             HAVING sold_quantity > 0
+             ORDER BY sold_quantity DESC, products.id DESC"
+        );
+        return array_map('intval', $statement ? $statement->fetchAll(PDO::FETCH_COLUMN) : []);
+    } catch (Throwable $exception) {
+        return [];
+    }
+}
+
+function girffonMobileProductCard(array $product): array
+{
+    $image = trim((string) ($product['image'] ?? ''));
+    $extension = strtolower(pathinfo(parse_url($image, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION));
+    if (in_array($extension, ['mp4', 'webm', 'mov', 'm4v'], true)) {
+        $image = '';
+    }
+    return [
+        'id' => (int) ($product['id'] ?? 0),
+        'sku' => (string) ($product['sku'] ?? ''),
+        'name' => (string) ($product['name'] ?? ''),
+        'image' => $image,
+        'price' => (float) ($product['effective_price'] ?? $product['price'] ?? 0),
+        'regular_price' => (float) ($product['price'] ?? 0),
+        'sale_price' => !empty($product['is_on_sale']) ? (float) ($product['effective_price'] ?? 0) : null,
+        'product_link' => (string) ($product['detail_url'] ?? ''),
+        'detail_url' => (string) ($product['detail_url'] ?? ''),
+    ];
+}
+
+function girffonMobileResolveProductSectionProducts(PDO $pdo, string $sectionKey, array $settings): array
+{
+    $limit = girffonMobileProductLimit($settings['product_limit'] ?? 4);
+    $source = strtolower(trim((string) ($settings['product_source'] ?? 'automatic')));
+    $manualIds = array_values(array_unique(array_filter(array_map('intval', (array) ($settings['manual_product_ids'] ?? [])))));
+    $products = array_values(array_filter(girffonAdminFetchProducts($pdo), static function (array $product): bool {
+        $status = strtolower(trim((string) ($product['status'] ?? 'active')));
+        return in_array($status, ['', 'active', 'published', 'available'], true);
+    }));
+    $productsById = [];
+    foreach ($products as $product) {
+        $productsById[(int) ($product['id'] ?? 0)] = $product;
+    }
+
+    if ($source === 'manual') {
+        $orderedIds = $manualIds;
+    } elseif ($sectionKey === 'shop-best-sellers') {
+        $orderedIds = girffonMobileBestSellerProductIds($pdo);
+    } else {
+        usort($products, static function (array $left, array $right): int {
+            $dateComparison = strcmp((string) ($right['created_at'] ?? ''), (string) ($left['created_at'] ?? ''));
+            return $dateComparison !== 0 ? $dateComparison : ((int) ($right['id'] ?? 0) <=> (int) ($left['id'] ?? 0));
+        });
+        $orderedIds = array_map(static fn(array $product): int => (int) ($product['id'] ?? 0), $products);
+    }
+
+    $cards = [];
+    foreach ($orderedIds as $productId) {
+        if (!isset($productsById[$productId])) {
+            continue;
+        }
+        $cards[] = girffonMobileProductCard($productsById[$productId]);
+        if (count($cards) >= $limit) {
+            break;
+        }
+    }
+    return $cards;
+}
+
+function girffonMobileResolveNewArrivalProducts(PDO $pdo, array $settings): array
+{
+    return girffonMobileResolveProductSectionProducts($pdo, 'home-new-arrivals', $settings);
+}
+
 function girffonMobilePublishedConfiguration(PDO $pdo): array
 {
     if (!girffonAdminEnsureMobileAppHomeTable($pdo)) {
@@ -387,6 +548,31 @@ function girffonMobilePublishedConfiguration(PDO $pdo): array
         $payload['is_published'] = true;
         $payload['revision'] = (int) $row['revision'];
         $payload['published_at'] = $row['published_at'];
+        if ($row['section_key'] === 'home-new-arrivals') {
+            $payload['products'] = girffonMobileResolveNewArrivalProducts($pdo, (array) ($payload['settings'] ?? []));
+            $payload['layout'] = ['axis' => 'horizontal', 'rows' => 1, 'scrollable' => true, 'swipe_enabled' => true];
+        }
+        if (in_array($row['section_key'], ['shop-new-arrivals', 'shop-best-sellers'], true)) {
+            $payload['products'] = girffonMobileResolveProductSectionProducts($pdo, $row['section_key'], (array) ($payload['settings'] ?? []));
+            $payload['layout'] = ['axis' => 'horizontal', 'rows' => 1, 'scrollable' => true, 'swipe_enabled' => true];
+            if ($row['section_key'] === 'shop-best-sellers') {
+                $payload['automatic_available'] = (bool) girffonMobileBestSellerProductIds($pdo);
+            }
+        }
+        if ($row['section_key'] === 'shop-by-product') {
+            $payload['items'] = [];
+            $payload['layout'] = ['axis' => 'horizontal', 'rows' => 1, 'scrollable' => true, 'swipe_enabled' => true];
+            foreach ((array) ($payload['settings']['items'] ?? []) as $item) {
+                if (empty($item['is_enabled'])) {
+                    continue;
+                }
+                $payload['items'][] = [
+                    'name' => (string) ($item['name'] ?? ''),
+                    'image' => (string) ($item['image'] ?? $item['icon'] ?? ''),
+                    'destination' => (string) ($item['destination'] ?? ''),
+                ];
+            }
+        }
         $groups[$row['content_group']][] = $payload;
         if ($latestPublishedAt === null || $row['published_at'] > $latestPublishedAt) {
             $latestPublishedAt = $row['published_at'];
@@ -422,10 +608,27 @@ function girffonMobilePublishedConfiguration(PDO $pdo): array
         }
     }
 
+    $shop = [
+        'category-buttons' => [],
+        'shop-by-product' => [],
+        'new-arrivals' => [],
+        'best-sellers' => [],
+        'make-it-yours' => [],
+        'gift-cards' => [],
+        'bundle' => [],
+    ];
+    foreach ($groups['shop'] ?? [] as $item) {
+        $area = (string) ($item['content_area'] ?? '');
+        if (array_key_exists($area, $shop)) {
+            $shop[$area][] = $item;
+        }
+    }
+
     return [
         'version' => 1,
         'published_at' => $latestPublishedAt,
         'home' => $home,
+        'shop' => $shop,
         'groups' => $groups,
     ];
 }

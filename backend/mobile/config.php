@@ -1,11 +1,12 @@
 <?php
 require_once __DIR__ . '/../admin/mobile-app-data.php';
+require_once __DIR__ . '/public-paths.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
 
 try {
-    $configuration = girffonMobilePublishedConfiguration($pdo);
+    $configuration = girffonMobileNormalizePublicConfiguration(girffonMobilePublishedConfiguration($pdo));
     $mobileBasePath = rtrim(str_replace('\\', '/', dirname((string) ($_SERVER['SCRIPT_NAME'] ?? '/backend/mobile/config.php'))), '/');
     $backendBasePath = rtrim(str_replace('\\', '/', dirname($mobileBasePath)), '/');
     $configuration['endpoints'] = [

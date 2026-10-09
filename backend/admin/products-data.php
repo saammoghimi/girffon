@@ -50,6 +50,112 @@ function girffonAdminNormalizeCatalogPath(string $value): string
     return ltrim($normalized, '/');
 }
 
+function girffonAdminResolveExistingCatalogPath(string $value): string
+{
+    $value = girffonAdminNormalizeCatalogPath(rawurldecode($value));
+    if ($value === '' || preg_match('#^(?:[a-z][a-z0-9+.-]*:|//)#i', $value)) {
+        return $value;
+    }
+
+    $candidates = [$value];
+    if (str_starts_with(strtolower($value), 'images/')) {
+        $candidates[] = 'Image/Custom Design Pro/' . $value;
+    }
+
+    $root = dirname(__DIR__, 2);
+    static $directoryEntries = [];
+    foreach ($candidates as $candidate) {
+        $segments = array_values(array_filter(explode('/', $candidate), static fn(string $segment): bool => $segment !== ''));
+        if (!$segments || array_intersect($segments, ['.', '..'])) {
+            continue;
+        }
+
+        $absolutePath = $root;
+        $resolvedSegments = [];
+        $found = true;
+        foreach ($segments as $segment) {
+            if (!isset($directoryEntries[$absolutePath])) {
+                $directoryEntries[$absolutePath] = is_dir($absolutePath) ? (scandir($absolutePath) ?: []) : [];
+            }
+            $resolvedName = null;
+            foreach ($directoryEntries[$absolutePath] as $entry) {
+                if (strcasecmp($entry, $segment) === 0) {
+                    $resolvedName = $entry;
+                    break;
+                }
+            }
+            if ($resolvedName === null) {
+                $found = false;
+                break;
+            }
+            $resolvedSegments[] = $resolvedName;
+            $absolutePath .= DIRECTORY_SEPARATOR . $resolvedName;
+        }
+        if ($found && is_file($absolutePath)) {
+            return implode('/', $resolvedSegments);
+        }
+    }
+
+    return '';
+}
+
+function girffonAdminResolveProductImagePath(array $product): string
+{
+    $resolvedImage = girffonAdminResolveExistingCatalogPath((string) ($product['image'] ?? ''));
+    if ($resolvedImage !== '') {
+        return $resolvedImage;
+    }
+
+    $detailPath = girffonAdminResolveExistingCatalogPath((string) ($product['detail_url'] ?? ''));
+    if ($detailPath !== '') {
+        $detailHtml = file_get_contents(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $detailPath));
+        if (is_string($detailHtml) && preg_match_all('/\bsrc=["\']([^"\']+)["\']/i', $detailHtml, $matches)) {
+            foreach ($matches[1] as $source) {
+                if (!str_contains(strtolower($source), 'images/products/')) {
+                    continue;
+                }
+                $candidate = girffonAdminResolveExistingCatalogPath(dirname($detailPath) . '/' . $source);
+                if ($candidate !== '') {
+                    return $candidate;
+                }
+            }
+        }
+    }
+
+    return 'Image/Logo/Logo.png';
+}
+
+function girffonAdminResolveProductDetailUrl(array $product): string
+{
+    $resolvedUrl = girffonAdminResolveExistingCatalogPath((string) ($product['detail_url'] ?? ''));
+    if ($resolvedUrl !== '') {
+        return $resolvedUrl;
+    }
+
+    $legacyDetailUrls = [
+        'cdp:1' => 'Image/Custom Design Pro/CustomDesignPro.html',
+        'cdp:2' => 'Image/Custom Design Pro/OrganicUnisexT-Shirt.html',
+        'cdp:3' => 'Image/Custom Design Pro/ClassicToteBag.html',
+        'cdp:4' => 'Image/Custom Design Pro/StanleyStellaEcoTote.html',
+        'cdp:5' => 'Image/Custom Design Pro/BabyT-Shirt.html',
+        'cdp:6' => 'Image/Custom Design Pro/VintageWashedShopperDenim.html',
+    ];
+    $sourceKey = strtolower(trim((string) ($product['source_key'] ?? '')));
+    if (isset($legacyDetailUrls[$sourceKey])) {
+        return $legacyDetailUrls[$sourceKey];
+    }
+
+    return 'catalog.html';
+}
+
+function girffonAdminHydrateProduct(array $product): array
+{
+    $product = girffonAdminHydrateProductPricing($product);
+    $product['detail_url'] = girffonAdminResolveProductDetailUrl($product);
+    $product['image'] = girffonAdminResolveProductImagePath($product);
+    return $product;
+}
+
 function girffonAdminBuildGeneratedCatalogSku(string $sourceKey): string
 {
     $normalized = strtoupper(trim(str_replace([':', '/', ' '], '-', $sourceKey)));
@@ -295,7 +401,7 @@ function girffonAdminFetchProducts(PDO $pdo, int $limit = 0): array
 
         $statement = $pdo->query($sql);
         $products = $statement ? $statement->fetchAll(PDO::FETCH_ASSOC) : [];
-        return array_map('girffonAdminHydrateProductPricing', $products);
+        return array_map('girffonAdminHydrateProduct', $products);
     } catch (PDOException $exception) {
         return [];
     }
@@ -312,7 +418,7 @@ function girffonAdminFetchProductById(PDO $pdo, int $productId): ?array
         $statement = $pdo->prepare(girffonAdminBuildProductSelect($columns) . " WHERE id = :id LIMIT 1");
         $statement->execute([':id' => $productId]);
         $product = $statement->fetch(PDO::FETCH_ASSOC);
-        return is_array($product) ? girffonAdminHydrateProductPricing($product) : null;
+        return is_array($product) ? girffonAdminHydrateProduct($product) : null;
     } catch (PDOException $exception) {
         return null;
     }
@@ -344,7 +450,7 @@ function girffonAdminFetchLowStockProducts(PDO $pdo, int $limit = 0, int $thresh
         $statement = $pdo->prepare($sql);
         $statement->execute([':threshold' => $threshold]);
         $products = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        return array_map('girffonAdminHydrateProductPricing', $products);
+        return array_map('girffonAdminHydrateProduct', $products);
     } catch (PDOException $exception) {
         return [];
     }

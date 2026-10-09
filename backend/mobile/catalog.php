@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../admin/products-data.php';
+require_once __DIR__ . '/public-paths.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: public, max-age=60, stale-while-revalidate=300');
@@ -24,8 +25,8 @@ try {
             'color' => (string) ($product['color'] ?? ''),
             'stock' => (int) ($product['stock'] ?? 0),
             'available' => (int) ($product['stock'] ?? 0) > 0,
-            'image' => (string) ($product['image'] ?? $product['image_path'] ?? ''),
-            'detail_url' => (string) ($product['detail_url'] ?? ''),
+            'image' => girffonMobilePublicUrl((string) ($product['image'] ?? $product['image_path'] ?? '')),
+            'detail_url' => girffonMobilePublicUrl((string) ($product['detail_url'] ?? '')),
             'updated_at' => (string) ($product['updated_at'] ?? ''),
         ];
     }
