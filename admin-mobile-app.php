@@ -21,6 +21,7 @@ $adminId = (int) ($_SESSION['admin_id'] ?? 0);
 $adminUsername = trim((string) ($_SESSION['admin_username'] ?? 'GirffoN Admin'));
 $csrfToken = girffonCsrfToken();
 $definitions = girffonMobileAppContentDefinitions();
+$shopNavigationCategories = girffonShopNavigationCategories();
 $tabs = ['home' => 'Home', 'shop' => 'Shop', 'custom-design' => 'Custom Design', 'account' => 'Account'];
 $areaLabels = [
     'home' => [
@@ -283,6 +284,7 @@ $accountStats = [
 
       <?php elseif ($tab === 'home' || $tab === 'shop'): ?>
         <div class="mobile-breadcrumbs"><a href="admin-mobile-app.php?tab=<?php echo rawurlencode($tab); ?>"><?php echo girffonMobileAdminEscape($tabs[$tab]); ?></a><span>/</span><strong><?php echo girffonMobileAdminEscape($areaLabels[$tab][$area]); ?></strong></div>
+        <?php if ($tab === 'shop' && $area === 'category-buttons'): ?><div class="mobile-meta" aria-label="Canonical SHOP navigation order"><?php foreach ($shopNavigationCategories as $navigationCategory): ?><span class="mobile-badge<?php echo !empty($navigationCategory['available']) ? ' ready' : ''; ?>"><?php echo girffonMobileAdminEscape($navigationCategory['label']); ?><?php echo empty($navigationCategory['available']) ? ' · Coming soon' : ''; ?></span><?php endforeach; ?></div><?php endif; ?>
         <div class="mobile-editor-layout<?php echo count($areaEntries) === 1 ? ' is-single' : ''; ?>">
           <?php if (count($areaEntries) > 1): ?><aside class="admin-panel mobile-entry-list" aria-label="Section entries"><?php foreach ($areaEntries as $key => $definition): $row = $rowsByKey[$key] ?? []; $entryName = trim((string) ($row['section_name'] ?? '')) ?: $definition['label']; ?><a class="<?php echo $key === $selectedKey ? 'is-active' : ''; ?>" href="admin-mobile-app.php?tab=<?php echo rawurlencode($tab); ?>&amp;area=<?php echo rawurlencode($area); ?>&amp;section=<?php echo rawurlencode($key); ?>"><span><?php echo girffonMobileAdminEscape($entryName); ?></span><small><?php echo !empty($row['has_published']) ? 'r' . (int) $row['revision'] : 'Draft'; ?></small></a><?php endforeach; ?></aside><?php endif; ?>
           <article class="admin-panel">

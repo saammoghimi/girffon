@@ -554,6 +554,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   function openMenu(box) {
+    if (!box) {
+      return;
+    }
     clearTimeout(timer);
 
     // اگر یکی باز است → فوری ببند
@@ -561,13 +564,22 @@ document.addEventListener("DOMContentLoaded", () => {
       activeBox.style.opacity = "0";
       activeBox.style.visibility = "hidden";
       activeBox.style.pointerEvents = "none";
+      activeBox.closest(".menu-item")?.querySelector(":scope > a")?.setAttribute("aria-expanded", "false");
     }
 
     box.style.opacity = "1";
     box.style.visibility = "visible";
     box.style.pointerEvents = "auto";
+    box.closest(".menu-item")?.querySelector(":scope > a")?.setAttribute("aria-expanded", "true");
 
     activeBox = box;
+  }
+
+  function closeNestedMenus(box) {
+    box?.querySelectorAll(".shop-kids-group.is-open").forEach((group) => {
+      group.classList.remove("is-open");
+      group.querySelector(":scope > a")?.setAttribute("aria-expanded", "false");
+    });
   }
 
   function closeMenu(box) {
@@ -575,6 +587,8 @@ document.addEventListener("DOMContentLoaded", () => {
       box.style.opacity = "0";
       box.style.visibility = "hidden";
       box.style.pointerEvents = "none";
+      box.closest(".menu-item")?.querySelector(":scope > a")?.setAttribute("aria-expanded", "false");
+      closeNestedMenus(box);
       activeBox = null;
     }, 1000); // 1 ثانیه
   }
@@ -582,6 +596,14 @@ document.addEventListener("DOMContentLoaded", () => {
   items.forEach((item) => {
     const box = item.querySelector(".menu-box");
     const trigger = item.querySelector(":scope > a");
+    const isShopMenu = item.classList.contains("shop-menu-item");
+
+    if (!box || !trigger) {
+      return;
+    }
+
+    trigger.setAttribute("aria-haspopup", "true");
+    trigger.setAttribute("aria-expanded", "false");
 
     item.addEventListener("mouseenter", () => openMenu(box));
 
@@ -591,8 +613,59 @@ document.addEventListener("DOMContentLoaded", () => {
 
     box.addEventListener("mouseleave", () => closeMenu(box));
 
+    const kidsGroup = item.querySelector(".shop-kids-group");
+    if (kidsGroup) {
+      const kidsTrigger = kidsGroup.querySelector(":scope > a");
+      const kidsSubmenu = kidsGroup.querySelector(".shop-submenu");
+
+      if (kidsTrigger && kidsSubmenu) {
+        kidsTrigger.setAttribute("aria-haspopup", "true");
+
+        const toggleKidsMenu = (forceOpen) => {
+          const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : !kidsGroup.classList.contains("is-open");
+          kidsGroup.classList.toggle("is-open", shouldOpen);
+          kidsTrigger.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+          if (!shouldOpen) {
+            kidsTrigger.blur();
+          }
+        };
+
+        kidsTrigger.addEventListener("click", (e) => {
+          const isTouch = window.matchMedia("(hover: none)").matches || window.innerWidth <= 900;
+          if (!isTouch) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          toggleKidsMenu();
+        });
+
+        kidsGroup.addEventListener("mouseleave", () => {
+          if (!window.matchMedia("(hover: none)").matches && window.innerWidth > 900) {
+            toggleKidsMenu(false);
+          }
+        });
+
+        kidsGroup.addEventListener("mouseenter", () => {
+          if (!window.matchMedia("(hover: none)").matches && window.innerWidth > 900) {
+            kidsTrigger.setAttribute("aria-expanded", "true");
+          }
+        });
+
+        kidsSubmenu.addEventListener("click", (e) => {
+          e.stopPropagation();
+        });
+      }
+    }
+
     trigger.addEventListener("click", (e) => {
       const href = String(trigger.getAttribute("href") || "").trim();
+      const touchShopMenu = isShopMenu && (window.matchMedia("(hover: none)").matches || window.innerWidth <= 900);
+      if (touchShopMenu && activeBox !== box) {
+        e.preventDefault();
+        openMenu(box);
+        return;
+      }
       if (href === "" || href === "#") {
         e.preventDefault();
         openMenu(box);
@@ -606,6 +679,27 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       window.location.href = href;
     });
+
+    if (isShopMenu) {
+      item.addEventListener("focusin", () => openMenu(box));
+      item.addEventListener("focusout", (event) => {
+        if (!item.contains(event.relatedTarget)) {
+          closeMenu(box);
+        }
+      });
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && activeBox) {
+      const trigger = activeBox.closest(".menu-item")?.querySelector(":scope > a");
+      activeBox.style.opacity = "0";
+      activeBox.style.visibility = "hidden";
+      activeBox.style.pointerEvents = "none";
+      trigger?.setAttribute("aria-expanded", "false");
+      activeBox = null;
+      trigger?.focus();
+    }
   });
 
   function safeReadArray(key) {

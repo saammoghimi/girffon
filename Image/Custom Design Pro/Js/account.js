@@ -722,6 +722,9 @@
             try {
                 await loginRemote(identifier, password);
                 loginForm.reset();
+                document.dispatchEvent(new CustomEvent("girffon:auth-updated", {
+                    detail: { authenticated: true, user: currentUser }
+                }));
             } catch (error) {
                 setAuthStatus(error && error.message ? error.message : "Unable to sign in.", true);
             } finally {

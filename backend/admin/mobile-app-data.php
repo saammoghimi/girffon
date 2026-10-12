@@ -2,6 +2,33 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/products-data.php';
 
+function girffonShopNavigationCategories(): array
+{
+    return [
+        ['key' => 'men', 'label' => 'MEN', 'destination' => 'men.html', 'available' => true],
+        ['key' => 'women', 'label' => 'WOMEN', 'destination' => 'woman.html', 'available' => true],
+        [
+            'key' => 'kids',
+            'label' => 'KIDS',
+            'destination' => 'kids.html',
+            'available' => true,
+            'children' => [
+                ['label' => '0-12 months', 'destination' => '', 'available' => false],
+                ['label' => '1-3 years', 'destination' => '', 'available' => false],
+                ['label' => '4-7 years', 'destination' => '', 'available' => false],
+                ['label' => '8-12 years', 'destination' => '', 'available' => false],
+                ['label' => '13-17 years', 'destination' => '', 'available' => false],
+            ],
+        ],
+        ['key' => 'phone-cases', 'label' => 'PHONE CASES', 'destination' => 'accessories.html#phone-cases', 'available' => true],
+        ['key' => 'jewelry', 'label' => 'JEWELRY', 'destination' => '', 'available' => false],
+        ['key' => 'board-games', 'label' => 'BOARD GAMES', 'destination' => '', 'available' => false],
+        ['key' => 'bags-cases', 'label' => 'BAGS & CASES', 'destination' => 'accessories.html#tote-bags', 'available' => true],
+        ['key' => 'accessories', 'label' => 'ACCESSORIES', 'destination' => 'accessories.html', 'available' => true],
+        ['key' => 'home-living', 'label' => 'HOME & LIVING', 'destination' => 'home-living.html', 'available' => true],
+    ];
+}
+
 function girffonMobileAppContentDefinitions(): array
 {
     $definitions = [
@@ -627,6 +654,9 @@ function girffonMobilePublishedConfiguration(PDO $pdo): array
     return [
         'version' => 1,
         'published_at' => $latestPublishedAt,
+        'navigation' => [
+            'shop' => girffonShopNavigationCategories(),
+        ],
         'home' => $home,
         'shop' => $shop,
         'groups' => $groups,

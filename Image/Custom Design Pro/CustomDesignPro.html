@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="css/help.css?v=20260507m1" />
   <link rel="stylesheet" href="css/welcome.css?v=20260505m2" />
   <link rel="stylesheet" href="css/cart.css" />
+  <link rel="stylesheet" href="css/girffon-ai.css?v=20260917r4" />
 <!-- Font Awesome -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -209,6 +210,135 @@
   <!-- =======================
        MODALS (Ù‡Ù…Ù‡ Ù…Ø®ÙÛŒ)
        ======================= -->
+
+  <!-- GIRFFON AI -->
+  <div id="cdpAiDialog" class="cdp-ai-dialog" data-visible="false" aria-hidden="true">
+    <button type="button" class="cdp-ai-backdrop" data-ai-close aria-label="Close GIRFFON AI"></button>
+    <section class="cdp-ai-panel" role="dialog" aria-modal="true" aria-labelledby="cdpAiTitle">
+      <header class="cdp-ai-header">
+        <div>
+          <span class="cdp-ai-kicker">GIRFFON CREATIVE STUDIO</span>
+          <h2 id="cdpAiTitle"><span aria-hidden="true">✨</span> GIRFFON AI</h2>
+        </div>
+        <div class="cdp-ai-header-actions">
+          <strong id="cdpAiCredits" class="cdp-ai-credits" aria-live="polite">✨ AI Credits: --</strong>
+          <button type="button" class="cdp-ai-close" data-ai-close aria-label="Close GIRFFON AI">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="cdp-ai-body">
+        <section id="cdpAiAuthStep" class="cdp-ai-step cdp-ai-auth-step" hidden aria-labelledby="cdpAiAuthTitle">
+          <div class="cdp-ai-auth-icon" aria-hidden="true"><i class="fa-solid fa-user-lock"></i></div>
+          <h3 id="cdpAiAuthTitle">GIRFFON AI requires an account</h3>
+          <p>Sign in or create an account to continue.</p>
+          <div class="cdp-ai-auth-actions">
+            <button type="button" id="cdpAiSignIn" class="cdp-ai-continue">Sign In</button>
+            <button type="button" id="cdpAiCreateAccount" class="cdp-ai-secondary">Create Account</button>
+          </div>
+        </section>
+
+        <section id="cdpAiSelectStep" class="cdp-ai-step" aria-labelledby="cdpAiSelectTitle">
+          <div class="cdp-ai-source-strip">
+            <img id="cdpAiSourceThumb" alt="Uploaded photo selected for GIRFFON AI">
+            <div>
+              <span>✨ AI will edit this image</span>
+              <strong id="cdpAiSourceName">Uploaded Photo</strong>
+            </div>
+            <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          </div>
+          <div id="cdpAiAvailability" class="cdp-ai-availability" role="status" aria-live="polite" hidden></div>
+          <h3 id="cdpAiSelectTitle" class="cdp-ai-step-title">Choose a transformation</h3>
+          <p class="cdp-ai-intro">Select one style, then continue to preview the result.</p>
+        <div class="cdp-ai-options" role="group" aria-label="AI design styles">
+          <button type="button" class="cdp-ai-option" data-ai-mode="embroidery">
+            <span class="cdp-ai-option-icon" aria-hidden="true">🪡</span>
+            <span class="cdp-ai-option-copy"><strong>Embroidery</strong><small>Thread-crafted texture</small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="cdp-ai-option" data-ai-mode="knitted">
+            <span class="cdp-ai-option-icon" aria-hidden="true">🧶</span>
+            <span class="cdp-ai-option-copy"><strong>Knitted</strong><small>Soft woven finish</small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="cdp-ai-option" data-ai-mode="toy-doll">
+            <span class="cdp-ai-option-icon" aria-hidden="true">🧸</span>
+            <span class="cdp-ai-option-copy"><strong>Toy / Doll</strong><small>Collectible character style</small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="cdp-ai-option" data-ai-mode="cartoon">
+            <span class="cdp-ai-option-icon" aria-hidden="true">🎨</span>
+            <span class="cdp-ai-option-copy"><strong>Cartoon</strong><small>Illustrated 2D look</small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="cdp-ai-option" data-ai-mode="3d-cartoon">
+            <span class="cdp-ai-option-icon" aria-hidden="true">🧊</span>
+            <span class="cdp-ai-option-copy"><strong>3D Cartoon</strong><small>Dimensional character render</small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="cdp-ai-option" data-ai-mode="photo-time" aria-controls="cdpAiPhotoTime">
+            <span class="cdp-ai-option-icon" aria-hidden="true">🕰️</span>
+            <span class="cdp-ai-option-copy"><strong>Photo Time</strong><small>Travel between photo eras</small></span>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div id="cdpAiPhotoTime" class="cdp-ai-photo-time" hidden>
+          <span class="cdp-ai-field-label">Choose a direction</span>
+          <div class="cdp-ai-direction-group">
+            <button type="button" class="cdp-ai-direction" data-ai-direction="old-to-modern" aria-pressed="false">
+              <span>Old</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i><strong>Modern / Color</strong>
+            </button>
+            <button type="button" class="cdp-ai-direction" data-ai-direction="modern-to-vintage" aria-pressed="false">
+              <span>Modern</span><i class="fa-solid fa-arrow-right" aria-hidden="true"></i><strong>Vintage B&amp;W</strong>
+            </button>
+          </div>
+        </div>
+        </section>
+
+        <section id="cdpAiProcessingStep" class="cdp-ai-step cdp-ai-processing" hidden aria-live="polite">
+          <span class="cdp-ai-spinner" aria-hidden="true"></span>
+          <h3>Preparing your preview</h3>
+          <p id="cdpAiProcessingLabel">Applying your selected style...</p>
+        </section>
+
+        <section id="cdpAiResultStep" class="cdp-ai-step" hidden aria-labelledby="cdpAiResultTitle">
+          <div class="cdp-ai-result-heading">
+            <div>
+              <span class="cdp-ai-result-status"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> PREVIEW READY</span>
+              <h3 id="cdpAiResultTitle">Your GIRFFON AI result</h3>
+            </div>
+            <span id="cdpAiResultMode" class="cdp-ai-result-mode"></span>
+          </div>
+          <div class="cdp-ai-compare">
+            <figure class="cdp-ai-preview-card">
+              <div class="cdp-ai-preview-frame"><img id="cdpAiBeforeImage" alt="Original uploaded photo"></div>
+              <figcaption>Original</figcaption>
+            </figure>
+            <i class="fa-solid fa-arrow-right cdp-ai-compare-arrow" aria-hidden="true"></i>
+            <figure class="cdp-ai-preview-card cdp-ai-preview-card--result">
+              <div id="cdpAiResultFrame" class="cdp-ai-preview-frame"><img id="cdpAiResultImage" alt="GIRFFON AI result preview"></div>
+              <figcaption id="cdpAiResultCaption">AI Preview</figcaption>
+            </figure>
+          </div>
+          <p class="cdp-ai-demo-note"><i class="fa-solid fa-flask" aria-hidden="true"></i> Simulated preview. Real AI processing will be connected later.</p>
+        </section>
+      </div>
+
+      <footer class="cdp-ai-footer">
+        <span id="cdpAiSelection" class="cdp-ai-selection" aria-live="polite">Select an AI style</span>
+        <div class="cdp-ai-footer-actions">
+          <button type="button" id="cdpAiPurchase" class="cdp-ai-purchase" hidden>Get AI Generations</button>
+          <button type="button" id="cdpAiTryAnother" class="cdp-ai-secondary" hidden>
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Try another
+          </button>
+          <button type="button" id="cdpAiContinue" class="cdp-ai-continue" disabled>Continue</button>
+          <button type="button" id="cdpAiUseResult" class="cdp-ai-continue" hidden>Use Result</button>
+        </div>
+      </footer>
+    </section>
+  </div>
 
   <!-- Timed Welcome Prompt -->
   <div id="cdpWelcomePrompt" class="cdp-welcome" data-visible="false" aria-hidden="true">
@@ -1171,7 +1301,7 @@
 <script src="Js/icon.js?v=20260517r2"></script>
 <script src="Js/flag.js?v=20260507m4"></script>
 <script src="Js/shape.js?v=20260507m4"></script>
-<script src="Js/upload.js?v=20260506m11"></script>
+<script src="Js/upload.js?v=20260917r2"></script>
 <script src="Js/adddesign.js?v=20260507m4"></script>
 <script src="Js/locale.js"></script>
 <script src="Js/settings-i18n.js"></script>
@@ -1179,12 +1309,12 @@
 <script src="Js/help.js"></script>
 <script src="Js/welcome.js?v=20260505m3"></script>
 <script src="Js/settings.js"></script>
-<script src="Js/account.js?v=20260517r1"></script>
+<script src="Js/account.js?v=20260917r2"></script>
 <script src="Js/sidebar-lock.js?v=20260505m4"></script>
 <script src="Js/cd-layers.js"></script>
+<script src="Js/girffon-ai.js?v=20261009r1"></script>
 <script src="../../JS/analytics.js?v=20260804r23"></script>
 <script src="Js/cart.js?v=20260807r23"></script>
 
 </body>
 </html>
-

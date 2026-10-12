@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GirffoN Admin Settings</title>
-  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260518r11">
+  <link rel="stylesheet" href="CSS/admin-girffon.css?v=20260917r12">
 </head>
 <body class="admin-page" data-admin-page="settings">
   <div class="admin-layout">
@@ -114,11 +114,61 @@
             <div id="adminSettingsStatus" class="admin-feedback" role="status" aria-live="polite"></div>
           </form>
         </article>
+
+        <article class="admin-panel" id="adminAiSettingsPanel">
+          <div class="admin-panel-head">
+            <div>
+              <h2>GIRFFON AI Settings</h2>
+              <p class="admin-panel-note">Control customer access, package values, and generation availability.</p>
+            </div>
+          </div>
+
+          <form id="adminAiSettingsForm" class="admin-grid-form" novalidate>
+            <div class="admin-field">
+              <label for="adminAiFeatureEnabled">AI Feature</label>
+              <select class="admin-input" id="adminAiFeatureEnabled" name="feature_enabled">
+                <option value="1">ON</option>
+                <option value="0">OFF</option>
+              </select>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminAiGenerationEnabled">AI Generation Availability</label>
+              <select class="admin-input" id="adminAiGenerationEnabled" name="generation_enabled">
+                <option value="1">ON</option>
+                <option value="0">OFF</option>
+              </select>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminAiPackagePrice">Package Price (€)</label>
+              <input class="admin-input" id="adminAiPackagePrice" name="package_price" type="number" min="0" max="999999.99" step="0.01" required>
+            </div>
+
+            <div class="admin-field">
+              <label for="adminAiPackageGenerations">Generations per Package</label>
+              <input class="admin-input" id="adminAiPackageGenerations" name="package_generations" type="number" min="1" max="100000" step="1" required>
+            </div>
+
+            <div class="admin-form-actions">
+              <button class="admin-button admin-button-accent" type="submit">Save AI Settings</button>
+            </div>
+            <div id="adminAiSettingsStatus" class="admin-feedback" role="status" aria-live="polite"></div>
+          </form>
+
+          <div class="admin-card-grid admin-ai-counters" aria-label="GIRFFON AI counters">
+            <article class="admin-stat-card"><span>Packages Sold</span><strong id="adminAiPackagesSold">0</strong></article>
+            <article class="admin-stat-card"><span>AI Revenue</span><strong id="adminAiRevenue">€0.00</strong></article>
+            <article class="admin-stat-card"><span>Credits Purchased</span><strong id="adminAiCreditsPurchased">0</strong></article>
+            <article class="admin-stat-card"><span>Credits Used</span><strong id="adminAiCreditsUsed">0</strong></article>
+          </div>
+        </article>
       </section>
     </main>
   </div>
 
   <script src="JS/admin-girffon.js?v=20260505r5"></script>
+  <script src="JS/admin-ai-settings.js?v=20260917r1"></script>
   <script>
     (function () {
       const workspaceKey = "girffon_admin_settings_workspace";

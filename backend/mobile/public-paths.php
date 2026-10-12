@@ -19,10 +19,16 @@ function girffonMobilePublicUrl(string $value): string
     }
 
     $path = ltrim(preg_replace('#^(?:\./)+#', '', $value), '/');
-    $path = str_replace([' ', '#'], ['%20', '%23'], $path);
+    $fragment = '';
+    $fragmentPosition = strpos($path, '#');
+    if ($fragmentPosition !== false) {
+        $fragment = substr($path, $fragmentPosition + 1);
+        $path = substr($path, 0, $fragmentPosition);
+    }
+    $path = str_replace(' ', '%20', $path);
     $basePath = girffonMobilePublicBasePath();
 
-    return ($basePath !== '' ? $basePath : '') . '/' . $path;
+    return ($basePath !== '' ? $basePath : '') . '/' . $path . ($fragment !== '' ? '#' . rawurlencode($fragment) : '');
 }
 
 function girffonMobileNormalizePublicConfiguration(array $configuration): array

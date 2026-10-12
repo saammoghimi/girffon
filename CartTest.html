@@ -7,7 +7,7 @@
   <title>GirffoN - Custom T-Shirt Design & Online Store</title>
   <meta name="description" content="Design your own custom t-shirt with GirffoN. Create unique styles, upload designs, and order online with high-quality printing." />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <link rel="stylesheet" href="CSS/style.css" />
+  <link rel="stylesheet" href="CSS/style.css?v=20261012-shop-nav-4" />
   <link rel="stylesheet" href="CSS/cart-block.css" />
   <link rel="stylesheet" href="CSS/Hero.css" />
   <link rel="stylesheet" href="CSS/Catalog5botton.css" />
@@ -47,7 +47,7 @@
 
 <div class="top-actions">
 
-  <!-- کره زمین + دلار -->
+  <!-- Ú©Ø±Ù‡ Ø²Ù…ÛŒÙ† + Ø¯Ù„Ø§Ø± -->
   <a href="#" id="gfLocaleTrigger" class="icon-link" title="Language / Currency" aria-label="Open language and currency panel">
     <i class="fa-solid fa-globe"></i>
     <i class="fa-solid fa-dollar-sign"></i>
@@ -82,14 +82,27 @@
   <a href="index.html">HOME</a>
   <a href="about.html">ABOUT</a>
 
-  <div class="menu-item">
+  <div class="menu-item shop-menu-item">
     <a href="shop.html">SHOP</a>
-    <div class="menu-box">
-      <a href="men.html">MAN</a>
-      <a href="woman.html">WOMAN</a>
-      <a href="kids.html">KIDS & BABIES</a>
-      <a href="accessories.html">ACCESSORIES</a>
-      <a href="home-living.html">HOME & LIVING</a>
+    <div class="menu-box shop-menu-box">
+      <a href="men.html" data-shop-category="men">MEN</a>
+      <a href="woman.html" data-shop-category="women">WOMEN</a>
+      <div class="shop-kids-group">
+        <a href="kids.html" data-shop-category="kids" aria-expanded="false">KIDS</a>
+        <div class="shop-submenu" aria-label="KIDS age groups">
+          <span class="shop-menu-disabled" aria-disabled="true">0-12 Months <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">1-3 Years <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">4-7 Years <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">8-12 Years <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">13-17 Years <small>Coming soon</small></span>
+        </div>
+      </div>
+      <a href="accessories.html#phone-cases" data-shop-category="phone-cases">PHONE CASES</a>
+      <span class="shop-menu-disabled" data-shop-category="jewelry" aria-disabled="true">JEWELRY <small>Coming soon</small></span>
+      <span class="shop-menu-disabled" data-shop-category="board-games" aria-disabled="true">BOARD GAMES <small>Coming soon</small></span>
+      <a href="accessories.html#tote-bags" data-shop-category="bags-cases">BAGS &amp; CASES</a>
+      <a href="accessories.html" data-shop-category="accessories">ACCESSORIES</a>
+      <a href="home-living.html" data-shop-category="home-living">HOME &amp; LIVING</a>
     </div>
   </div>
 
@@ -315,7 +328,7 @@
         cvc: 'CVC',
         payNow: 'Pay Now',
         paymentSuccess: 'Payment successful! (Demo)',
-        emptyCode: '—',
+        emptyCode: 'â€”',
         products: {
           menFrance: 'Men T-Shirt France',
           womenFrance: 'Women T-Shirt France'
@@ -328,7 +341,7 @@
       'it-IT': {
         pageTitle: 'GirffoN - Test Carrello',
         title: 'Test Carrello',
-        headers: ['Prodotto', 'Codice', 'Nome', 'Taglia', 'Colore', 'Qtà', 'Prezzo', 'Rimuovi'],
+        headers: ['Prodotto', 'Codice', 'Nome', 'Taglia', 'Colore', 'QtÃ ', 'Prezzo', 'Rimuovi'],
         total: 'Totale:',
         continueShopping: 'Continua lo Shopping',
         checkout: 'Checkout',
@@ -340,66 +353,66 @@
         cvc: 'CVC',
         payNow: 'Paga Ora',
         paymentSuccess: 'Pagamento completato! (Demo)',
-        emptyCode: '—',
+        emptyCode: 'â€”',
         products: { menFrance: 'T-Shirt Francia Uomo', womenFrance: 'T-Shirt Francia Donna' },
         colors: { White: 'Bianco', Black: 'Nero', Red: 'Rosso', Blue: 'Blu', Green: 'Verde', Yellow: 'Giallo', Orange: 'Arancione', Purple: 'Viola', Gray: 'Grigio', Navy: 'Blu Navy', Pink: 'Rosa', Brown: 'Marrone' }
       },
       'de-DE': {
         pageTitle: 'GirffoN - Warenkorb Test',
         title: 'Warenkorb Test',
-        headers: ['Produkt', 'Code', 'Name', 'Grösse', 'Farbe', 'Menge', 'Preis', 'Entfernen'],
+        headers: ['Produkt', 'Code', 'Name', 'GrÃ¶sse', 'Farbe', 'Menge', 'Preis', 'Entfernen'],
         total: 'Summe:',
         continueShopping: 'Weiter Einkaufen',
         checkout: 'Zur Kasse',
         securePayment: 'Sichere Zahlung',
         cardholder: 'Karteninhaber',
-        fullName: 'Vollständiger Name',
+        fullName: 'VollstÃ¤ndiger Name',
         cardNumber: 'Kartennummer',
         expiry: 'Ablauf',
         cvc: 'CVC',
         payNow: 'Jetzt Bezahlen',
         paymentSuccess: 'Zahlung erfolgreich! (Demo)',
-        emptyCode: '—',
+        emptyCode: 'â€”',
         products: { menFrance: 'Frankreich T-Shirt Herren', womenFrance: 'Frankreich T-Shirt Damen' },
-        colors: { White: 'Weiss', Black: 'Schwarz', Red: 'Rot', Blue: 'Blau', Green: 'Grün', Yellow: 'Gelb', Orange: 'Orange', Purple: 'Lila', Gray: 'Grau', Navy: 'Navy', Pink: 'Pink', Brown: 'Braun' }
+        colors: { White: 'Weiss', Black: 'Schwarz', Red: 'Rot', Blue: 'Blau', Green: 'GrÃ¼n', Yellow: 'Gelb', Orange: 'Orange', Purple: 'Lila', Gray: 'Grau', Navy: 'Navy', Pink: 'Pink', Brown: 'Braun' }
       },
       'fr-FR': {
         pageTitle: 'GirffoN - Test Panier',
         title: 'Test Panier',
-        headers: ['Produit', 'Code', 'Nom', 'Taille', 'Couleur', 'Qté', 'Prix', 'Retirer'],
+        headers: ['Produit', 'Code', 'Nom', 'Taille', 'Couleur', 'QtÃ©', 'Prix', 'Retirer'],
         total: 'Total :',
         continueShopping: 'Continuer vos Achats',
         checkout: 'Paiement',
-        securePayment: 'Paiement Sécurisé',
+        securePayment: 'Paiement SÃ©curisÃ©',
         cardholder: 'Nom du Titulaire',
         fullName: 'Nom Complet',
-        cardNumber: 'Numéro de Carte',
+        cardNumber: 'NumÃ©ro de Carte',
         expiry: 'Expiration',
         cvc: 'CVC',
         payNow: 'Payer Maintenant',
-        paymentSuccess: 'Paiement réussi ! (Demo)',
-        emptyCode: '—',
+        paymentSuccess: 'Paiement rÃ©ussi ! (Demo)',
+        emptyCode: 'â€”',
         products: { menFrance: 'T-Shirt France Homme', womenFrance: 'T-Shirt France Femme' },
         colors: { White: 'Blanc', Black: 'Noir', Red: 'Rouge', Blue: 'Bleu', Green: 'Vert', Yellow: 'Jaune', Orange: 'Orange', Purple: 'Violet', Gray: 'Gris', Navy: 'Bleu Marine', Pink: 'Rose', Brown: 'Marron' }
       },
       'es-ES': {
         pageTitle: 'GirffoN - Prueba Carrito',
         title: 'Prueba Carrito',
-        headers: ['Producto', 'Código', 'Nombre', 'Talla', 'Color', 'Cant.', 'Precio', 'Quitar'],
+        headers: ['Producto', 'CÃ³digo', 'Nombre', 'Talla', 'Color', 'Cant.', 'Precio', 'Quitar'],
         total: 'Total:',
         continueShopping: 'Seguir Comprando',
         checkout: 'Pagar',
         securePayment: 'Pago Seguro',
         cardholder: 'Titular de la Tarjeta',
         fullName: 'Nombre Completo',
-        cardNumber: 'Número de Tarjeta',
+        cardNumber: 'NÃºmero de Tarjeta',
         expiry: 'Caducidad',
         cvc: 'CVC',
         payNow: 'Pagar Ahora',
-        paymentSuccess: 'Pago realizado con éxito! (Demo)',
-        emptyCode: '—',
+        paymentSuccess: 'Pago realizado con Ã©xito! (Demo)',
+        emptyCode: 'â€”',
         products: { menFrance: 'Camiseta Francia Hombre', womenFrance: 'Camiseta Francia Mujer' },
-        colors: { White: 'Blanco', Black: 'Negro', Red: 'Rojo', Blue: 'Azul', Green: 'Verde', Yellow: 'Amarillo', Orange: 'Naranja', Purple: 'Morado', Gray: 'Gris', Navy: 'Azul Marino', Pink: 'Rosa', Brown: 'Marrón' }
+        colors: { White: 'Blanco', Black: 'Negro', Red: 'Rojo', Blue: 'Azul', Green: 'Verde', Yellow: 'Amarillo', Orange: 'Naranja', Purple: 'Morado', Gray: 'Gris', Navy: 'Azul Marino', Pink: 'Rosa', Brown: 'MarrÃ³n' }
       },
       'nl-NL': {
         pageTitle: 'GirffoN - Winkelwagen Test',
@@ -416,47 +429,47 @@
         cvc: 'CVC',
         payNow: 'Nu Betalen',
         paymentSuccess: 'Betaling geslaagd! (Demo)',
-        emptyCode: '—',
+        emptyCode: 'â€”',
         products: { menFrance: 'Frankrijk T-Shirt Heren', womenFrance: 'Frankrijk T-Shirt Dames' },
         colors: { White: 'Wit', Black: 'Zwart', Red: 'Rood', Blue: 'Blauw', Green: 'Groen', Yellow: 'Geel', Orange: 'Oranje', Purple: 'Paars', Gray: 'Grijs', Navy: 'Marineblauw', Pink: 'Roze', Brown: 'Bruin' }
       },
       'pl-PL': {
         pageTitle: 'GirffoN - Test Koszyka',
         title: 'Test Koszyka',
-        headers: ['Produkt', 'Kod', 'Nazwa', 'Rozmiar', 'Kolor', 'Ilość', 'Cena', 'Usuń'],
+        headers: ['Produkt', 'Kod', 'Nazwa', 'Rozmiar', 'Kolor', 'IloÅ›Ä‡', 'Cena', 'UsuÅ„'],
         total: 'Suma:',
         continueShopping: 'Kontynuuj Zakupy',
         checkout: 'Checkout',
-        securePayment: 'Bezpieczna Płatność',
-        cardholder: 'Imię i Nazwisko Właściciela',
-        fullName: 'Imię i Nazwisko',
+        securePayment: 'Bezpieczna PÅ‚atnoÅ›Ä‡',
+        cardholder: 'ImiÄ™ i Nazwisko WÅ‚aÅ›ciciela',
+        fullName: 'ImiÄ™ i Nazwisko',
         cardNumber: 'Numer Karty',
-        expiry: 'Data Ważności',
+        expiry: 'Data WaÅ¼noÅ›ci',
         cvc: 'CVC',
-        payNow: 'Zapłać Teraz',
-        paymentSuccess: 'Płatność zakończona sukcesem! (Demo)',
-        emptyCode: '—',
-        products: { menFrance: 'Męski T-Shirt Francja', womenFrance: 'Damski T-Shirt Francja' },
-        colors: { White: 'Biały', Black: 'Czarny', Red: 'Czerwony', Blue: 'Niebieski', Green: 'Zielony', Yellow: 'Żółty', Orange: 'Pomarańczowy', Purple: 'Fioletowy', Gray: 'Szary', Navy: 'Granatowy', Pink: 'Różowy', Brown: 'Brązowy' }
+        payNow: 'ZapÅ‚aÄ‡ Teraz',
+        paymentSuccess: 'PÅ‚atnoÅ›Ä‡ zakoÅ„czona sukcesem! (Demo)',
+        emptyCode: 'â€”',
+        products: { menFrance: 'MÄ™ski T-Shirt Francja', womenFrance: 'Damski T-Shirt Francja' },
+        colors: { White: 'BiaÅ‚y', Black: 'Czarny', Red: 'Czerwony', Blue: 'Niebieski', Green: 'Zielony', Yellow: 'Å»Ã³Å‚ty', Orange: 'PomaraÅ„czowy', Purple: 'Fioletowy', Gray: 'Szary', Navy: 'Granatowy', Pink: 'RÃ³Å¼owy', Brown: 'BrÄ…zowy' }
       },
       'sv-SE': {
         pageTitle: 'GirffoN - Kundvagn Test',
         title: 'Kundvagn Test',
-        headers: ['Produkt', 'Kod', 'Namn', 'Storlek', 'Färg', 'Antal', 'Pris', 'Ta Bort'],
+        headers: ['Produkt', 'Kod', 'Namn', 'Storlek', 'FÃ¤rg', 'Antal', 'Pris', 'Ta Bort'],
         total: 'Totalt:',
-        continueShopping: 'Fortsätt Handla',
+        continueShopping: 'FortsÃ¤tt Handla',
         checkout: 'Checkout',
-        securePayment: 'Säker Betalning',
+        securePayment: 'SÃ¤ker Betalning',
         cardholder: 'Kortinnehavarens Namn',
-        fullName: 'Fullständigt Namn',
+        fullName: 'FullstÃ¤ndigt Namn',
         cardNumber: 'Kortnummer',
-        expiry: 'Utgång',
+        expiry: 'UtgÃ¥ng',
         cvc: 'CVC',
         payNow: 'Betala Nu',
         paymentSuccess: 'Betalningen lyckades! (Demo)',
-        emptyCode: '—',
+        emptyCode: 'â€”',
         products: { menFrance: 'Frankrike T-Shirt Herr', womenFrance: 'Frankrike T-Shirt Dam' },
-        colors: { White: 'Vit', Black: 'Svart', Red: 'Röd', Blue: 'Blå', Green: 'Grön', Yellow: 'Gul', Orange: 'Orange', Purple: 'Lila', Gray: 'Grå', Navy: 'Marinblå', Pink: 'Rosa', Brown: 'Brun' }
+        colors: { White: 'Vit', Black: 'Svart', Red: 'RÃ¶d', Blue: 'BlÃ¥', Green: 'GrÃ¶n', Yellow: 'Gul', Orange: 'Orange', Purple: 'Lila', Gray: 'GrÃ¥', Navy: 'MarinblÃ¥', Pink: 'Rosa', Brown: 'Brun' }
       }
     };
 
@@ -775,7 +788,7 @@
       const recipientName = String(item.recipient_name || '').trim();
       const baseName = item.name || item.title || 'GirffoN Product';
       const displayName = isGiftCard
-        ? 'GIRFFON Gift Card' + (recipientName ? ' • ' + recipientName : '')
+        ? 'GIRFFON Gift Card' + (recipientName ? ' â€¢ ' + recipientName : '')
         : baseName;
 
       return {
@@ -1356,28 +1369,109 @@
 
   </div>
 
-  <!-- نوار زرد -->
-  <div class="footer-bottom">
+  <!-- Ù†ÙˆØ§Ø± Ø²Ø±Ø¯ -->
+<div class="footer-bottom">
 
-    <!-- آیکن‌ها -->
+  <div class="footer-connect-row">
+    <!-- Ø¢ÛŒÚ©Ù†â€ŒÙ‡Ø§ -->
     <div class="footer-social">
-      <a href="https://www.instagram.com/Girffonstudio" target="_blank" rel="noopener noreferrer" aria-label="Open Instagram profile" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-      <a href="https://www.tiktok.com/@Girffon" target="_blank" rel="noopener noreferrer" aria-label="Open TikTok profile" title="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-      <a href="https://www.facebook.com/girffon.shop" target="_blank" rel="noopener noreferrer" aria-label="Open Facebook page" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-      <a href="https://x.com/GirffoN2025" target="_blank" rel="noopener noreferrer" aria-label="Open X profile" title="X"><i class="fa-brands fa-twitter"></i></a>
-      <a href="https://www.youtube.com/@GirffoNStudio" target="_blank" rel="noopener noreferrer" aria-label="Open YouTube" title="YouTube"><i class="fa-brands fa-youtube"></i></a>
-      <a href="https://t.me/GirffoNStudio" target="_blank" rel="noopener noreferrer" aria-label="Open Telegram" title="Telegram"><i class="fa-brands fa-telegram"></i></a>
-      <a href="https://wa.me/393444268927" target="_blank" rel="noopener noreferrer" aria-label="Open WhatsApp chat" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+
+    <a href="https://www.instagram.com/Girffonstudio"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open Instagram profile"
+       title="Instagram">
+      <i class="fa-brands fa-instagram"></i>
+    </a>
+
+    <a href="https://www.tiktok.com/@Girffon"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open TikTok profile"
+       title="TikTok">
+      <i class="fa-brands fa-tiktok"></i>
+    </a>
+
+    <a href="https://www.facebook.com/girffon.shop"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open Facebook page"
+       title="Facebook">
+      <i class="fa-brands fa-facebook-f"></i>
+    </a>
+
+    <a href="https://x.com/GirffoN2025"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open X profile"
+       title="X">
+      <i class="fa-brands fa-x-twitter"></i>
+    </a>
+
+    <a href="https://www.youtube.com/@GirffoNStudio"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open YouTube"
+       title="YouTube">
+      <i class="fa-brands fa-youtube"></i>
+    </a>
+
+    <a href="https://t.me/GirffoNStudio"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open Telegram"
+       title="Telegram">
+      <i class="fa-brands fa-telegram"></i>
+    </a>
+
+    <a href="https://wa.me/393444268927"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Open WhatsApp chat"
+       title="WhatsApp">
+      <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
     </div>
 
-    <!-- متن جدا -->
-    <p>
-      © 2025 Design By 
-      <a href="../admin-moghimi/AdminMoghimi_System/auth/login.php" target="_blank">Admin Moghimi</a>. 
-      Designed in Italy - All Right Reserved
-    </p>
+    <div class="footer-app-download" aria-label="Download GIRFFON App">
+      <h3>Download <strong>GIRFFON</strong> App</h3>
+
+
+<div class="footer-app-buttons">
+  <a href="#"
+     class="footer-app-button footer-app-button-android"
+     aria-label="Get GIRFFON on Google Play">
+    <i class="fa-brands fa-google-play" aria-hidden="true"></i>
+    <span>
+      <small>GET IT ON</small>
+      Google Play
+    </span>
+  </a>
+        <a href="#" class="footer-app-button" aria-label="Download GIRFFON for iOS">
+          <i class="fa-brands fa-apple" aria-hidden="true"></i>
+          <span><small>Download for</small>iOS</span>
+        </a>
+      </div>
+    </div>
 
   </div>
+
+
+<!-- Footer Copyright -->
+<p>
+  &copy; 2025 Design By
+  <a
+    href="../admin-moghimi/AdminMoghimi_System/auth/login.php"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Admin Moghimi
+  </a>.
+  Designed in Italy - All Rights Reserved.
+</p>
+
+</div>
 </footer>
 
 <div id="gfReturnOverlay" class="gf-return-overlay" hidden></div>
@@ -1531,7 +1625,7 @@
   </form>
 </section>
 
-  <script src="JS/script.js?v=20260819-app-modal-1"></script>
+  <script src="JS/script.js?v=20261012-shop-nav-4"></script>
   <script src="JS/contact-panel.js"></script>
   <script src="JS/Hero.js"></script>
   <script src="JS/Catalog5botton.js"></script>
@@ -1543,7 +1637,7 @@
   <script src="JS/Gifthh.js"></script>
   <script src="JS/aufile.js"></script>
   <script src="JS/settings-panel.js"></script>
-  <script src="JS/locale-panel.js"></script>
+  <script src="JS/locale-panel.js?v=20261012-shop-nav-4"></script>
   <script src="JS/account-panel.js?v=forgot-password-1"></script>
   <script src="JS/site-search.js"></script>
   <!-- Modal logic for Add Product -->
@@ -1922,7 +2016,7 @@
         saveCart();
         renderCart();
         resetCheckoutModal();
-        alert(payload.order.order_number + ' • Order placed successfully.');
+        alert(payload.order.order_number + ' â€¢ Order placed successfully.');
         window.location.href = payload.redirectUrl || '/GirffoN/CartTest.html?checkout=success';
       } catch (error) {
         alert(error instanceof Error ? error.message : 'Unable to place your order.');

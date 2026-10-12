@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
       ]
     },
     {
-      key: 'kids-babies',
-      title: 'KIDS & BABIES',
+      key: 'kids',
+      title: 'KIDS',
       href: 'kids.html',
       tag: 'GirffoN Kidswear',
       products: [

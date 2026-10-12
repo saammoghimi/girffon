@@ -973,6 +973,7 @@
         }
 
         createEditPanel();
+        editPanel.setAttribute('data-visible', 'true');
         updateEditPreview();
         setupCanvas();
     }
@@ -1009,6 +1010,9 @@
                         </button>
                         <button type="button" class="cdp-tool-btn" id="cdpCropBtn" title="Crop">
                             <i class="fa-solid fa-crop"></i> Crop
+                        </button>
+                        <button type="button" class="cdp-tool-btn cdp-ai-edit-btn" id="cdpGirffonAiBtn" title="Open GIRFFON AI">
+                            <span aria-hidden="true">✨</span> GIRFFON AI
                         </button>
                     </div>
                     
@@ -1517,6 +1521,7 @@
         const widthValue = document.getElementById('cdpImageWidthValue');
         const eraseBtn = document.getElementById('cdpEraseBtn');
         const cropBtn = document.getElementById('cdpCropBtn');
+        const girffonAiBtn = document.getElementById('cdpGirffonAiBtn');
         const eraserControls = document.getElementById('cdpEraserControls');
         const eraserSizeSlider = document.getElementById('cdpEraserSizeSlider');
         const eraserSizeValue = document.getElementById('cdpEraserSizeValue');
@@ -1617,6 +1622,23 @@
         closeBtn.addEventListener('click', cancelEdit);
         cancelBtn.addEventListener('click', cancelEdit);
         applyBtn.addEventListener('click', applyImageEdits);
+        girffonAiBtn.addEventListener('click', function() {
+            if (!currentEditingImage) return;
+            document.dispatchEvent(new CustomEvent('girffon-ai:open', {
+                detail: { element: currentEditingImage }
+            }));
+        });
+
+        document.addEventListener('girffon-ai:applied', function(event) {
+            if (!currentEditingImage || event.detail?.element !== currentEditingImage) return;
+            const activeImage = currentEditingImage.querySelector('img');
+            if (!activeImage) return;
+            originalImageBackup = activeImage.src;
+            currentEditingImage.dataset.originalBackup = activeImage.src;
+            resetCanvasHistory();
+            updateEditPreview();
+            setupCanvas();
+        });
 
         // Width slider
         widthSlider.addEventListener('input', function() {

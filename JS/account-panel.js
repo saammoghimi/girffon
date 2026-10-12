@@ -1050,6 +1050,13 @@
       updateAccountView();
       setPanelVisibility(false);
       showRegisterSuccessPopup(email);
+      if (window.opener && !window.opener.closed) {
+        window.opener.postMessage({ type: "girffon:auth-complete" }, window.location.origin);
+        window.opener.focus();
+        window.setTimeout(function () {
+          window.close();
+        }, 500);
+      }
       return result;
     } catch (error) {
       setAuthStatus(error && error.message ? error.message : "Unable to create your account.", true);
@@ -1209,7 +1216,16 @@
 
   resetGuestState();
   updateAccountView();
-  syncSession().catch(function () {
+  syncSession().then(function () {
+    const requestedMode = new URLSearchParams(window.location.search).get("account");
+    if (requestedMode === "register" && !isAuthenticated) {
+      resetGuestState();
+      setRegisterMode(true);
+      setAuthStatus("Complete the fields below to create your account.", false);
+      setPanelVisibility(true);
+      registerNameInput && registerNameInput.focus();
+    }
+  }).catch(function () {
     return null;
   });
 

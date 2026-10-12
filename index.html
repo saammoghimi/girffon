@@ -7,7 +7,7 @@
   <title>GirffoN - Custom T-Shirt Design & Online Store</title>
   <meta name="description" content="Design your own custom t-shirt with GirffoN. Create unique styles, upload designs, and order online with high-quality printing." />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <link rel="stylesheet" href="CSS/style.css" />
+  <link rel="stylesheet" href="CSS/style.css?v=20261012-shop-nav-4" />
   <link rel="stylesheet" href="CSS/Hero.css" />
   <link rel="stylesheet" href="CSS/Catalog5botton.css" />
   <link rel="stylesheet" href="CSS/Rel.css"/>
@@ -57,6 +57,106 @@
     .bank-form input:focus { border: 1.5px solid #ff4c60; outline: none; background: #fff; }
     .bank-form button.checkout-btn { background: linear-gradient(90deg,#ff4c60 60%,#ff7b7b 100%); color: #fff; font-weight: 700; border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(255,76,96,0.08); transition: background 0.2s, box-shadow 0.2s; }
     .bank-form button.checkout-btn:hover { background: linear-gradient(90deg,#ff7b7b 0%,#ff4c60 100%); box-shadow: 0 4px 16px rgba(255,76,96,0.16); }
+
+
+.home-category-showcase {
+  width: 100%;
+  padding: 40px 0 20px;
+  background: #efefef;
+}
+
+
+/* ========================================
+   GIRFFON - HOME CATEGORY SHOWCASE
+   Six Vertical Category Cards
+======================================== */
+
+/* Main Category Grid */
+.home-category-showcase .category-grid {
+  width: min(1768px, calc(100% - 40px));
+  max-width: none;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* First Card Position */
+.home-category-showcase .category-grid > .category-card:first-child {
+  grid-column: 1;
+}
+
+/* Vertical Cards - Width and Height */
+.home-category-showcase .category-grid > .category-card {
+  width: calc(100% - 0.5cm);
+  min-height: calc(702px + 3cm);
+  justify-self: center;
+  box-sizing: border-box;
+}
+
+/* Last Card Position */
+.home-category-showcase .category-grid > .category-card:last-child {
+  grid-column: auto;
+}
+
+/* Coming Soon Button */
+.home-category-showcase .card-btn[data-coming-soon] {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+  color: #fff;
+  cursor: default;
+}
+
+/* Banner Heading */
+.home-category-banner-text h3 {
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+/* Banner Description */
+.home-category-banner-text p {
+  color: #ddd;
+  font-size: 14px;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+  .home-category-showcase .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-category-showcase .category-card {
+    min-height: 520px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .home-category-showcase .category-grid {
+    width: calc(100% - 24px);
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .home-category-showcase .category-card {
+    min-height: 420px;
+  }
+}
+    @media (max-width: 992px) {
+      .home-category-showcase .category-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .home-category-showcase .category-grid > .category-card:first-child {
+        grid-column: auto;
+      }
+    }
+    @media (max-width: 640px) {
+      .home-category-showcase .category-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
   <script>
     function openBankModal() { document.getElementById('bankModal').style.display = 'flex'; }
@@ -84,7 +184,7 @@
 
 <div class="top-actions">
 
-  <!-- کره زمین + دلار -->
+  <!-- Ú©Ø±Ù‡ Ø²Ù…ÛŒÙ† + Ø¯Ù„Ø§Ø± -->
   <a href="#" id="gfLocaleTrigger" class="icon-link" title="Language / Currency" aria-label="Open language and currency panel">
     <i class="fa-solid fa-globe"></i>
     <i class="fa-solid fa-dollar-sign"></i>
@@ -119,14 +219,27 @@
   <a href="index.html">HOME</a>
   <a href="about.html">ABOUT</a>
 
-  <div class="menu-item">
+  <div class="menu-item shop-menu-item">
     <a href="shop.html">SHOP</a>
-    <div class="menu-box">
-      <a href="men.html">MAN</a>
-      <a href="woman.html">WOMAN</a>
-      <a href="kids.html">KIDS & BABIES</a>
-      <a href="accessories.html">ACCESSORIES</a>
-      <a href="home-living.html">HOME & LIVING</a>
+    <div class="menu-box shop-menu-box">
+      <a href="men.html" data-shop-category="men">MEN</a>
+      <a href="woman.html" data-shop-category="women">WOMEN</a>
+      <div class="shop-kids-group">
+        <a href="kids.html" data-shop-category="kids" aria-expanded="false">KIDS</a>
+        <div class="shop-submenu" aria-label="KIDS age groups">
+          <span class="shop-menu-disabled" aria-disabled="true">0-12 Months <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">1-3 Years <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">4-7 Years <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">8-12 Years <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" aria-disabled="true">13-17 Years <small>Coming soon</small></span>
+        </div>
+      </div>
+      <a href="accessories.html#phone-cases" data-shop-category="phone-cases">PHONE CASES</a>
+      <span class="shop-menu-disabled" data-shop-category="jewelry" aria-disabled="true">JEWELRY <small>Coming soon</small></span>
+      <span class="shop-menu-disabled" data-shop-category="board-games" aria-disabled="true">BOARD GAMES <small>Coming soon</small></span>
+      <a href="accessories.html#tote-bags" data-shop-category="bags-cases">BAGS &amp; CASES</a>
+      <a href="accessories.html" data-shop-category="accessories">ACCESSORIES</a>
+      <a href="home-living.html" data-shop-category="home-living">HOME &amp; LIVING</a>
     </div>
   </div>
 
@@ -202,6 +315,34 @@
         <a href="#" class="slide-btn">Discover More</a>
       </div>
     </div>
+        <div class="slide active">
+      <video autoplay muted loop playsinline>
+        <source src="Image/Banner/Mp4/banner1.mp4" type="video/mp4">
+      </video>
+    </div>
+
+    <div class="slide">
+      <video autoplay muted loop playsinline>
+        <source src="Image/Banner/Mp4/banner2.mp4" type="video/mp4">
+      </video>
+
+      <div class="slide-content">
+        <h2>Tarot Collection</h2>
+        <p>Discover mystical tarot-inspired designs for your unique style.</p>
+        <a href="#" class="slide-btn">Shop Tarot</a>
+      </div>
+    </div>
+    <div class="slide">
+      <video autoplay muted loop playsinline>
+        <source src="Image/Banner/Mp4/banner4.mp4" type="video/mp4">
+      </video>
+
+      <div class="slide-content">
+        <h2>Boys & Girls</h2>
+        <p>Creative and fun designs for kids, boys and girls alike.</p>
+        <a href="#" class="slide-btn">Explore Kids</a>
+      </div>
+    </div>
   </div>
 
   <div class="slider-dots">
@@ -210,27 +351,15 @@
     <span class="dot" data-slide="2"></span>
     <span class="dot" data-slide="3"></span>
     <span class="dot" data-slide="4"></span>
+    <span class="dot" data-slide="5"></span>
+    <span class="dot" data-slide="6"></span>
+    <span class="dot" data-slide="7"></span>
   </div>
 </section>
-<section class="category-showcase">
+<section class="home-category-showcase" aria-label="Shop categories">
   <div class="category-grid">
-    <article class="category-card large">
-      <img src="Image/5botton/Animal.png" alt="Animal Design" class="card-img">
-      <video class="card-video" muted loop playsinline preload="auto">
-        <source src="Image/5botton/Animal.mp4" type="video/mp4">
-      </video>
-
-      <div class="card-overlay"></div>
-
-      <div class="card-content">
-        <h3>Animal Designs</h3>
-        <p>Creative animal artwork for unique styles.</p>
-        <a href="#" class="card-btn">Shop Now</a>
-      </div>
-    </article>
-
-    <article class="category-card">
-      <img src="Image/5botton/Man.png" alt="Men T-Shirts" class="card-img">
+    <article class="category-card" data-home-category="men" data-home-href="men.html">
+      <img src="Image/5botton/Man.png" alt="Men" class="card-img">
       <video class="card-video" muted loop playsinline preload="auto">
         <source src="Image/5botton/men.mp4" type="video/mp4">
       </video>
@@ -238,14 +367,13 @@
       <div class="card-overlay"></div>
 
       <div class="card-content">
-        <h3>Men T-Shirts</h3>
-        <p>Explore stylish t-shirts for men.</p>
-        <a href="#" class="card-btn">Shop Now</a>
+        <h3>MEN</h3>
+        <a href="men.html" class="card-btn">Shop Now</a>
       </div>
     </article>
 
-    <article class="category-card">
-      <img src="Image/5botton/woman.png" alt="Women T-Shirts" class="card-img">
+    <article class="category-card" data-home-category="women" data-home-href="woman.html">
+      <img src="Image/5botton/woman.png" alt="Women" class="card-img">
       <video class="card-video" muted loop playsinline preload="auto">
         <source src="Image/5botton/Women.mp4" type="video/mp4">
       </video>
@@ -253,14 +381,13 @@
       <div class="card-overlay"></div>
 
       <div class="card-content">
-        <h3>Women T-Shirts</h3>
-        <p>Discover trendy designs for women.</p>
-        <a href="#" class="card-btn">Shop Now</a>
+        <h3>WOMEN</h3>
+        <a href="woman.html" class="card-btn">Shop Now</a>
       </div>
     </article>
 
-    <article class="category-card">
-      <img src="Image/5botton/Kids.png" alt="Kids T-Shirts" class="card-img">
+    <article class="category-card" data-home-category="kids" data-home-href="kids.html">
+      <img src="Image/5botton/Kids.png" alt="Kids" class="card-img">
       <video class="card-video" muted loop playsinline preload="auto">
         <source src="Image/5botton/Kids.mp4" type="video/mp4">
       </video>
@@ -268,14 +395,45 @@
       <div class="card-overlay"></div>
 
       <div class="card-content">
-        <h3>Kids T-Shirts</h3>
-        <p>Cute and fun tees for kids.</p>
-        <a href="#" class="card-btn">Shop Now</a>
+        <h3>KIDS</h3>
+        <a href="kids.html" class="card-btn">Shop Now</a>
       </div>
     </article>
+  </div>
 
-    <article class="category-card">
-      <img src="Image/5botton/Animation.png" alt="Animation" class="card-img">
+  <section class="wide-banner" data-home-category="phone-cases" data-home-href="accessories.html#phone-cases">
+    <video class="banner-video" autoplay muted loop playsinline>
+      <source src="Image/5botton/Animation.mp4" type="video/mp4">
+    </video>
+
+    <div class="banner-overlay"></div>
+
+    <div class="banner-content">
+      <div class="home-category-banner-text">
+        <h3>PHONE CASES</h3>
+      </div>
+      <a href="accessories.html#phone-cases" class="banner-btn">Shop Now</a>
+    </div>
+  </section>
+
+  <section class="wide-banner" data-home-category="jewelry">
+    <video class="banner-video" autoplay muted loop playsinline>
+      <source src="Image/5botton/Animal.mp4" type="video/mp4">
+    </video>
+
+    <div class="banner-overlay"></div>
+
+    <div class="banner-content">
+      <div class="home-category-banner-text">
+        <h3>JEWELRY</h3>
+      </div>
+      <span class="banner-btn" data-coming-soon>Coming soon</span>
+    </div>
+  </section>
+
+  <div class="category-grid">
+    <article class="category-card" data-home-category="board-games">
+      <img src="Image/5botton/Animation.png" alt="Board Games" class="card-img">
       <video class="card-video" muted loop playsinline preload="auto">
         <source src="Image/5botton/Animation.mp4" type="video/mp4">
       </video>
@@ -283,36 +441,59 @@
       <div class="card-overlay"></div>
 
       <div class="card-content">
-        <h3>Animation</h3>
-        <p>Create dynamic animations for your designs.</p>
-        <a href="#" class="card-btn">Shop Now</a>
+        <h3>BOARD GAMES</h3>
+        <span class="card-btn" data-coming-soon>Coming soon</span>
+      </div>
+    </article>
+
+    <article class="category-card" data-home-category="bags-cases" data-home-href="accessories.html#tote-bags">
+      <img src="Image/5botton/Animal.png" alt="Bags &amp; Cases" class="card-img">
+      <video class="card-video" muted loop playsinline preload="auto">
+        <source src="Image/5botton/Animal.mp4" type="video/mp4">
+      </video>
+
+      <div class="card-overlay"></div>
+
+      <div class="card-content">
+        <h3>BAGS &amp; CASES</h3>
+        <a href="accessories.html#tote-bags" class="card-btn">Shop Now</a>
+      </div>
+    </article>
+
+    <article class="category-card" data-home-category="home-living" data-home-href="home-living.html">
+      <img src="Image/5botton/Animal.png" alt="Home &amp; Living" class="card-img">
+      <video class="card-video" muted loop playsinline preload="auto">
+        <source src="Image/BannerWide/home-living.mp4" type="video/mp4">
+      </video>
+
+      <div class="card-overlay"></div>
+
+      <div class="card-content">
+        <h3>HOME &amp; LIVING</h3>
+        <a href="home-living.html" class="card-btn">Shop Now</a>
       </div>
     </article>
   </div>
-</section>
 
-<section class="wide-banner">
+  <section class="wide-banner" data-home-category="accessories" data-home-href="accessories.html">
+    <video class="banner-video" autoplay muted loop playsinline>
+      <source src="Image/BannerWide/banner.mp4" type="video/mp4">
+    </video>
 
-  <video class="banner-video" autoplay muted loop playsinline>
-    <source src="Image/BannerWide/banner.mp4" type="video/mp4">
-  </video>
+    <div class="banner-overlay"></div>
 
-  <div class="banner-overlay"></div>
-
-  <div class="banner-content">
-    <div class="banner-text">
-      <h3>Accessories</h3>
-      <p>"Complete your custom style with GirffoN accessories — bags, hats, scarves, bottles, pins, and more designed to match your unique look."</p>
+    <div class="banner-content">
+      <div class="home-category-banner-text">
+        <h3>ACCESSORIES</h3>
+      </div>
+      <a href="accessories.html" class="banner-btn">Shop Now</a>
     </div>
-
-    <a href="#" class="banner-btn">Shop Now</a>
-  </div>
-
+  </section>
 </section>
 
 
 <section class="gx25-section">
-    <h2 class="gx25-title-main">All Collections</h2>
+    <h2 class="gx25-title-main">NEW ARRIVALS</h2>
   <div class="gx25-wrap">
 
     <button class="gx25-outer-nav gx25-outer-prev" id="gx25OuterPrev" aria-label="Previous products">
@@ -371,7 +552,7 @@
 
 
 <section class="gx25-category-section" data-category="men">
-  <h2 class="gx25-title-main">Men</h2>
+  <h2 class="gx25-title-main">ANIMATION</h2>
   <div class="gx25-wrap">
     <button class="gx25-outer-nav gx25-outer-prev" aria-label="Previous products">
       <span>&#10094;</span>
@@ -388,7 +569,7 @@
 </section>
 
 <section class="gx25-category-section" data-category="women">
-  <h2 class="gx25-title-main">Women</h2>
+  <h2 class="gx25-title-main">ANIMAL DESIGN</h2>
   <div class="gx25-wrap">
     <button class="gx25-outer-nav gx25-outer-prev" aria-label="Previous products">
       <span>&#10094;</span>
@@ -405,7 +586,7 @@
 </section>
 
 <section class="gx25-category-section" data-category="kids">
-  <h2 class="gx25-title-main">Kids</h2>
+  <h2 class="gx25-title-main">BEST SELLERS</h2>
   <div class="gx25-wrap">
     <button class="gx25-outer-nav gx25-outer-prev" aria-label="Previous products">
       <span>&#10094;</span>
@@ -432,7 +613,7 @@
   <div class="banner-content">
     <div class="banner-text">
       <h3>Home & Living</h3>
-      <p>Transform your space with unique designs — cushions, mugs, wall art, and decor made to match your personal style.</p>
+      <p>Transform your space with unique designs â€” cushions, mugs, wall art, and decor made to match your personal style.</p>
     </div>
 
     <a href="#" class="banner-btn">Shop Now</a>
@@ -451,30 +632,30 @@
 
     <div class="home-gift-card-grid">
       <a class="home-gift-card-card" id="gfHomeGiftCard25Card" href="gift-card.php?amount=25" aria-label="Buy GIRFFON 25 euro gift card">
-        <div class="home-gift-card-image"><img id="gfHomeGiftCard25Image" src="Image/Gift/gift-25.png" alt="GIRFFON €25 Gift Card"></div>
+        <div class="home-gift-card-image"><img id="gfHomeGiftCard25Image" src="Image/Gift/gift-25.png" alt="GIRFFON â‚¬25 Gift Card"></div>
         <div class="home-gift-card-copy">
-          <h3 id="gfHomeGiftCard25Title">€25 Gift Card</h3>
+          <h3 id="gfHomeGiftCard25Title">â‚¬25 Gift Card</h3>
           <p id="gfHomeGiftCard25Text">Ideal for a refined entry gift.</p>
         </div>
-        <span class="home-gift-card-button" id="gfHomeGiftCard25Button">Buy €25 Gift Card</span>
+        <span class="home-gift-card-button" id="gfHomeGiftCard25Button">Buy â‚¬25 Gift Card</span>
       </a>
 
       <a class="home-gift-card-card" id="gfHomeGiftCard50Card" href="gift-card.php?amount=50" aria-label="Buy GIRFFON 50 euro gift card">
-        <div class="home-gift-card-image"><img id="gfHomeGiftCard50Image" src="Image/Gift/gift-50.png" alt="GIRFFON €50 Gift Card"></div>
+        <div class="home-gift-card-image"><img id="gfHomeGiftCard50Image" src="Image/Gift/gift-50.png" alt="GIRFFON â‚¬50 Gift Card"></div>
         <div class="home-gift-card-copy">
-          <h3 id="gfHomeGiftCard50Title">€50 Gift Card</h3>
+          <h3 id="gfHomeGiftCard50Title">â‚¬50 Gift Card</h3>
           <p id="gfHomeGiftCard50Text">A balanced option for premium gifting.</p>
         </div>
-        <span class="home-gift-card-button" id="gfHomeGiftCard50Button">Buy €50 Gift Card</span>
+        <span class="home-gift-card-button" id="gfHomeGiftCard50Button">Buy â‚¬50 Gift Card</span>
       </a>
 
       <a class="home-gift-card-card" id="gfHomeGiftCard100Card" href="gift-card.php?amount=100" aria-label="Buy GIRFFON 100 euro gift card">
-        <div class="home-gift-card-image"><img id="gfHomeGiftCard100Image" src="Image/Gift/gift-100.png" alt="GIRFFON €100 Gift Card"></div>
+        <div class="home-gift-card-image"><img id="gfHomeGiftCard100Image" src="Image/Gift/gift-100.png" alt="GIRFFON â‚¬100 Gift Card"></div>
         <div class="home-gift-card-copy">
-          <h3 id="gfHomeGiftCard100Title">€100 Gift Card</h3>
+          <h3 id="gfHomeGiftCard100Title">â‚¬100 Gift Card</h3>
           <p id="gfHomeGiftCard100Text">A luxury statement for milestone occasions.</p>
         </div>
-        <span class="home-gift-card-button" id="gfHomeGiftCard100Button">Buy €100 Gift Card</span>
+        <span class="home-gift-card-button" id="gfHomeGiftCard100Button">Buy â‚¬100 Gift Card</span>
       </a>
     </div>
   </div>
@@ -500,11 +681,11 @@
           <p><strong>Free Shipping</strong></p>
           <p>Enjoy free delivery on qualifying orders across Italy and selected EU destinations.</p>
           <ul>
-            <li>🇮🇹 Italy: Free shipping on orders over <strong>€50</strong></li>
-            <li>🇪🇺 Europe: Free shipping on orders over <strong>€90</strong></li>
-            <li>📦 Fully tracked delivery</li>
-            <li>🚚 Fast dispatch with <strong>GLS / BRT / DHL</strong></li>
-            <li>⏱️ Estimated delivery: <strong>1-3 business days in Italy</strong></li>
+            <li>ðŸ‡®ðŸ‡¹ Italy: Free shipping on orders over <strong>â‚¬50</strong></li>
+            <li>ðŸ‡ªðŸ‡º Europe: Free shipping on orders over <strong>â‚¬90</strong></li>
+            <li>ðŸ“¦ Fully tracked delivery</li>
+            <li>ðŸšš Fast dispatch with <strong>GLS / BRT / DHL</strong></li>
+            <li>â±ï¸ Estimated delivery: <strong>1-3 business days in Italy</strong></li>
           </ul>
           <p>We process orders quickly so your items arrive fast and safely.</p>
         </div>
@@ -526,11 +707,11 @@
           <p><strong>Limited Editions</strong></p>
           <p>Exclusive drops made for customers who want something unique.</p>
           <ul>
-            <li>⭐ Special designs in limited quantities</li>
-            <li>🎨 Premium collections and seasonal releases</li>
-            <li>⏳ Once sold out, they may not return</li>
-            <li>👕 Unique styles not found in regular stock</li>
-            <li>🚀 Early access launches and new arrivals</li>
+            <li>â­ Special designs in limited quantities</li>
+            <li>ðŸŽ¨ Premium collections and seasonal releases</li>
+            <li>â³ Once sold out, they may not return</li>
+            <li>ðŸ‘• Unique styles not found in regular stock</li>
+            <li>ðŸš€ Early access launches and new arrivals</li>
           </ul>
           <p>Designed to stand out. Made for those who move first.</p>
         </div>
@@ -551,11 +732,11 @@
           <p><strong>Secure Checkout</strong></p>
           <p>Your payment and personal data are protected with trusted security standards.</p>
           <ul>
-            <li>🔒 SSL encrypted checkout</li>
-            <li>💳 Secure payments by trusted providers</li>
-            <li>🛡️ Safe customer data handling</li>
-            <li>📧 Instant order confirmation by email</li>
-            <li>✅ Reliable and transparent checkout process</li>
+            <li>ðŸ”’ SSL encrypted checkout</li>
+            <li>ðŸ’³ Secure payments by trusted providers</li>
+            <li>ðŸ›¡ï¸ Safe customer data handling</li>
+            <li>ðŸ“§ Instant order confirmation by email</li>
+            <li>âœ… Reliable and transparent checkout process</li>
           </ul>
           <p>Shop safely with confidence from order to delivery.</p>
         </div>
@@ -576,11 +757,11 @@
           <p><strong>Easy Returns</strong></p>
           <p>Shop with confidence. If something is not right, returning your order is simple.</p>
           <ul>
-            <li>🔄 Return window: <strong>14 days</strong></li>
-            <li>📦 Items must be unused and in original condition</li>
-            <li>📝 Quick return request by email or contact form</li>
-            <li>🚚 Return shipping available via <strong>GLS / BRT / DHL</strong></li>
-            <li>💳 Refund processed after inspection</li>
+            <li>ðŸ”„ Return window: <strong>14 days</strong></li>
+            <li>ðŸ“¦ Items must be unused and in original condition</li>
+            <li>ðŸ“ Quick return request by email or contact form</li>
+            <li>ðŸšš Return shipping available via <strong>GLS / BRT / DHL</strong></li>
+            <li>ðŸ’³ Refund processed after inspection</li>
           </ul>
           <p>Our support team makes the return process smooth and hassle-free.</p>
         </div>
@@ -595,121 +776,121 @@
 <section class="review-strip">
   <div class="review-grid drag-scroll">
 
-    <!-- کارت‌ها همان قبلی -->
+    <!-- Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù…Ø§Ù† Ù‚Ø¨Ù„ÛŒ -->
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Easy Best</h3>
       <p>Easy designs, concise timely communication, fair pricing, rapid delivery, as designed. Definitely recommend!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Design T-Shirt</h3>
       <p>Fast and high quality service, great communication. Will order again for sure!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Great Mug</h3>
       <p>Great mug. Very well done. Got sent out quickly. Super service!</p>
     </article>
-    <!-- کارت‌ها همان قبلی -->
+    <!-- Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù…Ø§Ù† Ù‚Ø¨Ù„ÛŒ -->
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Easy Best</h3>
       <p>Easy designs, concise timely communication, fair pricing, rapid delivery, as designed. Definitely recommend!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Design T-Shirt</h3>
       <p>Fast and high quality service, great communication. Will order again for sure!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Great Mug</h3>
       <p>Great mug. Very well done. Got sent out quickly. Super service!</p>
     </article>
 
-    <!-- کارت‌ها همان قبلی -->
+    <!-- Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù…Ø§Ù† Ù‚Ø¨Ù„ÛŒ -->
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Easy Best</h3>
       <p>Easy designs, concise timely communication, fair pricing, rapid delivery, as designed. Definitely recommend!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Design T-Shirt</h3>
       <p>Fast and high quality service, great communication. Will order again for sure!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Great Mug</h3>
       <p>Great mug. Very well done. Got sent out quickly. Super service!</p>
     </article>
 
-    <!-- کارت‌ها همان قبلی -->
+    <!-- Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù…Ø§Ù† Ù‚Ø¨Ù„ÛŒ -->
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Easy Best</h3>
       <p>Easy designs, concise timely communication, fair pricing, rapid delivery, as designed. Definitely recommend!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Design T-Shirt</h3>
       <p>Fast and high quality service, great communication. Will order again for sure!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Great Mug</h3>
       <p>Great mug. Very well done. Got sent out quickly. Super service!</p>
     </article>
 
-    <!-- کارت‌ها همان قبلی -->
+    <!-- Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù…Ø§Ù† Ù‚Ø¨Ù„ÛŒ -->
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Easy Best</h3>
       <p>Easy designs, concise timely communication, fair pricing, rapid delivery, as designed. Definitely recommend!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Design T-Shirt</h3>
       <p>Fast and high quality service, great communication. Will order again for sure!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Great Mug</h3>
       <p>Great mug. Very well done. Got sent out quickly. Super service!</p>
     </article>
 
-    <!-- کارت‌ها همان قبلی -->
+    <!-- Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ Ù‡Ù…Ø§Ù† Ù‚Ø¨Ù„ÛŒ -->
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Easy Best</h3>
       <p>Easy designs, concise timely communication, fair pricing, rapid delivery, as designed. Definitely recommend!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Design T-Shirt</h3>
       <p>Fast and high quality service, great communication. Will order again for sure!</p>
     </article>
 
     <article class="review-card">
-      <div class="review-stars">★★★★★</div>
+      <div class="review-stars">â˜…â˜…â˜…â˜…â˜…</div>
       <h3>Great Mug</h3>
       <p>Great mug. Very well done. Got sent out quickly. Super service!</p>
     </article>
 
 
-    <!-- ادامه کارت‌ها -->
+    <!-- Ø§Ø¯Ø§Ù…Ù‡ Ú©Ø§Ø±Øªâ€ŒÙ‡Ø§ -->
     
   </div>
 </section>  
@@ -1051,11 +1232,11 @@
 
   </div>
 
-  <!-- نوار زرد -->
+  <!-- Ù†ÙˆØ§Ø± Ø²Ø±Ø¯ -->
 <div class="footer-bottom">
 
   <div class="footer-connect-row">
-    <!-- آیکن‌ها -->
+    <!-- Ø¢ÛŒÚ©Ù†â€ŒÙ‡Ø§ -->
     <div class="footer-social">
 
     <a href="https://www.instagram.com/Girffonstudio"
@@ -1119,12 +1300,17 @@
     <div class="footer-app-download" aria-label="Download GIRFFON App">
       <h3>Download <strong>GIRFFON</strong> App</h3>
 
-      <div class="footer-app-buttons">
-        <a href="#" class="footer-app-button footer-app-button-android" aria-label="Download GIRFFON for Android">
-          <i class="fa-brands fa-android" aria-hidden="true"></i>
-          <span><small>Download for</small>Android</span>
-        </a>
 
+<div class="footer-app-buttons">
+  <a href="#"
+     class="footer-app-button footer-app-button-android"
+     aria-label="Get GIRFFON on Google Play">
+    <i class="fa-brands fa-google-play" aria-hidden="true"></i>
+    <span>
+      <small>GET IT ON</small>
+      Google Play
+    </span>
+  </a>
         <a href="#" class="footer-app-button" aria-label="Download GIRFFON for iOS">
           <i class="fa-brands fa-apple" aria-hidden="true"></i>
           <span><small>Download for</small>iOS</span>
@@ -1134,15 +1320,19 @@
 
   </div>
 
-  <!-- متن جدا -->
-  <p>
-    © 2025 Design By
-    <a href="../admin-moghimi/AdminMoghimi_System/auth/login.php"
-       target="_blank">
-      Admin Moghimi
-    </a>.
-    Designed in Italy - All Right Reserved
-  </p>
+
+<!-- Footer Copyright -->
+<p>
+  &copy; 2025 Design By
+  <a
+    href="../admin-moghimi/AdminMoghimi_System/auth/login.php"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    Admin Moghimi
+  </a>.
+  Designed in Italy - All Rights Reserved.
+</p>
 
 </div>
 </footer>
@@ -1299,7 +1489,7 @@
 
   <script src="JS/analytics.js?v=20260804r20"></script>
   <script src="JS/cart.js?v=20260804r23"></script>
-  <script src="JS/script.js?v=20260819-app-modal-1"></script>
+  <script src="JS/script.js?v=20261012-shop-nav-4"></script>
   <script src="JS/contact-panel.js"></script>
   <script src="JS/Hero.js"></script>
   <script src="JS/Catalog5botton.js"></script>
@@ -1311,8 +1501,72 @@
   <script src="JS/Gifthh.js"></script>
   <script src="JS/aufile.js"></script>
   <script src="JS/settings-panel.js"></script>
-  <script src="JS/locale-panel.js?v=20260807r6"></script>
-  <script src="JS/account-panel.js?v=forgot-password-1"></script>
+  <script src="JS/locale-panel.js?v=20261012-shop-nav-4"></script>
+  <script>
+    (() => {
+      const shopMenu = document.querySelector(".shop-menu-box");
+      const categorySection = document.querySelector(".home-category-showcase");
+      if (!shopMenu || !categorySection) return;
+
+      const cards = categorySection.querySelectorAll("[data-home-category]");
+      const carouselTitles = [
+        [document.querySelector(".gx25-section .gx25-title-main"), "NEW ARRIVALS"],
+        [document.querySelector('.gx25-category-section[data-category="men"] .gx25-title-main'), "ANIMATION"],
+        [document.querySelector('.gx25-category-section[data-category="women"] .gx25-title-main'), "ANIMAL DESIGN"],
+        [document.querySelector('.gx25-category-section[data-category="kids"] .gx25-title-main'), "BEST SELLERS"]
+      ];
+
+      const syncCarouselTitles = () => {
+        carouselTitles.forEach(([title, text]) => {
+          if (title && title.textContent !== text) title.textContent = text;
+        });
+      };
+
+      const syncCategoryLabels = () => {
+        cards.forEach((card) => {
+          const source = shopMenu.querySelector(`[data-shop-category="${card.dataset.homeCategory}"]`);
+          const title = card.querySelector(".card-content h3, .home-category-banner-text h3");
+          if (!source || !title) return;
+
+          const labelNode = Array.from(source.childNodes).find(
+            (node) => node.nodeType === Node.TEXT_NODE && node.nodeValue.trim()
+          );
+          title.textContent = labelNode ? labelNode.nodeValue.trim() : source.textContent.trim();
+
+          const image = card.querySelector(".card-img");
+          if (image) image.alt = title.textContent;
+
+          const badge = card.querySelector("[data-coming-soon]");
+          const sourceBadge = source.querySelector("small");
+          if (badge && sourceBadge) badge.textContent = sourceBadge.textContent.trim();
+        });
+
+      };
+
+      cards.forEach((card) => {
+        const href = card.dataset.homeHref;
+        if (!href) return;
+        card.addEventListener("click", (event) => {
+          if (event.target.closest("a")) return;
+          window.location.href = href;
+        });
+      });
+
+      syncCarouselTitles();
+      const carouselTitleObserver = new MutationObserver(syncCarouselTitles);
+      carouselTitles.forEach(([title]) => {
+        if (title) carouselTitleObserver.observe(title, { childList: true, characterData: true, subtree: true });
+      });
+
+      syncCategoryLabels();
+      new MutationObserver(syncCategoryLabels).observe(shopMenu, {
+        childList: true,
+        characterData: true,
+        subtree: true
+      });
+    })();
+  </script>
+  <script src="JS/account-panel.js?v=20260917-auth-return-2"></script>
   <script src="JS/site-search.js?v=20260812-live-search-1"></script>
   <script src="JS/index-managed-sections.js?v=20260816r1"></script>
 

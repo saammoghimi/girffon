@@ -73,11 +73,21 @@
     returnPolicy: "Return Policy",
     faqs: "FAQs",
     contactUs: "Contact Us",
-    shopMen: "MAN",
-    shopWomen: "WOMAN",
-    shopKidsBabies: "KIDS & BABIES",
+    shopMen: "MEN",
+    shopWomen: "WOMEN",
+    shopKidsBabies: "KIDS",
+    shopPhoneCases: "PHONE CASES",
+    shopJewelry: "JEWELRY",
+    shopBoardGames: "BOARD GAMES",
+    shopBagsCases: "BAGS & CASES",
     shopAccessories: "ACCESSORIES",
     shopHomeLiving: "HOME & LIVING",
+    shopComingSoon: "Coming soon",
+    shopKidsAge0to12Months: "0-12 Months",
+    shopKidsAge1to3Years: "1-3 Years",
+    shopKidsAge4to7Years: "4-7 Years",
+    shopKidsAge8to12Years: "8-12 Years",
+    shopKidsAge13to17Years: "13-17 Years",
     customMen: "MEN",
     customWomen: "WOMEN",
     customKids: "KIDS",
@@ -795,9 +805,19 @@
       aboutPara2Html: "Esplora oltre <strong>10.000+ combinazioni creative</strong> con stili prodotto, colori, layout ed elementi visivi. Scegli tra <strong>migliaia di stili di font</strong>, usa lo strumento <strong>Add Design</strong> per loghi e artwork, e crea prodotti personalizzati unici con un'esperienza di design pulita e potente.",
       shopMen: "UOMO",
       shopWomen: "DONNA",
-      shopKidsBabies: "BAMBINI & NEONATI",
+      shopKidsBabies: "BAMBINI",
+      shopPhoneCases: "COVER TELEFONO",
+      shopJewelry: "GIOIELLI",
+      shopBoardGames: "GIOCHI DA TAVOLO",
+      shopBagsCases: "BORSE & CUSTODIE",
       shopAccessories: "ACCESSORI",
       shopHomeLiving: "CASA & LIVING",
+      shopComingSoon: "Prossimamente",
+      shopKidsAge0to12Months: "0-12 Mesi",
+      shopKidsAge1to3Years: "1-3 Anni",
+      shopKidsAge4to7Years: "4-7 Anni",
+      shopKidsAge8to12Years: "8-12 Anni",
+      shopKidsAge13to17Years: "13-17 Anni",
       customNeonati: "NEONATI",
       heroTarotTitle: "Collezione Tarot",
       heroTarotBtn: "Acquista Tarot",
@@ -846,9 +866,19 @@
       aboutPara2Html: "Entdecken Sie mehr als <strong>10.000+ kreative Kombinationen</strong> mit Produktstilen, Farben, Layouts und visuellen Elementen. Wahlen Sie aus <strong>Tausenden von Schriftarten</strong>, nutzen Sie das <strong>Add Design</strong>-Tool fur Logos und Artwork und erstellen Sie einzigartige personalisierte Produkte mit einem klaren und leistungsstarken Design-Erlebnis.",
       shopMen: "HERREN",
       shopWomen: "DAMEN",
-      shopKidsBabies: "KINDER & BABYS",
+      shopKidsBabies: "KINDER",
+      shopPhoneCases: "HANDYHULLEN",
+      shopJewelry: "SCHMUCK",
+      shopBoardGames: "BRETTSPIELE",
+      shopBagsCases: "TASCHEN & HULLEN",
       shopAccessories: "ACCESSOIRES",
       shopHomeLiving: "HOME & LIVING",
+      shopComingSoon: "Demnachst",
+      shopKidsAge0to12Months: "0-12 Monate",
+      shopKidsAge1to3Years: "1-3 Jahre",
+      shopKidsAge4to7Years: "4-7 Jahre",
+      shopKidsAge8to12Years: "8-12 Jahre",
+      shopKidsAge13to17Years: "13-17 Jahre",
       customNeonati: "BABYS",
       heroTarotTitle: "Tarot Kollektion",
       heroTarotBtn: "Tarot Kaufen",
@@ -895,9 +925,19 @@
       aboutPara2Html: "Explorez plus de <strong>10 000+ combinaisons creatives</strong> avec styles de produit, couleurs, mises en page et elements visuels. Choisissez parmi <strong>des milliers de styles de police</strong>, utilisez l'outil <strong>Add Design</strong> pour les logos et artworks, et creez des produits personnalises uniques avec une experience de design claire et puissante.",
       shopMen: "HOMME",
       shopWomen: "FEMME",
-      shopKidsBabies: "ENFANTS & BEBES",
+      shopKidsBabies: "ENFANTS",
+      shopPhoneCases: "COQUES TELEPHONE",
+      shopJewelry: "BIJOUX",
+      shopBoardGames: "JEUX DE SOCIETE",
+      shopBagsCases: "SACS & ETUIS",
       shopAccessories: "ACCESSOIRES",
       shopHomeLiving: "MAISON & LIVING",
+      shopComingSoon: "Bientot disponible",
+      shopKidsAge0to12Months: "0-12 Mois",
+      shopKidsAge1to3Years: "1-3 Ans",
+      shopKidsAge4to7Years: "4-7 Ans",
+      shopKidsAge8to12Years: "8-12 Ans",
+      shopKidsAge13to17Years: "13-17 Ans",
       customNeonati: "NOUVEAU-NES",
       heroTarotTitle: "Collection Tarot",
       heroTarotBtn: "Acheter Tarot",
@@ -944,9 +984,19 @@
       aboutPara2Html: "Explora mas de <strong>10.000+ combinaciones creativas</strong> con estilos de producto, colores, composiciones y elementos visuales. Elige entre <strong>miles de estilos de fuente</strong>, usa la herramienta <strong>Add Design</strong> para logos y artwork, y crea productos personalizados unicos con una experiencia de diseno limpia y potente.",
       shopMen: "HOMBRE",
       shopWomen: "MUJER",
-      shopKidsBabies: "NINOS & BEBES",
+      shopKidsBabies: "NINOS",
+      shopPhoneCases: "FUNDAS MOVIL",
+      shopJewelry: "JOYERIA",
+      shopBoardGames: "JUEGOS DE MESA",
+      shopBagsCases: "BOLSOS & FUNDAS",
       shopAccessories: "ACCESORIOS",
       shopHomeLiving: "HOGAR & LIVING",
+      shopComingSoon: "Proximamente",
+      shopKidsAge0to12Months: "0-12 Meses",
+      shopKidsAge1to3Years: "1-3 Anos",
+      shopKidsAge4to7Years: "4-7 Anos",
+      shopKidsAge8to12Years: "8-12 Anos",
+      shopKidsAge13to17Years: "13-17 Anos",
       customNeonati: "BEBES",
       heroTarotTitle: "Coleccion Tarot",
       heroTarotBtn: "Comprar Tarot",
@@ -993,9 +1043,19 @@
       aboutPara2Html: "Ontdek meer dan <strong>10.000+ creatieve combinaties</strong> met productstijlen, kleuren, lay-outs en visuele elementen. Kies uit <strong>duizenden lettertypes</strong>, gebruik de <strong>Add Design</strong>-tool voor logo's en artwork, en bouw unieke gepersonaliseerde producten met een strakke en krachtige designervaring.",
       shopMen: "HEREN",
       shopWomen: "DAMES",
-      shopKidsBabies: "KIDS & BABYS",
+      shopKidsBabies: "KIDS",
+      shopPhoneCases: "TELEFOONHOESJES",
+      shopJewelry: "SIERADEN",
+      shopBoardGames: "BORDSPELLEN",
+      shopBagsCases: "TASSEN & HOESJES",
       shopAccessories: "ACCESSOIRES",
       shopHomeLiving: "HOME & LIVING",
+      shopComingSoon: "Binnenkort",
+      shopKidsAge0to12Months: "0-12 Maanden",
+      shopKidsAge1to3Years: "1-3 Jaar",
+      shopKidsAge4to7Years: "4-7 Jaar",
+      shopKidsAge8to12Years: "8-12 Jaar",
+      shopKidsAge13to17Years: "13-17 Jaar",
       customNeonati: "BABYS",
       settingsDisplay: "WEERGAVE",
       settingsTheme: "Thema",
@@ -1032,9 +1092,19 @@
       aboutPara2Html: "Odkryj ponad <strong>10 000+ kreatywnych kombinacji</strong> stylow produktow, kolorow, ukladow i elementow wizualnych. Wybieraj sposrod <strong>tysiecy stylow czcionek</strong>, korzystaj z narzedzia <strong>Add Design</strong> dla logo i artworku oraz tworz unikalne produkty personalizowane w czystym i wydajnym srodowisku projektowym.",
       shopMen: "MEZCZYZNI",
       shopWomen: "KOBIETY",
-      shopKidsBabies: "DZIECI & NIEMOWLETA",
+      shopKidsBabies: "DZIECI",
+      shopPhoneCases: "ETUI NA TELEFON",
+      shopJewelry: "BIZUTERIA",
+      shopBoardGames: "GRY PLANSZOWE",
+      shopBagsCases: "TORBY & ETUI",
       shopAccessories: "AKCESORIA",
       shopHomeLiving: "DOM & LIVING",
+      shopComingSoon: "Wkrotce",
+      shopKidsAge0to12Months: "0-12 Miesiecy",
+      shopKidsAge1to3Years: "1-3 Lata",
+      shopKidsAge4to7Years: "4-7 Lat",
+      shopKidsAge8to12Years: "8-12 Lat",
+      shopKidsAge13to17Years: "13-17 Lat",
       customNeonati: "NIEMOWLETA",
       settingsDisplay: "WYSWIETLANIE",
       settingsTheme: "Motyw",
@@ -1071,9 +1141,19 @@
       aboutPara2Html: "Utforska mer an <strong>10 000+ kreativa kombinationer</strong> med produktstilar, farger, layouter och visuella element. Valj bland <strong>tusentals teckensnitt</strong>, anvand verktyget <strong>Add Design</strong> for logotyper och artwork, och skapa unika personliga produkter med en ren och kraftfull designupplevelse.",
       shopMen: "MAN",
       shopWomen: "KVINNOR",
-      shopKidsBabies: "BARN & BABY",
+      shopKidsBabies: "BARN",
+      shopPhoneCases: "MOBILSKAL",
+      shopJewelry: "SMYCKEN",
+      shopBoardGames: "BRADSPEL",
+      shopBagsCases: "VASKOR & FODRAL",
       shopAccessories: "ACCESSOARER",
       shopHomeLiving: "HEM & LIVING",
+      shopComingSoon: "Kommer snart",
+      shopKidsAge0to12Months: "0-12 Manader",
+      shopKidsAge1to3Years: "1-3 Ar",
+      shopKidsAge4to7Years: "4-7 Ar",
+      shopKidsAge8to12Years: "8-12 Ar",
+      shopKidsAge13to17Years: "13-17 Ar",
       customNeonati: "BABY",
       settingsDisplay: "VISNING",
       settingsTheme: "Tema",
@@ -1110,9 +1190,19 @@
       aboutPara2Html: "Entdecken Sie uber <strong>10.000+ kreative Kombinationen</strong> mit Produktstilen, Farben, Layouts und visuellen Elementen. Wahlen Sie aus <strong>Tausenden von Schriftarten</strong>, nutzen Sie das <strong>Add Design</strong>-Tool fur Logos und Artwork und erstellen Sie einzigartige personalisierte Produkte mit einem klaren und leistungsstarken Design-Erlebnis.",
       shopMen: "HERREN",
       shopWomen: "DAMEN",
-      shopKidsBabies: "KINDER & BABYS",
+      shopKidsBabies: "KINDER",
+      shopPhoneCases: "HANDYHULLEN",
+      shopJewelry: "SCHMUCK",
+      shopBoardGames: "BRETTSPIELE",
+      shopBagsCases: "TASCHEN & HULLEN",
       shopAccessories: "ACCESSOIRES",
       shopHomeLiving: "HOME & LIVING",
+      shopComingSoon: "Demnachst",
+      shopKidsAge0to12Months: "0-12 Monate",
+      shopKidsAge1to3Years: "1-3 Jahre",
+      shopKidsAge4to7Years: "4-7 Jahre",
+      shopKidsAge8to12Years: "8-12 Jahre",
+      shopKidsAge13to17Years: "13-17 Jahre",
       customNeonati: "BABYS",
       settingsDisplay: "ANZEIGE",
       settingsTheme: "Design",
@@ -2591,6 +2681,24 @@
     }
   }
 
+  function setShopEntryText(node, label, comingSoonLabel) {
+    if (!node || typeof label !== "string") return;
+    const tag = node.querySelector("small");
+    if (!tag) {
+      node.textContent = label;
+      return;
+    }
+    const leadingText = node.firstChild;
+    if (leadingText && leadingText.nodeType === 3) {
+      leadingText.nodeValue = label + " ";
+    } else {
+      node.insertBefore(document.createTextNode(label + " "), tag);
+    }
+    if (typeof comingSoonLabel === "string") {
+      tag.textContent = comingSoonLabel;
+    }
+  }
+
   function getServiceBlocks(localeCode) {
     return SERVICE_BLOCK_I18N[localeCode] || SERVICE_BLOCK_I18N["en-GB"];
   }
@@ -2726,12 +2834,27 @@
 
     const menuBoxes = document.querySelectorAll(".menu-item .menu-box");
     if (menuBoxes[0]) {
-      const shopItems = menuBoxes[0].querySelectorAll("a");
-      setNodeText(shopItems[0], lang.shopMen);
-      setNodeText(shopItems[1], lang.shopWomen);
-      setNodeText(shopItems[2], lang.shopKidsBabies);
-      setNodeText(shopItems[3], lang.shopAccessories);
-      setNodeText(shopItems[4], lang.shopHomeLiving);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="men"]'), lang.shopMen);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="women"]'), lang.shopWomen);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="kids"]'), lang.shopKidsBabies);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="phone-cases"]'), lang.shopPhoneCases);
+      setShopEntryText(menuBoxes[0].querySelector('[data-shop-category="jewelry"]'), lang.shopJewelry, lang.shopComingSoon);
+      setShopEntryText(menuBoxes[0].querySelector('[data-shop-category="board-games"]'), lang.shopBoardGames, lang.shopComingSoon);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="bags-cases"]'), lang.shopBagsCases);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="accessories"]'), lang.shopAccessories);
+      setNodeText(menuBoxes[0].querySelector('[data-shop-category="home-living"]'), lang.shopHomeLiving);
+
+      const kidsAgeLabels = [
+        lang.shopKidsAge0to12Months,
+        lang.shopKidsAge1to3Years,
+        lang.shopKidsAge4to7Years,
+        lang.shopKidsAge8to12Years,
+        lang.shopKidsAge13to17Years
+      ];
+      const kidsAgeNodes = menuBoxes[0].querySelectorAll(".shop-submenu .shop-menu-disabled");
+      kidsAgeNodes.forEach((ageNode, index) => {
+        setShopEntryText(ageNode, kidsAgeLabels[index], lang.shopComingSoon);
+      });
     }
     if (menuBoxes[1]) {
       const customItems = menuBoxes[1].querySelectorAll("a");

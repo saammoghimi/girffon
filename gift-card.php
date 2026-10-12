@@ -7,7 +7,7 @@
   <title id="gfGiftCardPageTitle">GIRFFON Gift Card</title>
   <meta id="gfGiftCardMetaDescription" name="description" content="Buy a GIRFFON Gift Card in digital or physical format and add it to the existing checkout flow." />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-  <link rel="stylesheet" href="CSS/style.css" />
+  <link rel="stylesheet" href="CSS/style.css?v=20261012-shop-nav-4" />
   <link rel="stylesheet" href="CSS/Hero.css" />
   <link rel="stylesheet" href="CSS/Catalog5botton.css" />
   <link rel="stylesheet" href="CSS/Rel.css" />
@@ -69,14 +69,27 @@
       <a href="index.html">HOME</a>
       <a href="about.html">ABOUT</a>
 
-      <div class="menu-item">
-        <a href="#">SHOP</a>
-        <div class="menu-box">
-          <a href="men.html">MAN</a>
-          <a href="woman.html">WOMAN</a>
-          <a href="kids.html">KIDS & BABIES</a>
-          <a href="accessories.html">ACCESSORIES</a>
-          <a href="home-living.html">HOME & LIVING</a>
+      <div class="menu-item shop-menu-item">
+        <a href="shop.html">SHOP</a>
+        <div class="menu-box shop-menu-box">
+          <a href="men.html" data-shop-category="men">MEN</a>
+          <a href="woman.html" data-shop-category="women">WOMEN</a>
+          <div class="shop-kids-group">
+            <a href="kids.html" data-shop-category="kids" aria-expanded="false">KIDS</a>
+            <div class="shop-submenu" aria-label="KIDS age groups">
+              <span class="shop-menu-disabled" aria-disabled="true">0-12 Months <small>Coming soon</small></span>
+              <span class="shop-menu-disabled" aria-disabled="true">1-3 Years <small>Coming soon</small></span>
+              <span class="shop-menu-disabled" aria-disabled="true">4-7 Years <small>Coming soon</small></span>
+              <span class="shop-menu-disabled" aria-disabled="true">8-12 Years <small>Coming soon</small></span>
+              <span class="shop-menu-disabled" aria-disabled="true">13-17 Years <small>Coming soon</small></span>
+            </div>
+          </div>
+          <a href="accessories.html#phone-cases" data-shop-category="phone-cases">PHONE CASES</a>
+          <span class="shop-menu-disabled" data-shop-category="jewelry" aria-disabled="true">JEWELRY <small>Coming soon</small></span>
+          <span class="shop-menu-disabled" data-shop-category="board-games" aria-disabled="true">BOARD GAMES <small>Coming soon</small></span>
+          <a href="accessories.html#tote-bags" data-shop-category="bags-cases">BAGS &amp; CASES</a>
+          <a href="accessories.html" data-shop-category="accessories">ACCESSORIES</a>
+          <a href="home-living.html" data-shop-category="home-living">HOME &amp; LIVING</a>
         </div>
       </div>
 
@@ -744,7 +757,7 @@
   <script src="JS/script.js?v=20260819-app-modal-1"></script>
   <script src="JS/contact-panel.js"></script>
   <script src="JS/settings-panel.js"></script>
-  <script src="JS/locale-panel.js?v=20260807r4"></script>
+  <script src="JS/locale-panel.js?v=20261012-shop-nav-4"></script>
   <script src="JS/account-panel.js?v=forgot-password-1"></script>
   <script src="JS/site-search.js"></script>
   <script src="JS/gift-card-page.js?v=20260806r1"></script>

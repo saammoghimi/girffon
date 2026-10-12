@@ -717,6 +717,13 @@ body.admin-page {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px;
 }
+.admin-ai-counters {
+  margin-top: 24px;
+}
+
+.admin-ai-counters .admin-stat-card {
+  min-height: 132px;
+}
 
 .admin-panel,
 .admin-table-panel {

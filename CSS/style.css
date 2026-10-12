@@ -359,10 +359,126 @@ main {
   background: transparent;
 }
 
+.shop-menu-box {
+  height: auto;
+  min-height: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  left: 0;
+  padding: 26px 32px 28px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  justify-items: stretch;
+  justify-content: center;
+  gap: 12px 24px;
+  overflow: visible;
+  transform: none;
+}
+
+.shop-menu-box > a,
+.shop-kids-group > a,
+.shop-menu-disabled {
+  min-height: 56px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-align: center;
+  line-height: 1.25;
+  white-space: nowrap;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.shop-menu-box > a:hover,
+.shop-menu-box > a:focus-visible,
+.shop-kids-group > a:hover,
+.shop-kids-group > a:focus-visible {
+  color: #111;
+  background: rgba(212, 161, 0, 0.12);
+  outline: none;
+}
+
+.shop-kids-group {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.shop-submenu {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 190px;
+  max-width: calc(100vw - 32px);
+  padding: 10px;
+  border: 1px solid #ece7d7;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+}
+
+.shop-kids-group.is-open .shop-submenu {
+  display: flex;
+}
+
+@media (min-width: 901px) and (hover: hover) and (pointer: fine) {
+  .shop-kids-group:hover .shop-submenu,
+  .shop-kids-group:focus-within .shop-submenu {
+    display: flex;
+  }
+}
+
+.shop-submenu .shop-menu-disabled {
+  min-height: 0;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  font-size: 11px;
+  text-align: left;
+  width: 100%;
+}
+
+.shop-menu-disabled {
+  color: #777;
+  cursor: not-allowed;
+}
+
+.shop-menu-disabled small {
+  color: #967300;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.shop-menu-box > .shop-menu-disabled small {
+  font-size: 9px;
+  opacity: 0.85;
+}
+
 /* FIX hover gap */
 .menu-box {
   margin-top: -8px; /* فاصله رو حذف می‌کنه */
   padding-top: 8px; /* ولی ظاهر حفظ میشه */
+}
+
+.shop-menu-box {
+  padding-top: 26px;
 }
 
 /* Empty page area */
@@ -464,9 +580,9 @@ main {
 }
 
 .footer-app-button {
-  min-width: 126px;
-  min-height: 46px;
-  padding: 5px 12px;
+  min-width: 100px;
+  min-height: 40px;
+  padding: 4px 10px;
   border: 1px solid #000;
   border-radius: 8px;
   display: inline-flex;
@@ -481,7 +597,7 @@ main {
 }
 
 .footer-app-button i {
-  font-size: 28px;
+  font-size: 20px;
 }
 
 .footer-app-button-android i,
@@ -1125,6 +1241,22 @@ body.gf-footer-panel-open {
     flex-wrap: wrap;
     gap: 24px;
   }
+
+  .shop-menu-box {
+    width: 100%;
+    max-width: none;
+    padding: 20px 20px 22px;
+    gap: 10px 16px;
+  }
+
+  .shop-menu-box > a,
+  .shop-kids-group > a,
+  .shop-menu-box > .shop-menu-disabled {
+    min-height: 50px;
+    padding-right: 10px;
+    padding-left: 10px;
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -1169,6 +1301,47 @@ body.gf-footer-panel-open {
   .menu-box {
     gap: 18px;
   }
+
+  .shop-menu-box {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    align-items: start;
+    width: 100%;
+    max-width: none;
+    max-height: min(70vh, 620px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 16px 14px 18px;
+    gap: 8px 10px;
+  }
+
+  .shop-kids-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+  }
+
+  .shop-submenu {
+    position: static;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 4px;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .shop-menu-box > a,
+  .shop-kids-group > a,
+  .shop-menu-box > .shop-menu-disabled {
+    min-height: 44px;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    text-align: left;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1181,6 +1354,18 @@ body.gf-footer-panel-open {
   .footer-links a,
   .top-actions a {
     font-size: 12px;
+  }
+
+  .shop-menu-box {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .shop-menu-box > a,
+  .shop-kids-group > a,
+  .shop-menu-box > .shop-menu-disabled {
+    justify-content: space-between;
+    text-align: left;
   }
 
   .footer-social a {
@@ -1307,5 +1492,3 @@ body.gf-footer-panel-open {
     padding: 14px;
   }
 }
-
-
